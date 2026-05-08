@@ -7,32 +7,53 @@ const APIMO_TOKEN = "5ccdef5377bd6f2f41681f17233c7818a3484333";
 const APIMO_AGENCY = "23650";
 const FALLBACK_API = "https://tst-drab-eta.vercel.app/api/properties";
 
+/* Apimo type/category ID mappings → French labels */
+const APIMO_CATEGORIES = { 1: "Vente", 2: "Location", 3: "Viager", 4: "Saisonnier" };
+const APIMO_TYPES = {
+  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Parking", 5: "Bureau",
+  6: "Commerce", 7: "Immeuble", 8: "Loft", 9: "Château", 10: "Local",
+  11: "Villa", 12: "Ferme", 13: "Propriété", 14: "Manoir", 15: "Hôtel particulier",
+  16: "Programme neuf", 17: "Fonds de commerce", 18: "Entrepôt", 19: "Chambre",
+  20: "Studio", 21: "Duplex", 22: "Triplex",
+};
+
+function resolveApimoField(field) {
+  if (!field) return "";
+  if (typeof field === "string") return field;
+  if (typeof field === "object" && field.name) return field.name;
+  if (typeof field === "number") return APIMO_TYPES[field] || APIMO_CATEGORIES[field] || "";
+  return String(field);
+}
+
 /* Format title like ebimmo.com: "MAISON DE VILLE A RENOVER – 63M² – BIEVILLE-BEUVILLE" */
 function fmtTitle(p) {
-  const type = (p.type?.name || p.subtype?.name || "Bien").toUpperCase();
+  /* 1. If Apimo provides a name, use it directly */
+  if (p.name && p.name.length > 3) return p.name.toUpperCase();
+  /* 2. Otherwise build from type + area + city */
+  const type = resolveApimoField(p.type) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
   const area = p.area?.value || p.area?.total || 0;
   const areaStr = area ? `${area}M²` : "";
-  const city = (p.city?.name || "").toUpperCase();
-  return [type, areaStr, city].filter(Boolean).join(" – ");
+  const city = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
+  return [type.toUpperCase(), areaStr, city.toUpperCase()].filter(Boolean).join(" – ");
 }
 
 /* Use Apimo raw description, or auto-generate an E&B Immo style one */
 function fmtDesc(p) {
   const raw = (p.comments || []).map(c => c.comment).filter(Boolean).join("\n\n");
   if (raw && raw.length > 30) return raw;
-  const type = (p.type?.name || p.subtype?.name || "bien").toLowerCase();
+  const type = (resolveApimoField(p.type) || resolveApimoField(p.subtype) || "bien").toLowerCase();
   const rooms = p.rooms || 0;
   const beds = p.bedrooms || 0;
   const area = p.area?.value || p.area?.total || 0;
-  const city = p.city?.name || "Normandie";
-  const zip = p.city?.zipcode || "";
+  const cityName = typeof p.city === "object" ? (p.city?.name || "Normandie") : (p.city || "Normandie");
+  const zip = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
   const isFem = type === "maison" || type === "villa" || type.endsWith("e");
   const lines = [];
   lines.push(`NOUVEAUTÉ CHEZ E&B IMMO`);
   if (area > 0) {
-    lines.push(`Sur la commune de ${city.toUpperCase()}${zip ? ` (${zip})` : ""}, nous vous proposons de découvrir ${isFem ? "cette" : "ce"} ${type} de ${area}m²${rooms ? ` comprenant ${rooms} pièce${rooms > 1 ? "s" : ""}` : ""}${beds ? ` dont ${beds} chambre${beds > 1 ? "s" : ""}` : ""}.`);
+    lines.push(`Sur la commune de ${cityName.toUpperCase()}${zip ? ` (${zip})` : ""}, nous vous proposons de découvrir ${isFem ? "cette" : "ce"} ${type} de ${area}m²${rooms ? ` comprenant ${rooms} pièce${rooms > 1 ? "s" : ""}` : ""}${beds ? ` dont ${beds} chambre${beds > 1 ? "s" : ""}` : ""}.`);
   } else {
-    lines.push(`${type.charAt(0).toUpperCase() + type.slice(1)} situé${isFem ? "e" : ""} à ${city}${zip ? ` (${zip})` : ""}.`);
+    lines.push(`${type.charAt(0).toUpperCase() + type.slice(1)} situé${isFem ? "e" : ""} à ${cityName}${zip ? ` (${zip})` : ""}.`);
   }
   if (p.area?.total && p.area.total > area) lines.push(`Terrain de ${p.area.total} m².`);
   lines.push(`Pour plus d'informations ou organiser une visite :\nEmeline BUREL\n07 60 95 36 18\ncontact@eb-immo.fr`);
@@ -41,15 +62,20 @@ function fmtDesc(p) {
 
 function normalizeApimo(p) {
   const photos = (p.pictures || []).map(pic => pic.url).filter(Boolean);
+  const typeName = resolveApimoField(p.type);
+  const subtypeName = resolveApimoField(p.subtype);
+  const categoryName = resolveApimoField(p.category);
+  const cityName = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
+  const zipCode = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
   return {
     id: p.id, title: p.name || fmtTitle(p),
     displayTitle: fmtTitle(p),
     price: p.price?.value || 0, rooms: p.rooms || 0, bedrooms: p.bedrooms || 0,
     area: { value: p.area?.value || 0, total: p.area?.total || 0 },
-    city: p.city?.name || "", zipcode: p.city?.zipcode || "", reference: p.reference || "",
+    city: cityName, zipcode: zipCode, reference: p.reference || "",
     thumbnail: photos[0] || "", photos, url: p.url || "",
     description: fmtDesc(p),
-    category: p.category?.name || "", type: p.type?.name || "", subtype: p.subtype?.name || "",
+    category: categoryName, type: typeName, subtype: subtypeName,
     address: p.publish_address ? p.address : "",
     latitude: p.latitude, longitude: p.longitude, _raw: p,
   };
