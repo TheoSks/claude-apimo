@@ -67,17 +67,39 @@ function normalizeApimo(p) {
   const categoryName = resolveApimoField(p.category);
   const cityName = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
   const zipCode = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
+  /* Extract services/amenities */
+  const services = [];
+  if (p.services) Object.entries(p.services).forEach(([k, v]) => { if (v && typeof v === "boolean") services.push(k.replace(/_/g, " ")); else if (v && typeof v === "string") services.push(v); });
+  if (p.amenities && Array.isArray(p.amenities)) p.amenities.forEach(a => services.push(typeof a === "object" ? (a.name || a.value || "") : String(a)));
+  /* Extract regulations (DPE, GES, etc.) */
+  const regulations = {};
+  if (p.regulations) Object.entries(p.regulations).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== "" && v !== 0) regulations[k] = v; });
+  if (p.energy) regulations.energy = p.energy;
+  if (p.gas) regulations.gas = p.gas;
+  /* Virtual tour */
+  const virtualTour = p.virtual_tour || p.virtual_visit || "";
+  /* Agent / user */
+  const agent = p.user ? { name: [p.user.firstname, p.user.lastname].filter(Boolean).join(" "), phone: p.user.phone || p.user.mobile || "", email: p.user.email || "", photo: p.user.picture || "" } : null;
   return {
     id: p.id, title: p.name || fmtTitle(p),
     displayTitle: fmtTitle(p),
     price: p.price?.value || 0, rooms: p.rooms || 0, bedrooms: p.bedrooms || 0,
+    bathrooms: p.bathrooms || 0,
     area: { value: p.area?.value || 0, total: p.area?.total || 0 },
     city: cityName, zipcode: zipCode, reference: p.reference || "",
     thumbnail: photos[0] || "", photos, url: p.url || "",
     description: fmtDesc(p),
     category: categoryName, type: typeName, subtype: subtypeName,
     address: p.publish_address ? p.address : "",
-    latitude: p.latitude, longitude: p.longitude, _raw: p,
+    latitude: p.latitude, longitude: p.longitude,
+    services: services.filter(Boolean),
+    regulations,
+    virtualTour,
+    agent,
+    condition: p.condition?.name || resolveApimoField(p.condition) || "",
+    availability: p.available_at || p.availability || "",
+    heating: p.heating ? (p.heating.device?.name || resolveApimoField(p.heating?.device) || "") : "",
+    _raw: p,
   };
 }
 function normalizeFallback(p) {
@@ -711,11 +733,15 @@ function Bien({ props, id, go, m, px }) {
                 {[
                   p.category && ["Catégorie", p.category],
                   p.type && ["Type", `${p.type}${p.subtype ? ` / ${p.subtype}` : ""}`],
+                  p.condition && ["État", p.condition],
+                  p.availability && ["Disponibilité", p.availability],
                   area > 0 && ["Surfaces", `${area} m²`],
                   p.area?.total > 0 && p.area.total !== area && ["Surface terrain", `${p.area.total} m²`],
                   ["Prix", `€ ${Number(p.price).toLocaleString("fr-FR")}`],
                   p.rooms > 0 && ["Pièces", p.rooms],
                   p.bedrooms > 0 && ["Chambres", p.bedrooms],
+                  p.bathrooms > 0 && ["Salles de bains", p.bathrooms],
+                  p.heating && ["Chauffage", p.heating],
                   p.reference && ["Référence", p.reference],
                 ].filter(Boolean).map(([label, value], i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.cinder10}` }}>
@@ -725,6 +751,67 @@ function Bien({ props, id, go, m, px }) {
                 ))}
               </div>
             </div>
+
+            {/* Prestations section */}
+            {p.services && p.services.length > 0 && (
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28, marginTop: 8 }}>
+                <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Prestations</h2>
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: "10px 40px" }}>
+                  {p.services.map((s, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={C.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span style={{ fontSize: 15, color: C.mine, textTransform: "capitalize" }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Location Details — Google Maps */}
+            {(p.latitude && p.longitude) && (
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28, marginTop: 8 }}>
+                <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Location Details</h2>
+                <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 12, position: "relative" }}>
+                  <iframe
+                    title="Map"
+                    width="100%"
+                    height={m.mob ? 250 : 380}
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://maps.google.com/maps?q=${p.latitude},${p.longitude}&z=15&output=embed`}
+                  />
+                  <a href={`https://www.google.com/maps?q=${p.latitude},${p.longitude}`} target="_blank" rel="noopener noreferrer"
+                    style={{ position: "absolute", top: 12, left: 12, background: "#fff", border: `1px solid ${C.cinder10}`, borderRadius: 8, padding: "6px 14px", fontSize: 14, color: C.cyan, fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                    Open in Maps
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </a>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, color: C.abbey }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke={C.abbey} strokeWidth="1.5"/><circle cx="12" cy="10" r="3" stroke={C.abbey} strokeWidth="1.5"/></svg>
+                  FR, Calvados, {p.city}
+                </div>
+              </div>
+            )}
+
+            {/* Réglementation (DPE / GES) */}
+            {p.regulations && Object.keys(p.regulations).length > 0 && (
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28, marginTop: 8 }}>
+                <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>RÉGLEMENTATION :</h2>
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
+                  {Object.entries(p.regulations).map(([key, value], i) => {
+                    const label = key.replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase());
+                    const displayVal = typeof value === "object" ? JSON.stringify(value) : String(value);
+                    return (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.cinder10}` }}>
+                        <span style={{ fontSize: 15, color: C.abbey }}>{label}</span>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: C.mine }}>{displayVal}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: sticky agent contact card */}
@@ -740,13 +827,26 @@ function Bien({ props, id, go, m, px }) {
                 <PillBtn variant="solid-cyan" onClick={() => {}} style={{ width: "100%", justifyContent: "center" }} hideArrow>Envoyer</PillBtn>
               </div>
             </div>
-            {/* Agent info */}
-            <div style={{ display: "flex", gap: 14, alignItems: "center", padding: "16px 0" }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 600 }}>EB</div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: C.mine }}>E&B Immo</div>
-                <div style={{ fontSize: 14, color: C.abbey }}>Agence immobilière</div>
+            {/* Agent card — cyan background like ebimmo.com */}
+            <div style={{ background: C.cyan, borderRadius: 16, padding: m.mob ? 16 : 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                {p.agent?.photo ? (
+                  <img src={p.agent.photo} alt={p.agent.name} style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "3px solid #fff" }} />
+                ) : (
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20, fontWeight: 600, border: "3px solid #fff" }}>EB</div>
+                )}
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
+                    {p.agent?.name || "E&B Immo"}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="#fff" stroke="#fff" strokeWidth="1"/></svg>
+                  </div>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,.85)" }}>Agence immobilière</div>
+                </div>
               </div>
+              <a href={`mailto:${p.agent?.email || "contact@eb-immo.fr"}`} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 8, padding: "10px 18px", fontSize: 15, fontWeight: 500, color: C.cyan, textDecoration: "none", whiteSpace: "nowrap" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke={C.cyan} strokeWidth="1.5"/><polyline points="22,6 12,13 2,6" stroke={C.cyan} strokeWidth="1.5"/></svg>
+                Send Email
+              </a>
             </div>
             {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: 15, color: C.cyan, textDecoration: "underline" }}>Voir sur ebimmo.com</a>}
           </div>
