@@ -506,6 +506,9 @@ function Home({ props, ld, go, m, px }) {
 function Annonces({ props, ld, go, m, px }) {
   const [f, setF] = useState("all");
   const [s, setS] = useState("");
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 12;
+
   const fl = props.filter(x => {
     const txt = `${x.title} ${x.type || ""}`.toLowerCase();
     if (f === "maison" && !/maison|villa|house/i.test(txt)) return false;
@@ -514,6 +517,23 @@ function Annonces({ props, ld, go, m, px }) {
     if (s && !txt.includes(s.toLowerCase()) && !(x.city || "").toLowerCase().includes(s.toLowerCase())) return false;
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(fl.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = fl.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+  /* Reset page when filter or search changes */
+  const handleFilter = (v) => { setF(v); setPage(1); };
+  const handleSearch = (e) => { setS(e.target.value); setPage(1); };
+  const goPage = (p) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
+
+  /* Page numbers to display */
+  const pageNums = [];
+  const maxVisible = m.mob ? 3 : 5;
+  let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let end = Math.min(totalPages, start + maxVisible - 1);
+  if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+  for (let i = start; i <= end; i++) pageNums.push(i);
 
   return (
     <main style={{ paddingTop: m.mob ? 80 : 120 }}>
@@ -525,23 +545,82 @@ function Annonces({ props, ld, go, m, px }) {
         <Rv d={1}>
           <div style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap", alignItems: "center" }}>
             {[["all", "Tous"], ["maison", "Maisons"], ["appart", "Apparts"], ["terrain", "Terrains"]].map(([k, l]) => (
-              <button key={k} onClick={() => setF(k)} style={{ padding: m.mob ? "8px 16px" : "10px 24px", borderRadius: 99, border: `1px solid ${f === k ? C.cyan : C.cinder10}`, background: f === k ? C.cyan : "transparent", color: f === k ? C.white : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 13 : 15, fontWeight: 500, cursor: "pointer", transition: "all .2s" }}>{l}</button>
+              <button key={k} onClick={() => handleFilter(k)} style={{ padding: m.mob ? "8px 16px" : "10px 24px", borderRadius: 99, border: `1px solid ${f === k ? C.cyan : C.cinder10}`, background: f === k ? C.cyan : "transparent", color: f === k ? C.white : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 13 : 15, fontWeight: 500, cursor: "pointer", transition: "all .2s" }}>{l}</button>
             ))}
-            <input placeholder="Rechercher..." value={s} onChange={e => setS(e.target.value)} style={{ marginLeft: m.mob ? 0 : "auto", padding: "10px 20px", border: `1px solid ${C.cinder10}`, borderRadius: 99, fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", width: m.mob ? "100%" : 260, background: "transparent" }} />
+            <input placeholder="Rechercher..." value={s} onChange={handleSearch} style={{ marginLeft: m.mob ? 0 : "auto", padding: "10px 20px", border: `1px solid ${C.cinder10}`, borderRadius: 99, fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", width: m.mob ? "100%" : 260, background: "transparent" }} />
           </div>
         </Rv>
         <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr 1fr" : m.tab ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: m.mob ? 16 : 28 }}>
-          {!ld && fl.map((p, i) => (
+          {!ld && paginated.map((p, i) => (
             <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} onClick={() => go("bien", p.id)} /></Rv>
           ))}
         </div>
-        <div style={{ textAlign: "center", marginTop: 40 }}>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: m.mob ? 6 : 10, marginTop: m.mob ? 40 : 56 }}>
+            {/* Prev */}
+            <button onClick={() => goPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}
+              style={{ width: m.mob ? 36 : 44, height: m.mob ? 36 : 44, borderRadius: 12, border: `1px solid ${C.cinder10}`, background: "transparent", cursor: currentPage === 1 ? "default" : "pointer", opacity: currentPage === 1 ? .3 : 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity .2s" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke={C.mine} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+
+            {/* First + ellipsis */}
+            {start > 1 && (
+              <>
+                <button onClick={() => goPage(1)} style={pgBtnStyle(1 === currentPage, m.mob)}>1</button>
+                {start > 2 && <span style={{ fontSize: 14, color: C.abbey }}>…</span>}
+              </>
+            )}
+
+            {/* Page numbers */}
+            {pageNums.map(n => (
+              <button key={n} onClick={() => goPage(n)} style={pgBtnStyle(n === currentPage, m.mob)}>{n}</button>
+            ))}
+
+            {/* Ellipsis + last */}
+            {end < totalPages && (
+              <>
+                {end < totalPages - 1 && <span style={{ fontSize: 14, color: C.abbey }}>…</span>}
+                <button onClick={() => goPage(totalPages)} style={pgBtnStyle(totalPages === currentPage, m.mob)}>{totalPages}</button>
+              </>
+            )}
+
+            {/* Next */}
+            <button onClick={() => goPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}
+              style={{ width: m.mob ? 36 : 44, height: m.mob ? 36 : 44, borderRadius: 12, border: `1px solid ${C.cinder10}`, background: "transparent", cursor: currentPage === totalPages ? "default" : "pointer", opacity: currentPage === totalPages ? .3 : 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity .2s" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={C.mine} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
+        )}
+
+        {/* Info page */}
+        {totalPages > 1 && (
+          <div style={{ textAlign: "center", marginTop: 12, fontSize: 14, color: C.abbey }}>
+            Page {currentPage} sur {totalPages}
+          </div>
+        )}
+
+        <div style={{ textAlign: "center", marginTop: 32 }}>
           <a onClick={() => go("home")} style={{ fontSize: 16, color: C.abbey, cursor: "pointer", textDecoration: "underline" }}>← Retour à l'accueil</a>
         </div>
       </section>
       <Footer go={go} m={m} px={px} />
     </main>
   );
+}
+
+/* Pagination button style */
+function pgBtnStyle(active, mob) {
+  return {
+    width: mob ? 36 : 44, height: mob ? 36 : 44, borderRadius: 12,
+    border: active ? "none" : `1px solid ${C.cinder10}`,
+    background: active ? C.cyan : "transparent",
+    color: active ? C.white : C.mine,
+    fontFamily: "Urbanist, sans-serif", fontSize: mob ? 14 : 16, fontWeight: 500,
+    cursor: "pointer", transition: "all .2s",
+    display: "flex", alignItems: "center", justifyContent: "center",
+  };
 }
 
 /* ═══════ BIEN DETAIL ═══════ */
