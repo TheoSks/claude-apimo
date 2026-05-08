@@ -7,22 +7,65 @@ const APIMO_TOKEN = "5ccdef5377bd6f2f41681f17233c7818a3484333";
 const APIMO_AGENCY = "23650";
 const FALLBACK_API = "https://tst-drab-eta.vercel.app/api/properties";
 
-/* Normalize Apimo → unified */
+/* Format title like ebimmo.com: "MAISON DE VILLE A RENOVER – 63M² – BIEVILLE-BEUVILLE" */
+function fmtTitle(p) {
+  const type = (p.type?.name || p.subtype?.name || "Bien").toUpperCase();
+  const area = p.area?.value || p.area?.total || 0;
+  const areaStr = area ? `${area}M²` : "";
+  const city = (p.city?.name || "").toUpperCase();
+  return [type, areaStr, city].filter(Boolean).join(" – ");
+}
+
+/* Use Apimo raw description, or auto-generate an E&B Immo style one */
+function fmtDesc(p) {
+  const raw = (p.comments || []).map(c => c.comment).filter(Boolean).join("\n\n");
+  if (raw && raw.length > 30) return raw;
+  const type = (p.type?.name || p.subtype?.name || "bien").toLowerCase();
+  const rooms = p.rooms || 0;
+  const beds = p.bedrooms || 0;
+  const area = p.area?.value || p.area?.total || 0;
+  const city = p.city?.name || "Normandie";
+  const zip = p.city?.zipcode || "";
+  const isFem = type === "maison" || type === "villa" || type.endsWith("e");
+  const lines = [];
+  lines.push(`NOUVEAUTÉ CHEZ E&B IMMO`);
+  if (area > 0) {
+    lines.push(`Sur la commune de ${city.toUpperCase()}${zip ? ` (${zip})` : ""}, nous vous proposons de découvrir ${isFem ? "cette" : "ce"} ${type} de ${area}m²${rooms ? ` comprenant ${rooms} pièce${rooms > 1 ? "s" : ""}` : ""}${beds ? ` dont ${beds} chambre${beds > 1 ? "s" : ""}` : ""}.`);
+  } else {
+    lines.push(`${type.charAt(0).toUpperCase() + type.slice(1)} situé${isFem ? "e" : ""} à ${city}${zip ? ` (${zip})` : ""}.`);
+  }
+  if (p.area?.total && p.area.total > area) lines.push(`Terrain de ${p.area.total} m².`);
+  lines.push(`Pour plus d'informations ou organiser une visite :\nEmeline BUREL\n07 60 95 36 18\ncontact@eb-immo.fr`);
+  return lines.join("\n\n");
+}
+
 function normalizeApimo(p) {
   const photos = (p.pictures || []).map(pic => pic.url).filter(Boolean);
   return {
-    id: p.id, title: p.name || `${p.type?.name || "Bien"} — ${p.subtype?.name || ""}`.trim(),
+    id: p.id, title: p.name || fmtTitle(p),
+    displayTitle: fmtTitle(p),
     price: p.price?.value || 0, rooms: p.rooms || 0, bedrooms: p.bedrooms || 0,
     area: { value: p.area?.value || 0, total: p.area?.total || 0 },
     city: p.city?.name || "", zipcode: p.city?.zipcode || "", reference: p.reference || "",
     thumbnail: photos[0] || "", photos, url: p.url || "",
-    description: (p.comments || []).map(c => c.comment).join(" ") || "",
-    category: p.category?.name || "", type: p.type?.name || "", address: p.publish_address ? p.address : "",
+    description: fmtDesc(p),
+    category: p.category?.name || "", type: p.type?.name || "", subtype: p.subtype?.name || "",
+    address: p.publish_address ? p.address : "",
     latitude: p.latitude, longitude: p.longitude, _raw: p,
   };
 }
 function normalizeFallback(p) {
-  return { ...p, city: p.city || "", photos: p.thumbnail ? [p.thumbnail] : [], description: "", category: "", type: "", address: "", _raw: p };
+  const area = p.area?.value || p.area?.total || 0;
+  const rooms = p.rooms || 0;
+  const beds = p.bedrooms || 0;
+  const type = /maison|villa/i.test(p.title) ? "MAISON" : /appart/i.test(p.title) ? "APPARTEMENT" : /terrain/i.test(p.title) ? "TERRAIN" : "BIEN";
+  const city = (p.city || "").toUpperCase();
+  const displayTitle = [type, area ? `${area}M²` : "", city].filter(Boolean).join(" – ");
+  const isFem = type === "MAISON" || type === "VILLA";
+  const desc = area > 0
+    ? `NOUVEAUTÉ CHEZ E&B IMMO\n\nNous vous proposons de découvrir ${isFem ? "cette" : "ce"} ${type.toLowerCase()} de ${area}m²${rooms ? ` comprenant ${rooms} pièces` : ""}${beds ? ` dont ${beds} chambres` : ""}.\n\nPour plus d'informations ou organiser une visite :\nEmeline BUREL\n07 60 95 36 18\ncontact@eb-immo.fr`
+    : `${type.charAt(0) + type.slice(1).toLowerCase()} disponible.\n\nContactez E&B Immo pour plus d'informations.`;
+  return { ...p, displayTitle, city: p.city || "", photos: p.thumbnail ? [p.thumbnail] : [], description: desc, category: "", type: type.charAt(0) + type.slice(1).toLowerCase(), subtype: "", address: "", _raw: p };
 }
 
 async function fetchProperties() {
@@ -97,46 +140,67 @@ function PillBtn({ children, variant = "outline-cyan", onClick, style: s = {}, h
   );
 }
 
-/* ═══ Property Card (responsive) ═══ */
+/* ═══ Property Card (UNI-style responsive) ═══ */
 function PropCard({ p, onClick, idx = 0, mob }) {
-  const area = p.area?.value || p.area?.total || "—";
+  const area = p.area?.value || p.area?.total || 0;
   const [h, setH] = useState(false);
+  const title = p.displayTitle || p.title;
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
-      <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee" }}>
-        <img src={p.thumbnail || fb(idx)} alt={p.title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", transform: h ? "scale(1.05)" : "" }} />
+      <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
+        <img src={p.thumbnail || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", transform: h ? "scale(1.05)" : "" }} />
+        {p.photos?.length > 1 && (
+          <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 6, padding: "4px 8px", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="#fff"/><path d="M21 15l-5-5L5 21" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            {p.photos.length}
+          </div>
+        )}
       </div>
-      <div style={{ marginTop: mob ? 12 : 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-          <h3 style={{ fontSize: mob ? 16 : 20, fontWeight: 500, color: C.bush, margin: 0, flex: 1, lineHeight: 1.3 }}>{p.title}</h3>
-          <span style={{ fontSize: mob ? 16 : 20, fontWeight: 600, color: C.bush, whiteSpace: "nowrap" }}>{fmtP(p.price)}</span>
+      <div style={{ marginTop: mob ? 10 : 16 }}>
+        <h3 style={{ fontSize: mob ? 14 : 17, fontWeight: 500, color: C.bush, margin: 0, lineHeight: 1.35, marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</h3>
+        <div style={{ fontSize: mob ? 12 : 14, color: C.abbey, marginBottom: 8 }}>
+          {p.city && <span>{p.zipcode || ""} {p.city}</span>}
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-          <span style={{ fontSize: mob ? 14 : 16, color: C.abbey }}>{p.city || "Normandie"}</span>
-          <span style={{ fontSize: mob ? 14 : 16, color: C.abbey }}>{area} m²</span>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          {p.rooms > 0 && <span style={{ fontSize: mob ? 11 : 12, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "3px 8px" }}>Nb pièces : {p.rooms}</span>}
+          {area > 0 && <span style={{ fontSize: mob ? 11 : 12, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "3px 8px" }}>Surface : {area}m²</span>}
         </div>
+        <span style={{ fontSize: mob ? 18 : 22, fontWeight: 600, color: C.bush }}>{fmtP(p.price)}</span>
       </div>
     </div>
   );
 }
 
-/* ═══ Property Row (responsive — stacks on mobile) ═══ */
+/* ═══ Property Row (UNI-style responsive) ═══ */
 function PropRow({ p, onClick, idx = 0, mob }) {
-  const area = p.area?.value || p.area?.total || "—";
+  const area = p.area?.value || p.area?.total || 0;
   const [h, setH] = useState(false);
-  const desc = p.description || `${p.title} — ${area}m² — ${p.rooms || 0} pièces — ${p.bedrooms || 0} chambres.`;
+  const title = p.displayTitle || p.title;
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{ display: "flex", flexDirection: mob ? "column" : "row", gap: mob ? 20 : 30, paddingBottom: mob ? 32 : 50, borderBottom: `1px solid ${C.cinder50}`, cursor: "pointer" }}>
-      <div style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: mob ? 220 : 380 }}>
-        <img src={p.thumbnail || fb(idx)} alt={p.title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s", transform: h ? "scale(1.03)" : "" }} />
+      <div style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: mob ? 220 : 380, position: "relative" }}>
+        <img src={p.thumbnail || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s", transform: h ? "scale(1.03)" : "" }} />
+        {p.photos?.length > 1 && (
+          <div style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 8, padding: "5px 10px", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="#fff"/><path d="M21 15l-5-5L5 21" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            {p.photos.length}
+          </div>
+        )}
       </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 16 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <h3 style={{ fontSize: mob ? 24 : 40, fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: 12 }}>{p.title}</h3>
-          <p style={{ fontSize: mob ? 15 : 17, color: C.abbey, lineHeight: 1.6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: mob ? 3 : 5, WebkitBoxOrient: "vertical" }}>{desc}</p>
+          <h3 style={{ fontSize: mob ? 22 : 34, fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: 6 }}>{title}</h3>
+          {p.city && <div style={{ fontSize: mob ? 14 : 16, color: C.abbey, marginBottom: 12 }}>{p.zipcode || ""} {p.city}</div>}
+          {/* Characteristics row */}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+            {p.rooms > 0 && <span style={{ fontSize: 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "4px 10px" }}>Nb pièces : {p.rooms}</span>}
+            {area > 0 && <span style={{ fontSize: 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "4px 10px" }}>Surface : {area}m²</span>}
+            {p.bedrooms > 0 && <span style={{ fontSize: 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "4px 10px" }}>Chambres : {p.bedrooms}</span>}
+          </div>
+          <p style={{ fontSize: mob ? 14 : 16, color: C.abbey, lineHeight: 1.65, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: mob ? 3 : 4, WebkitBoxOrient: "vertical" }}>{p.description}</p>
         </div>
-        <span style={{ fontSize: mob ? 24 : 34, fontWeight: 500, color: C.bush }}>{fmtP(p.price)}</span>
+        <span style={{ fontSize: mob ? 24 : 32, fontWeight: 600, color: C.bush }}>{fmtP(p.price)}</span>
       </div>
     </div>
   );
@@ -459,52 +523,127 @@ function Bien({ props, id, go, m, px }) {
   const p = props.find(x => x.id === id);
   const [photoIdx, setPhotoIdx] = useState(0);
   if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
-  const area = p.area?.value || p.area?.total || "—";
+  const area = p.area?.value || p.area?.total || 0;
   const photos = p.photos?.length ? p.photos : [p.thumbnail || fb(0)];
+  const title = p.displayTitle || p.title;
 
   return (
     <main style={{ paddingTop: m.mob ? 80 : 120 }}>
       <section style={{ padding: `32px ${px} 80px`, maxWidth: 1440, margin: "0 auto" }}>
-        <a onClick={() => go("annonces")} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 16, color: C.cyan, cursor: "pointer", marginBottom: 24, textDecoration: "none" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <a onClick={() => go("annonces")} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 15, color: C.cyan, cursor: "pointer", marginBottom: 28, textDecoration: "none" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Retour aux propriétés
         </a>
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1.3fr 1fr", gap: m.mob ? 24 : 40, alignItems: "start" }}>
-          <div>
-            <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 10 }}>
-              <img src={photos[photoIdx] || fb(0)} alt={p.title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: m.mob ? 240 : 460, objectFit: "cover" }} />
-            </div>
-            {photos.length > 1 && (
-              <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
-                {photos.slice(0, 8).map((ph, i) => (
-                  <div key={i} onClick={() => setPhotoIdx(i)} style={{ flex: "0 0 72px", height: 52, borderRadius: 6, overflow: "hidden", cursor: "pointer", border: photoIdx === i ? `2px solid ${C.cyan}` : "2px solid transparent" }}>
-                    <img src={ph} alt="" onError={(e) => handleImgErr(e, i)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
-                ))}
-              </div>
-            )}
-            {p.description && (
-              <div style={{ marginTop: 32 }}>
-                <h3 style={{ fontSize: m.mob ? 20 : 22, fontWeight: 500, color: C.bush, marginBottom: 12 }}>Description</h3>
-                <p style={{ fontSize: m.mob ? 15 : 17, color: C.abbey, lineHeight: 1.65 }}>{p.description}</p>
-              </div>
-            )}
+
+        {/* Photo gallery */}
+        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : photos.length > 1 ? "2fr 1fr" : "1fr", gap: 6, marginBottom: 32, borderRadius: 16, overflow: "hidden", maxHeight: m.mob ? 280 : 500 }}>
+          <div style={{ cursor: "pointer" }} onClick={() => {}}>
+            <img src={photos[photoIdx] || fb(0)} alt={title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
-          <div style={{ position: m.mob ? "relative" : "sticky", top: m.mob ? 0 : 120 }}>
-            {p.category && <span style={{ fontSize: 13, fontWeight: 600, color: C.cyan, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>{p.category}</span>}
-            <h1 style={{ fontSize: m.mob ? 26 : 40, fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: 6 }}>{p.title}</h1>
-            {p.city && <div style={{ fontSize: 16, color: C.abbey, marginBottom: 16 }}>{p.city}{p.zipcode ? ` (${p.zipcode})` : ""}</div>}
-            <div style={{ fontSize: m.mob ? 28 : 36, fontWeight: 500, color: C.bush, marginBottom: 28 }}>{fmtP(p.price)}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
-              {[["Surface", `${area} m²`], ["Pièces", p.rooms || "—"], ["Chambres", p.bedrooms || "—"], ["Réf.", p.reference], ...(p.type ? [["Type", p.type]] : [])].map(([l, v], i) => (
-                <div key={i} style={{ background: "#f5f5f5", borderRadius: 10, padding: m.mob ? "14px 16px" : "18px 20px" }}>
-                  <div style={{ fontSize: 13, color: C.abbey, marginBottom: 4 }}>{l}</div>
-                  <div style={{ fontSize: m.mob ? 18 : 22, fontWeight: 500, color: C.bush }}>{v}</div>
+          {!m.mob && photos.length > 1 && (
+            <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 6 }}>
+              {photos.slice(1, 3).map((ph, i) => (
+                <div key={i} style={{ overflow: "hidden", cursor: "pointer", position: "relative" }} onClick={() => setPhotoIdx(i + 1)}>
+                  <img src={ph} alt="" onError={(e) => handleImgErr(e, i + 1)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  {i === 1 && photos.length > 3 && (
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 500 }}>+{photos.length - 3} photos</div>
+                  )}
                 </div>
               ))}
             </div>
-            <PillBtn variant="solid-cyan" onClick={() => go("contact")} style={{ width: "100%", justifyContent: "center" }} hideArrow>Nous contacter</PillBtn>
-            {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", marginTop: 14, fontSize: 15, color: C.abbey, textDecoration: "underline" }}>Voir l'annonce complète</a>}
+          )}
+        </div>
+        {photos.length > 1 && (
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 32, paddingBottom: 4 }}>
+            {photos.map((ph, i) => (
+              <div key={i} onClick={() => setPhotoIdx(i)} style={{ flex: `0 0 ${m.mob ? 64 : 80}px`, height: m.mob ? 48 : 58, borderRadius: 6, overflow: "hidden", cursor: "pointer", border: photoIdx === i ? `2px solid ${C.cyan}` : "2px solid transparent", opacity: photoIdx === i ? 1 : .7, transition: "all .2s" }}>
+                <img src={ph} alt="" onError={(e) => handleImgErr(e, i)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1.5fr 1fr", gap: m.mob ? 32 : 60, alignItems: "start" }}>
+          {/* Left: title, description, informations */}
+          <div>
+            {/* Title — E&B style: uppercase */}
+            <h1 style={{ fontSize: m.mob ? 22 : m.tab ? 30 : 38, fontWeight: 600, color: C.bush, lineHeight: 1.25, marginBottom: 12, textTransform: "uppercase" }}>{title}</h1>
+
+            {/* Price */}
+            <div style={{ fontSize: m.mob ? 28 : 36, fontWeight: 600, color: C.bush, marginBottom: 12 }}>€ {Number(p.price).toLocaleString("fr-FR")}</div>
+
+            {/* City + zip + ref */}
+            <div style={{ fontSize: 15, color: C.abbey, marginBottom: 6 }}>{p.city}{p.zipcode ? ` - ${p.zipcode}` : ""}</div>
+            {p.reference && <div style={{ fontSize: 14, color: C.abbey, marginBottom: 24 }}>#{p.reference}</div>}
+
+            {/* 3 badges like ebimmo.com */}
+            <div style={{ display: "flex", gap: m.mob ? 12 : 20, marginBottom: 36, flexWrap: "wrap" }}>
+              {[
+                p.rooms > 0 && [`${p.rooms} Pièce${p.rooms > 1 ? "s" : ""}`, "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"],
+                [`${p.bedrooms || 0} Salle de bains`, "M21 10H7M21 6H3M21 14H3M21 18H7"],
+                area > 0 && [`${area} m²`, "M3 3h18v18H3zM3 9h18M9 3v18"],
+              ].filter(Boolean).map(([label, icon], i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: m.mob ? 14 : 15, color: C.mine, fontWeight: 500 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f3f3f3", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d={icon} stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            {/* Description — white-space pre-line like ebimmo */}
+            {p.description && (
+              <div style={{ marginBottom: 40 }}>
+                <p style={{ fontSize: m.mob ? 15 : 16, color: C.abbey, lineHeight: 1.75, whiteSpace: "pre-line" }}>{p.description}</p>
+              </div>
+            )}
+
+            {/* Informations section — like ebimmo.com */}
+            <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28 }}>
+              <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Informations</h2>
+              <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
+                {[
+                  p.category && ["Catégorie", p.category],
+                  p.type && ["Type", `${p.type}${p.subtype ? ` / ${p.subtype}` : ""}`],
+                  area > 0 && ["Surfaces", `${area} m²`],
+                  p.area?.total > 0 && p.area.total !== area && ["Surface terrain", `${p.area.total} m²`],
+                  ["Prix", `€ ${Number(p.price).toLocaleString("fr-FR")}`],
+                  p.rooms > 0 && ["Pièces", p.rooms],
+                  p.bedrooms > 0 && ["Chambres", p.bedrooms],
+                  p.reference && ["Référence", p.reference],
+                ].filter(Boolean).map(([label, value], i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.cinder10}` }}>
+                    <span style={{ fontSize: 15, color: C.abbey }}>{label}:</span>
+                    <span style={{ fontSize: 15, fontWeight: 500, color: C.mine }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: sticky agent contact card */}
+          <div style={{ position: m.mob ? "relative" : "sticky", top: m.mob ? 0 : 120 }}>
+            <div style={{ background: "#f7f7f7", borderRadius: 16, padding: m.mob ? 20 : 28, marginBottom: 20 }}>
+              <h3 style={{ fontSize: m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Formulaire de contact</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <input placeholder="Nom" style={inpS} />
+                <input placeholder="Prénom" style={inpS} />
+                <input placeholder="Téléphone" type="tel" style={inpS} />
+                <input placeholder="Email" type="email" style={inpS} />
+                <textarea placeholder="Message" rows={4} style={{ ...inpS, resize: "vertical" }} />
+                <PillBtn variant="solid-cyan" onClick={() => {}} style={{ width: "100%", justifyContent: "center" }} hideArrow>Envoyer</PillBtn>
+              </div>
+            </div>
+            {/* Agent info */}
+            <div style={{ display: "flex", gap: 14, alignItems: "center", padding: "16px 0" }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 600 }}>EB</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: C.mine }}>E&B Immo</div>
+                <div style={{ fontSize: 14, color: C.abbey }}>Agence immobilière</div>
+              </div>
+            </div>
+            {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: 15, color: C.cyan, textDecoration: "underline" }}>Voir sur ebimmo.com</a>}
           </div>
         </div>
       </section>
