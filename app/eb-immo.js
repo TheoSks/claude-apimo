@@ -1134,6 +1134,45 @@ function pgBtnStyle(active, mob) {
 function Bien({ props, id, go, m, px }) {
   const p = props.find(x => x.id === id);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [cForm, setCForm] = useState({ nom: "", prenom: "", tel: "", email: "", message: "" });
+  const [cErrors, setCErrors] = useState({});
+  const [cSending, setCsSending] = useState(false);
+  const [cSent, setCSent] = useState(false);
+  const [cError, setCError] = useState("");
+
+  const setC = (k) => (e) => setCForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function handleContactSend() {
+    const e = {};
+    if (!cForm.nom.trim()) e.nom = true;
+    if (!cForm.prenom.trim()) e.prenom = true;
+    if (!cForm.tel.trim()) e.tel = true;
+    if (!cForm.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email)) e.email = true;
+    if (Object.keys(e).length) { setCErrors(e); return; }
+    setCsSending(true);
+    setCError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nom: cForm.nom, prenom: cForm.prenom, email: cForm.email, telephone: cForm.tel,
+          adresse: "", ville: p.city || "", codePostal: p.zipcode || "",
+          typeBien: p.type || p.title, superficie: String(p.area?.value || ""),
+          nbChambres: String(p.bedrooms || ""), anneeConstruction: "",
+          message: cForm.message, reference: p.reference || String(p.id),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur");
+      setCSent(true);
+    } catch {
+      setCError("Une erreur est survenue. Contactez-nous directement.");
+    } finally {
+      setCsSending(false);
+    }
+  }
+
   if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
   const area = p.area?.value || p.area?.total || 0;
   const photos = p.photos?.length ? p.photos : [p.thumbnail || fb(0)];
@@ -1303,14 +1342,27 @@ function Bien({ props, id, go, m, px }) {
           <div style={{ position: m.mob ? "relative" : "sticky", top: m.mob ? 0 : 120 }}>
             <div style={{ background: "#f7f7f7", borderRadius: 16, padding: m.mob ? 20 : 28, marginBottom: 20 }}>
               <h3 style={{ fontSize: m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Formulaire de contact</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <input placeholder="Nom" style={inpS} />
-                <input placeholder="Prénom" style={inpS} />
-                <input placeholder="Téléphone" type="tel" style={inpS} />
-                <input placeholder="Email" type="email" style={inpS} />
-                <textarea placeholder="Message" rows={4} style={{ ...inpS, resize: "vertical" }} />
-                <PillBtn variant="solid-cyan" onClick={() => {}} style={{ width: "100%", justifyContent: "center" }} hideArrow>Envoyer</PillBtn>
-              </div>
+              {cSent ? (
+                <div style={{ textAlign: "center", padding: "24px 0" }}>
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ fontSize: 16, fontWeight: 600, color: C.bush, marginBottom: 6 }}>Message envoyé !</p>
+                  <p style={{ fontSize: 14, color: C.abbey }}>Nous vous répondrons dans les plus brefs délais.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <input placeholder="Nom *" value={cForm.nom} onChange={setC("nom")} style={{ ...inpS, border: `1px solid ${cErrors.nom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+                  <input placeholder="Prénom *" value={cForm.prenom} onChange={setC("prenom")} style={{ ...inpS, border: `1px solid ${cErrors.prenom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+                  <input placeholder="Téléphone *" type="tel" value={cForm.tel} onChange={setC("tel")} style={{ ...inpS, border: `1px solid ${cErrors.tel ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+                  <input placeholder="Email *" type="email" value={cForm.email} onChange={setC("email")} style={{ ...inpS, border: `1px solid ${cErrors.email ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+                  <textarea placeholder="Message" rows={4} value={cForm.message} onChange={setC("message")} style={{ ...inpS, resize: "vertical" }} />
+                  {cError && <p style={{ fontSize: 13, color: "#c0392b", margin: 0 }}>{cError}</p>}
+                  <PillBtn variant="solid-cyan" onClick={handleContactSend} style={{ width: "100%", justifyContent: "center", opacity: cSending ? 0.7 : 1, cursor: cSending ? "not-allowed" : "pointer" }} hideArrow>
+                    {cSending ? "Envoi en cours…" : "Envoyer"}
+                  </PillBtn>
+                </div>
+              )}
             </div>
             {/* Agent card — cyan background like ebimmo.com */}
             <div style={{ background: C.cyan, borderRadius: 16, padding: m.mob ? 16 : 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
