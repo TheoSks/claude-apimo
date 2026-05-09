@@ -479,6 +479,7 @@ export default function App() {
       {pg === "home" && <Home props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "bien" && <Bien props={props} id={sid} go={go} m={m} px={px} />}
+      {pg === "apropos" && <Apropos go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
     </div>
   );
@@ -512,7 +513,7 @@ function Nav({ pg, go, m, px }) {
           </button>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: m.md ? 20 : m.lg ? 28 : 40, flexWrap: "nowrap" }}>
-            {[["Accueil", "home"], ["Propriétés", "annonces"], ["Nous contacter", "contact"]].map(([l, p]) => (
+            {[["Accueil", "home"], ["Propriétés", "annonces"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
               <a key={p} onClick={() => go(p)} style={{ fontSize: m.md ? 14 : 16, color: C.white, cursor: "pointer", textDecoration: "none", opacity: pg === p ? 1 : .7, transition: "opacity .2s", whiteSpace: "nowrap" }}>{l}</a>
             ))}
             <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ padding: m.md ? "8px 18px" : "10px 24px", fontSize: m.md ? 13 : 15 }}>Prendre contact</PillBtn>
@@ -522,7 +523,7 @@ function Nav({ pg, go, m, px }) {
       {/* Mobile menu overlay */}
       {mob && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: "rgba(9,38,29,.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: m.xs ? 24 : 32, padding: 24, opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transition: "opacity .3s" }}>
-          {[["Accueil", "home"], ["Propriétés", "annonces"], ["Nous contacter", "contact"]].map(([l, p]) => (
+          {[["Accueil", "home"], ["Propriétés", "annonces"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
             <a key={p} onClick={() => { go(p); setMenuOpen(false); }} style={{ fontSize: m.xs ? 24 : 28, fontWeight: 500, color: C.white, cursor: "pointer", textDecoration: "none" }}>{l}</a>
           ))}
           <PillBtn variant="outline-white" onClick={() => { go("contact"); setMenuOpen(false); }}>Prendre contact</PillBtn>
@@ -1597,6 +1598,113 @@ function Contact({ go, m, px }) {
 }
 
 const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,14,19,0.1)`, borderRadius: 12, fontFamily: "Urbanist, sans-serif", fontSize: 16, outline: "none", background: "#fff" };
+
+/* ═══════ À PROPOS ═══════ */
+function Apropos({ go, m, px }) {
+  const [openFaq, setOpenFaq] = useState(null);
+
+  const team = [
+    { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr" },
+    { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr" },
+    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr" },
+    { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr" },
+    { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr" },
+    { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr" },
+  ];
+
+  const forces = [
+    { title: "Expertise locale", desc: "Notre équipe possède une connaissance approfondie du marché immobilier local. Grâce à notre expertise, nous vous guidons vers les meilleures opportunités et vous aidons à prendre des décisions éclairées." },
+    { title: "Service personnalisé", desc: "Chez nous, chaque client est unique. Nous offrons un service personnalisé pour répondre à vos besoins spécifiques. Que vous soyez acheteur, vendeur ou investisseur, nous sommes là à chaque étape du processus." },
+    { title: "Transparence et intégrité", desc: "Nous croyons en une communication transparente et honnête. Vous pouvez compter sur nous pour vous fournir toutes les informations nécessaires afin de prendre vos décisions en toute confiance." },
+  ];
+
+  const faqs = [
+    { q: "Qui sommes-nous ?", a: "EB Immo est votre partenaire de confiance pour tous vos besoins immobiliers. Avec notre expertise, notre engagement et notre service personnalisé, nous vous accompagnons à chaque étape de votre projet, de la recherche à la clôture, pour faire de votre rêve immobilier une réalité." },
+    { q: "Comment puis-je prendre rendez-vous avec un conseiller ?", a: "Vous pouvez nous joindre par téléphone, par e-mail ou via notre formulaire de contact. Nous vous répondrons dans les plus brefs délais pour convenir d'un rendez-vous à votre convenance." },
+    { q: "Quelle est la zone géographique couverte par EB Immo ?", a: "EB Immo intervient principalement sur Caen, Cabourg, Merville-Franceville et Villersur-Mer, ainsi que l'ensemble du Calvados et ses alentours." },
+  ];
+
+  return (
+    <main style={{ paddingTop: m.xs ? 64 : 72 }}>
+      {/* Hero */}
+      <section style={{ background: C.bush, padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, textAlign: "center" }}>
+        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 16 }}>À propos</p>
+        <h1 style={{ fontSize: "clamp(28px, 6vw, 64px)", fontWeight: 500, color: C.white, lineHeight: 1.15, maxWidth: 700, margin: "0 auto" }}>Accompagnement sur mesure,<br />écoute attentive</h1>
+      </section>
+
+      {/* Notre équipe */}
+      <section style={{ padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, maxWidth: 1440, margin: "0 auto" }}>
+        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>Notre équipe</p>
+        <h2 style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 500, color: C.bush, marginBottom: m.xs ? 40 : 56 }}>Une équipe à votre écoute</h2>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "1fr 1fr" : m.tab ? "repeat(3,1fr)" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
+          {team.map((t) => (
+            <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,.6)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,.6)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <h3 style={{ fontSize: m.xs ? 17 : 19, fontWeight: 600, color: C.bush, margin: 0 }}>{t.name}</h3>
+              <p style={{ fontSize: 14, color: C.abbey, margin: 0 }}>{t.role}</p>
+              <a href={`tel:${t.phone.replace(/ /g,"")}`} style={{ fontSize: 14, color: C.cyan, textDecoration: "none", marginTop: 4 }}>{t.phone}</a>
+              <a href={`mailto:${t.email}`} style={{ fontSize: 14, color: C.abbey, textDecoration: "none" }}>{t.email}</a>
+              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                <a href="https://www.facebook.com/people/Benjamin-Emeline-Home-Hunters/100091578297983/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Facebook</a>
+                <a href="https://www.instagram.com/benjamin_emeline_home_hunters" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Instagram</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Nos forces */}
+      <section style={{ background: "#F7F8F5", padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}` }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto" }}>
+          <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>Nos forces</p>
+          <h2 style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 500, color: C.bush, marginBottom: m.xs ? 40 : 56 }}>Expertise, Service, Intégrité</h2>
+          <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
+            {forces.map((f, i) => (
+              <div key={i} style={{ background: C.white, borderRadius: 16, padding: m.xs ? 28 : 36, borderTop: `3px solid ${C.cyan}` }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: `rgba(36,175,197,.12)`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke={C.cyan} strokeWidth="1.5" strokeLinejoin="round"/></svg>
+                </div>
+                <h3 style={{ fontSize: m.xs ? 17 : 20, fontWeight: 600, color: C.bush, marginBottom: 12 }}>{f.title}</h3>
+                <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.7, margin: 0 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section style={{ padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, maxWidth: 1440, margin: "0 auto" }}>
+        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>FAQ</p>
+        <h2 style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 500, color: C.bush, marginBottom: m.xs ? 32 : 48 }}>Pour en savoir plus, consultez notre FAQ</h2>
+        <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 12 }}>
+          {faqs.map((f, i) => (
+            <div key={i} style={{ border: `1px solid rgba(9,38,29,.12)`, borderRadius: 12, overflow: "hidden" }}>
+              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: m.xs ? "16px 20px" : "20px 28px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+                <span style={{ fontSize: m.xs ? 15 : 17, fontWeight: 600, color: C.bush }}>{f.q}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: "transform .3s", transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)" }}><path d="M6 9l6 6 6-6" stroke={C.bush} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              {openFaq === i && (
+                <div style={{ padding: m.xs ? "0 20px 20px" : "0 28px 24px" }}>
+                  <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.7, margin: 0 }}>{f.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{ background: C.bush, padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, textAlign: "center" }}>
+        <h2 style={{ fontSize: "clamp(22px, 4.5vw, 52px)", fontWeight: 500, color: C.white, lineHeight: 1.2, marginBottom: m.xs ? 28 : 40, maxWidth: 700, margin: "0 auto 32px" }}>Prêt à trouver votre maison de rêve ?</h2>
+        <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ alignSelf: "flex-start" }}>Nous contacter</PillBtn>
+      </section>
+
+      <Footer go={go} m={m} px={px} />
+    </main>
+  );
+}
 
 /* ═══════ FOOTER ═══════ */
 function Footer({ go, m, px }) {
