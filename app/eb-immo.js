@@ -298,7 +298,8 @@ function PropCard({ p, onClick, idx = 0, mob }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const title = p.displayTitle || p.title;
 
-  const photos = p.photos?.length > 0 ? p.photos : [{ url: p.thumbnail || fb(idx) }];
+  const rawPhotos = p.photos?.length > 0 ? p.photos : [];
+  const photos = rawPhotos.length > 0 ? rawPhotos : [p.thumbnail || fb(idx)];
   const total = photos.length;
 
   const prev = (e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + total) % total); };
@@ -317,7 +318,7 @@ function PropCard({ p, onClick, idx = 0, mob }) {
       <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
         <img
           key={photoIdx}
-          src={photos[photoIdx]?.url || photos[photoIdx]?.thumbnail || fb(idx)}
+          src={photos[photoIdx] || fb(idx)}
           alt={title}
           onError={(e) => handleImgErr(e, idx)}
           style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
