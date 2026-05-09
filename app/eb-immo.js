@@ -1648,7 +1648,7 @@ function Footer({ go, m, px }) {
       </div>
       <div style={{ borderTop: `1px solid rgba(86,89,90,.3)`, paddingTop: 20, display: "flex", flexDirection: m.mob ? "column" : "row", justifyContent: "space-between", gap: 8 }}>
         <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>© 2025 E&B Immo. Tous droits réservés.</span>
-        <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>Propulsé par Apimo</span>
+        <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>Propulsé par <a href="https://www.linkedin.com/in/theo-gaggio/" target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, textDecoration: "none", fontWeight: 500 }}>Théo G.</a></span>
       </div>
     </footer>
   );
