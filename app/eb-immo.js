@@ -1396,7 +1396,7 @@ function Bien({ props, id, go, m, px }) {
             <div style={{ background: C.cyan, borderRadius: 16, padding: m.xs ? 14 : m.mob ? 16 : 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: m.xs ? 12 : 16, flexWrap: "wrap" }}>
               <div style={{ display: "flex", gap: m.xs ? 10 : 14, alignItems: "center", minWidth: 0 }}>
                 {p.agent?.photo ? (
-                  <img src={p.agent.photo} alt={p.agent.name} style={{ width: m.xs ? 48 : 56, height: m.xs ? 48 : 56, borderRadius: "50%", objectFit: "cover", border: "3px solid #fff", flexShrink: 0 }} />
+                  <img src={p.agent.photo} alt={p.agent.name} style={{ width: m.xs ? 48 : 56, height: m.xs ? 48 : 56, borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "3px solid #fff", flexShrink: 0 }} />
                 ) : (
                   <div style={{ width: m.xs ? 48 : 56, height: m.xs ? 48 : 56, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: m.xs ? 17 : 20, fontWeight: 600, border: "3px solid #fff", flexShrink: 0 }}>EB</div>
                 )}
