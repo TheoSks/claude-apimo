@@ -671,9 +671,9 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             </button>
           </div>
-          <div style={{ minHeight: 160 }}>
+          <div>
             {activeTab === "city" && (
-              <div style={{ padding: "28px 32px" }}>
+              <div style={{ padding: "20px 24px" }}>
                 <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
                   <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
                     onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
@@ -690,7 +690,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
               </div>
             )}
             {activeTab === "types" && (
-              <div style={{ padding: "28px 32px", display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <div style={{ padding: "20px 24px", display: "flex", flexWrap: "wrap", gap: 10 }}>
                 {TYPE_OPTIONS.map(([key, label]) => {
                   const on = sq.types.includes(key);
                   return (
