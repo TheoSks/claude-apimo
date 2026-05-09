@@ -295,15 +295,47 @@ function PillBtn({ children, variant = "outline-cyan", onClick, style: s = {}, h
 function PropCard({ p, onClick, idx = 0, mob }) {
   const area = p.area?.value || p.area?.total || 0;
   const [h, setH] = useState(false);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const title = p.displayTitle || p.title;
+
+  const photos = p.photos?.length > 0 ? p.photos : [{ url: p.thumbnail || fb(idx) }];
+  const total = photos.length;
+
+  const prev = (e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + total) % total); };
+  const next = (e) => { e.stopPropagation(); setPhotoIdx(i => (i + 1) % total); };
+
+  const arrowBtn = (dir, handler) => (
+    <button onClick={handler} style={{ position: "absolute", top: "50%", [dir]: 10, transform: "translateY(-50%)", width: 32, height: 32, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.45)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: h ? 1 : 0, transition: "opacity .25s", zIndex: 2, backdropFilter: "blur(4px)", flexShrink: 0 }}>
+      {dir === "left"
+        ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        : <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+    </button>
+  );
+
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
       <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
-        <img src={p.thumbnail || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s", transform: h ? "scale(1.05)" : "" }} />
-        {p.photos?.length > 1 && (
-          <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 6, padding: "4px 8px", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="#fff"/><path d="M21 15l-5-5L5 21" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            {p.photos.length}
+        <img
+          key={photoIdx}
+          src={photos[photoIdx]?.url || photos[photoIdx]?.thumbnail || fb(idx)}
+          alt={title}
+          onError={(e) => handleImgErr(e, idx)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
+        />
+        {total > 1 && arrowBtn("left", prev)}
+        {total > 1 && arrowBtn("right", next)}
+        {/* Dots */}
+        {total > 1 && total <= 10 && (
+          <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 5, zIndex: 2 }}>
+            {photos.map((_, i) => (
+              <div key={i} onClick={(e) => { e.stopPropagation(); setPhotoIdx(i); }} style={{ width: i === photoIdx ? 16 : 6, height: 6, borderRadius: 3, background: i === photoIdx ? "#fff" : "rgba(255,255,255,.5)", transition: "all .25s", cursor: "pointer" }} />
+            ))}
+          </div>
+        )}
+        {/* Counter for many photos */}
+        {total > 10 && (
+          <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 6, padding: "4px 8px", fontSize: 12, fontWeight: 500 }}>
+            {photoIdx + 1} / {total}
           </div>
         )}
       </div>
@@ -1354,18 +1386,20 @@ function Contact({ go, m, px }) {
 
               {/* ── Step indicator ── */}
               {!sent && (
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-                  {[1, 2].map((s) => (
-                    <React.Fragment key={s}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: step >= s ? C.bush : "rgba(13,14,19,0.1)", color: step >= s ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
-                          {step > s ? <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> : s}
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 32 }}>
+                  {[{ n: 1, label: "Vos coordonnées" }, { n: 2, label: "Votre projet" }].map(({ n, label }, i) => (
+                    <React.Fragment key={n}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: step >= n ? C.cyan : "transparent", border: `2px solid ${step >= n ? C.cyan : "rgba(13,14,19,0.15)"}`, color: step >= n ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
+                          {step > n
+                            ? <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4L13 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            : n}
                         </div>
-                        <span style={{ fontSize: 13, fontWeight: step === s ? 600 : 400, color: step >= s ? C.bush : C.abbey, whiteSpace: "nowrap" }}>
-                          {s === 1 ? "Vos coordonnées" : "Votre projet"}
-                        </span>
+                        <span style={{ fontSize: 12, fontWeight: step === n ? 600 : 400, color: step === n ? C.cyan : C.abbey, whiteSpace: "nowrap", transition: "all .3s" }}>{label}</span>
                       </div>
-                      {s < 2 && <div style={{ flex: 1, height: 1, background: step > s ? C.bush : "rgba(13,14,19,0.1)", transition: "background .3s" }} />}
+                      {i < 1 && (
+                        <div style={{ flex: 1, height: 2, margin: "0 12px", marginBottom: 22, background: `linear-gradient(to right, ${C.cyan} ${step > 1 ? "100%" : "0%"}, rgba(13,14,19,0.12) 0%)`, transition: "background .4s" }} />
+                      )}
                     </React.Fragment>
                   ))}
                 </div>
@@ -1383,7 +1417,7 @@ function Contact({ go, m, px }) {
                   {inp("cp", "Code postal *")}
                   <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
                     <button onClick={() => { if (validateStep1()) setStep(2); }}
-                      style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.bush, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                      style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                       Continuer
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
