@@ -242,24 +242,24 @@ function DualRangeSlider({ min = 0, max = 1500000, step = 10000, valueMin, value
           dragging.current = dMin <= dMax ? "min" : "max";
         }}>
         {/* Dashed grey full track */}
-        <div style={{ position: "absolute", left: 0, right: 0, top: 0, borderTop: "2px dashed #ccc" }} />
+        <div style={{ position: "absolute", left: 0, right: 0, top: 0, borderTop: `2px dashed ${C.bush15}` }} />
         {/* Left handle */}
         <div
           onMouseDown={e => { e.stopPropagation(); dragging.current = "min"; }}
           onTouchStart={e => { e.stopPropagation(); dragging.current = "min"; }}
-          style={{ position: "absolute", top: "50%", left: `${pct(valueMin)}%`, transform: "translate(-50%, -50%)", width: 20, height: 20, borderRadius: "50%", background: "#111", cursor: "grab", zIndex: 2, boxShadow: "0 2px 6px rgba(0,0,0,.3)", touchAction: "none" }} />
+          style={{ position: "absolute", top: "50%", left: `${pct(valueMin)}%`, transform: "translate(-50%, -50%)", width: 20, height: 20, borderRadius: "50%", background: C.bush, cursor: "grab", zIndex: 2, boxShadow: "0 2px 8px rgba(9,38,29,.35)", touchAction: "none" }} />
         {/* Right handle */}
         <div
           onMouseDown={e => { e.stopPropagation(); dragging.current = "max"; }}
           onTouchStart={e => { e.stopPropagation(); dragging.current = "max"; }}
-          style={{ position: "absolute", top: "50%", left: `${pct(valueMax)}%`, transform: "translate(-50%, -50%)", width: 20, height: 20, borderRadius: "50%", background: "#111", cursor: "grab", zIndex: 2, boxShadow: "0 2px 6px rgba(0,0,0,.3)", touchAction: "none" }} />
+          style={{ position: "absolute", top: "50%", left: `${pct(valueMax)}%`, transform: "translate(-50%, -50%)", width: 20, height: 20, borderRadius: "50%", background: C.bush, cursor: "grab", zIndex: 2, boxShadow: "0 2px 8px rgba(9,38,29,.35)", touchAction: "none" }} />
       </div>
       {/* Labels */}
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, fontSize: 13, color: "#aaa" }}>
         <span>{minLabel}</span><span>{endLabel}</span>
       </div>
       {/* Selected range */}
-      <div style={{ textAlign: "center", marginTop: 12, paddingBottom: 28, fontSize: 16, fontWeight: 600, color: "#111" }}>
+      <div style={{ textAlign: "center", marginTop: 12, paddingBottom: 28, fontSize: 16, fontWeight: 600, color: C.bush }}>
         {fmtVal(valueMin)} — {fmtVal(valueMax)}
       </div>
     </div>
@@ -548,15 +548,15 @@ function Home({ props, ld, go, m, px }) {
             {activeTab && (
               <div style={{ background: C.white, borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
                 {/* Tab header row */}
-                <div style={{ display: "flex", alignItems: "stretch", borderBottom: "1px solid #eee" }}>
+                <div style={{ display: "flex", alignItems: "stretch", borderBottom: `1px solid ${C.cinder10}` }}>
                   {TABS.map((t, i) => (
                     <button key={t.key} onClick={() => setActiveTab(t.key)}
-                      style={{ flex: 1, height: 52, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? "1px solid #e8e8e8" : "none", borderBottom: activeTab === t.key ? "2px solid #111" : "2px solid transparent", background: "transparent", color: activeTab === t.key ? "#111" : "#aaa", fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: activeTab === t.key ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      style={{ flex: 1, height: 52, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", borderBottom: activeTab === t.key ? `2px solid ${C.cyan}` : "2px solid transparent", background: "transparent", color: activeTab === t.key ? C.bush : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: activeTab === t.key ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {t.label}
                     </button>
                   ))}
                   {/* Close X */}
-                  <button onClick={() => setActiveTab(null)} style={{ width: 52, flexShrink: 0, border: "none", borderLeft: "1px solid #e8e8e8", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#999" }}>
+                  <button onClick={() => setActiveTab(null)} style={{ width: 52, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                   </button>
                 </div>
@@ -592,7 +592,7 @@ function Home({ props, ld, go, m, px }) {
                         const on = sq.types.includes(key);
                         return (
                           <button key={key} onClick={() => setSq(q => ({ ...q, types: on ? q.types.filter(t => t !== key) : [...q.types, key] }))}
-                            style={{ height: 42, padding: "0 20px", borderRadius: 99, border: `1.5px solid ${on ? "#111" : "#ccc"}`, background: on ? "#111" : "transparent", color: on ? C.white : "#555", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+                            style={{ height: 42, padding: "0 20px", borderRadius: 99, border: `1.5px solid ${on ? C.bush : C.cinder15}`, background: on ? C.bush : "transparent", color: on ? C.white : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
                             {label}
                           </button>
                         );
@@ -619,9 +619,9 @@ function Home({ props, ld, go, m, px }) {
                 </div>
 
                 {/* Footer */}
-                <div style={{ background: "#f9f9f9", borderTop: "1px solid #eee", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
-                  <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: "#666", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
-                  <button onClick={applyAndSearch} style={{ height: 42, padding: "0 28px", border: "none", background: "#111", color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
+                <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
+                  <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
+                  <button onClick={applyAndSearch} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
                 </div>
               </div>
             )}
