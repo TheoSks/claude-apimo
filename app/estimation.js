@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 const C = {
   bush: "#09261D",
@@ -103,35 +103,34 @@ export default function Estimation({ go, m, px }) {
   const [sent, setSent] = useState(false);
   const [estimate, setEstimate] = useState(null);
   const [errors, setErrors] = useState({});
+  // Render-driving state only — changes here trigger conditional rendering
   const [f, setF] = useState({
-    adresse: "",
-    cp: "",
-    ville: "",
     typeBien: "",
-    surface: "",
-    nbPieces: "",
-    nbChambres: "",
-    nbSalleBain: "",
-    etage: "",
-    nbEtages: "",
     connaitAnnee: null,
-    anneeConstruction: "",
     refaisNeuf: null,
     travaux: [],
     materiaux: "",
     caracs: [],
     parking: "",
     annexes: [],
-    visAVis: "",
     vue: "",
-    proprietaire: null,
-    intentionVente: "",
-    nom: "",
-    prenom: "",
-    email: "",
-    telephone: "",
     rgpd: false,
   });
+
+  // Text/number values in refs — no re-render on keystroke, no focus loss
+  const vals = useRef({
+    adresse: "", cp: "", ville: "",
+    surface: "", nbPieces: "", nbChambres: "", nbSalleBain: "",
+    etage: "", nbEtages: "", anneeConstruction: "",
+    nom: "", prenom: "", email: "", telephone: "",
+  });
+
+  // Step 2 next-button validation (updated only when Stepper fires onChange)
+  const [step2Ready, setStep2Ready] = useState({ surface: false, pieces: false });
+  // Year input validity for step 3 next-button
+  const [anneeOk, setAnneeOk] = useState(false);
+  // Contact info captured at submit time for result display
+  const [contactInfo, setContactInfo] = useState({ email: "", telephone: "" });
 
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
   const toggleArr = (k, v) => setF(p => ({ ...p, [k]: p[k].includes(v) ? p[k].filter(x => x !== v) : [...p[k], v] }));
@@ -149,47 +148,49 @@ export default function Estimation({ go, m, px }) {
 
   function startEstimation() {
     const e = {};
-    if (!f.adresse.trim()) e.adresse = true;
-    if (!f.cp.trim()) e.cp = true;
-    if (!f.ville.trim()) e.ville = true;
+    if (!vals.current.adresse.trim()) e.adresse = true;
+    if (!vals.current.cp.trim()) e.cp = true;
+    if (!vals.current.ville.trim()) e.ville = true;
     if (Object.keys(e).length) { setErrors(e); return; }
     setStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function submitFinal() {
+    const v = vals.current;
     const e = {};
-    if (!f.nom.trim()) e.nom = true;
-    if (!f.prenom.trim()) e.prenom = true;
-    if (!f.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = true;
-    if (!f.telephone.trim()) e.telephone = true;
+    if (!v.nom.trim()) e.nom = true;
+    if (!v.prenom.trim()) e.prenom = true;
+    if (!v.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) e.email = true;
+    if (!v.telephone.trim()) e.telephone = true;
     if (!f.rgpd) e.rgpd = true;
     if (Object.keys(e).length) { setErrors(e); return; }
 
     setSending(true);
     try {
-      const est = computeEstimate(f);
+      const fullData = { ...f, ...v };
+      const est = computeEstimate(fullData);
 
       const res = await fetch("/api/estimation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nom: f.nom,
-          prenom: f.prenom,
-          email: f.email,
-          telephone: f.telephone,
-          adresse: f.adresse,
-          cp: f.cp,
-          ville: f.ville,
+          nom: v.nom,
+          prenom: v.prenom,
+          email: v.email,
+          telephone: v.telephone,
+          adresse: v.adresse,
+          cp: v.cp,
+          ville: v.ville,
           typeBien: f.typeBien,
-          surface: f.surface,
-          nbPieces: f.nbPieces,
-          nbChambres: f.nbChambres,
-          nbSalleBain: f.nbSalleBain,
-          etage: f.etage,
-          nbEtages: f.nbEtages,
+          surface: v.surface,
+          nbPieces: v.nbPieces,
+          nbChambres: v.nbChambres,
+          nbSalleBain: v.nbSalleBain,
+          etage: v.etage,
+          nbEtages: v.nbEtages,
           connaitAnnee: f.connaitAnnee,
-          anneeConstruction: f.anneeConstruction,
+          anneeConstruction: v.anneeConstruction,
           refaisNeuf: f.refaisNeuf,
           travaux: f.travaux,
           materiaux: f.materiaux,
@@ -203,6 +204,7 @@ export default function Estimation({ go, m, px }) {
         }),
       });
       if (!res.ok) throw new Error();
+      setContactInfo({ email: v.email, telephone: v.telephone });
       setEstimate(est);
       setSent(true);
       setStep(TOTAL_STEPS);
@@ -277,32 +279,36 @@ export default function Estimation({ go, m, px }) {
     </button>
   );
 
-  /* ── Number stepper ── */
-  const Stepper = ({ label, value, onChange, min = 0, suffix }) => (
+  /* ── Number stepper (self-contained — prevents parent re-render / focus loss) ── */
+  const Stepper = ({ label, initValue = "", onChange, min = 0, suffix }) => {
+    const [val, setVal] = useState(String(initValue));
+    const update = newVal => { const s = String(newVal); setVal(s); onChange(s); };
+    return (
     <div style={{ flex: 1, minWidth: m.xs ? "100%" : 140 }}>
       <label style={{ display: "block", fontSize: m.xs ? 13 : 14, color: C.abbey, marginBottom: 8, fontWeight: 500 }}>{label}</label>
       <div style={{ display: "flex", alignItems: "center", height: 50, border: `1px solid ${C.cinder10}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
         <button
           type="button"
-          onClick={() => onChange(Math.max(min, (Number(value) || 0) - 1))}
+          onClick={() => update(Math.max(min, (Number(val) || 0) - 1))}
           style={{ width: 44, height: "100%", border: "none", background: "transparent", color: C.bush, cursor: "pointer", fontSize: 20, fontWeight: 500 }}
           aria-label="Diminuer">−</button>
         <input
           type="number"
-          value={value}
-          onChange={e => onChange(e.target.value.replace(/[^0-9]/g, ""))}
+          value={val}
+          onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ""); setVal(v); onChange(v); }}
           min={min}
           style={{ flex: 1, height: "100%", border: "none", textAlign: "center", fontFamily: "Urbanist, sans-serif", fontSize: 16, color: C.mine, outline: "none", minWidth: 0, MozAppearance: "textfield" }}
         />
         <button
           type="button"
-          onClick={() => onChange((Number(value) || 0) + 1)}
+          onClick={() => update((Number(val) || 0) + 1)}
           style={{ width: 44, height: "100%", border: "none", background: "transparent", color: C.bush, cursor: "pointer", fontSize: 20, fontWeight: 500 }}
           aria-label="Augmenter">+</button>
         {suffix && <span style={{ paddingRight: 14, fontSize: 13, color: C.abbey }}>{suffix}</span>}
       </div>
     </div>
-  );
+    );
+  };
 
   /* ── Progress bar ── */
   const Progress = () => {
@@ -373,8 +379,8 @@ export default function Estimation({ go, m, px }) {
               <input
                 type="text"
                 placeholder="Ex : 1 rue Jacques Pasquier"
-                value={f.adresse}
-                onChange={e => set("adresse", e.target.value)}
+                defaultValue={vals.current.adresse}
+                onChange={e => { vals.current.adresse = e.target.value; }}
                 style={{ ...baseInput, border: `1px solid ${errors.adresse ? "#e53935" : C.cinder10}` }}
               />
               <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : "120px 1fr", gap: 12 }}>
@@ -383,15 +389,15 @@ export default function Estimation({ go, m, px }) {
                   inputMode="numeric"
                   maxLength={5}
                   placeholder="Code postal"
-                  value={f.cp}
-                  onChange={e => set("cp", e.target.value.replace(/\D/g, "").slice(0, 5))}
+                  defaultValue={vals.current.cp}
+                  onChange={e => { vals.current.cp = e.target.value.replace(/\D/g, "").slice(0, 5); }}
                   style={{ ...baseInput, border: `1px solid ${errors.cp ? "#e53935" : C.cinder10}` }}
                 />
                 <input
                   type="text"
                   placeholder="Ville"
-                  value={f.ville}
-                  onChange={e => set("ville", e.target.value)}
+                  defaultValue={vals.current.ville}
+                  onChange={e => { vals.current.ville = e.target.value; }}
                   style={{ ...baseInput, border: `1px solid ${errors.ville ? "#e53935" : C.cinder10}` }}
                 />
               </div>
@@ -473,18 +479,18 @@ export default function Estimation({ go, m, px }) {
       <WizardWrapper>
         <SectionTitle>Caractéristiques principales</SectionTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <Stepper label="Surface (m²)" value={f.surface} onChange={v => set("surface", v)} min={1} suffix="m²" />
+          <Stepper label="Surface (m²)" initValue={vals.current.surface} onChange={v => { vals.current.surface = v; setStep2Ready(p => ({ ...p, surface: !!v && Number(v) > 0 })); }} min={1} suffix="m²" />
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <Stepper label="Nombre de pièces" value={f.nbPieces} onChange={v => set("nbPieces", v)} min={1} />
-            <Stepper label="Nombre de chambres" value={f.nbChambres} onChange={v => set("nbChambres", v)} min={0} />
+            <Stepper label="Nombre de pièces" initValue={vals.current.nbPieces} onChange={v => { vals.current.nbPieces = v; setStep2Ready(p => ({ ...p, pieces: !!v && Number(v) > 0 })); }} min={1} />
+            <Stepper label="Nombre de chambres" initValue={vals.current.nbChambres} onChange={v => { vals.current.nbChambres = v; }} min={0} />
           </div>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <Stepper label="Salles de bain" value={f.nbSalleBain} onChange={v => set("nbSalleBain", v)} min={0} />
-            {isApart && <Stepper label="Étage du bien" value={f.etage} onChange={v => set("etage", v)} min={0} />}
-            {isApart && <Stepper label="Étages dans l'immeuble" value={f.nbEtages} onChange={v => set("nbEtages", v)} min={0} />}
+            <Stepper label="Salles de bain" initValue={vals.current.nbSalleBain} onChange={v => { vals.current.nbSalleBain = v; }} min={0} />
+            {isApart && <Stepper label="Étage du bien" initValue={vals.current.etage} onChange={v => { vals.current.etage = v; }} min={0} />}
+            {isApart && <Stepper label="Étages dans l'immeuble" initValue={vals.current.nbEtages} onChange={v => { vals.current.nbEtages = v; }} min={0} />}
           </div>
         </div>
-        <ActionBar onNext={next} nextDisabled={!f.surface || !f.nbPieces} />
+        <ActionBar onNext={next} nextDisabled={!step2Ready.surface || !step2Ready.pieces} />
       </WizardWrapper>
     );
   }
@@ -496,7 +502,7 @@ export default function Estimation({ go, m, px }) {
         <SectionTitle>Connaissez-vous l'année de construction ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, marginBottom: 20, flexDirection: m.xs ? "column" : "row" }}>
           <BigCard active={f.connaitAnnee === true} onClick={() => set("connaitAnnee", true)} label="Oui" />
-          <BigCard active={f.connaitAnnee === false} onClick={() => { set("connaitAnnee", false); set("anneeConstruction", ""); }} label="Non" />
+          <BigCard active={f.connaitAnnee === false} onClick={() => { set("connaitAnnee", false); vals.current.anneeConstruction = ""; setAnneeOk(false); }} label="Non" />
         </div>
         {f.connaitAnnee === true && (
           <div>
@@ -506,13 +512,13 @@ export default function Estimation({ go, m, px }) {
               inputMode="numeric"
               maxLength={4}
               placeholder="Ex : 1985"
-              value={f.anneeConstruction}
-              onChange={e => set("anneeConstruction", e.target.value.replace(/\D/g, "").slice(0, 4))}
+              defaultValue={vals.current.anneeConstruction}
+              onChange={e => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); vals.current.anneeConstruction = v; setAnneeOk(v.length === 4); }}
               style={baseInput}
             />
           </div>
         )}
-        <ActionBar onNext={next} nextDisabled={f.connaitAnnee === null || (f.connaitAnnee === true && !f.anneeConstruction)} />
+        <ActionBar onNext={next} nextDisabled={f.connaitAnnee === null || (f.connaitAnnee === true && !anneeOk)} />
       </WizardWrapper>
     );
   }
@@ -639,10 +645,10 @@ export default function Estimation({ go, m, px }) {
           <br />Un agent E&B Immo pourra vous recontacter pour affiner le résultat.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : "1fr 1fr", gap: 14 }}>
-          <input type="text" placeholder="Nom *" value={f.nom} onChange={e => set("nom", e.target.value)} style={{ ...baseInput, border: `1px solid ${errors.nom ? "#e53935" : C.cinder10}` }} />
-          <input type="text" placeholder="Prénom *" value={f.prenom} onChange={e => set("prenom", e.target.value)} style={{ ...baseInput, border: `1px solid ${errors.prenom ? "#e53935" : C.cinder10}` }} />
-          <input type="email" placeholder="Email *" value={f.email} onChange={e => set("email", e.target.value)} style={{ ...baseInput, gridColumn: m.xs ? "auto" : "1 / -1", border: `1px solid ${errors.email ? "#e53935" : C.cinder10}` }} />
-          <input type="tel" placeholder="Téléphone *" value={f.telephone} onChange={e => set("telephone", e.target.value)} style={{ ...baseInput, gridColumn: m.xs ? "auto" : "1 / -1", border: `1px solid ${errors.telephone ? "#e53935" : C.cinder10}` }} />
+          <input type="text" placeholder="Nom *" defaultValue={vals.current.nom} onChange={e => { vals.current.nom = e.target.value; }} style={{ ...baseInput, border: `1px solid ${errors.nom ? "#e53935" : C.cinder10}` }} />
+          <input type="text" placeholder="Prénom *" defaultValue={vals.current.prenom} onChange={e => { vals.current.prenom = e.target.value; }} style={{ ...baseInput, border: `1px solid ${errors.prenom ? "#e53935" : C.cinder10}` }} />
+          <input type="email" placeholder="Email *" defaultValue={vals.current.email} onChange={e => { vals.current.email = e.target.value; }} style={{ ...baseInput, gridColumn: m.xs ? "auto" : "1 / -1", border: `1px solid ${errors.email ? "#e53935" : C.cinder10}` }} />
+          <input type="tel" placeholder="Téléphone *" defaultValue={vals.current.telephone} onChange={e => { vals.current.telephone = e.target.value; }} style={{ ...baseInput, gridColumn: m.xs ? "auto" : "1 / -1", border: `1px solid ${errors.telephone ? "#e53935" : C.cinder10}` }} />
         </div>
         <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 18, cursor: "pointer" }}>
           <input type="checkbox" checked={f.rgpd} onChange={e => set("rgpd", e.target.checked)} style={{ marginTop: 3, width: 18, height: 18, accentColor: C.cyan, cursor: "pointer" }} />
@@ -684,8 +690,8 @@ export default function Estimation({ go, m, px }) {
               </div>
             )}
             <p style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, marginBottom: m.xs ? 20 : 28, lineHeight: 1.6 }}>
-              Un email de confirmation a été envoyé à <strong style={{ color: C.mine }}>{f.email}</strong>.<br />
-              Notre agent prendra contact avec vous au <strong style={{ color: C.mine }}>{f.telephone}</strong> sous peu.
+              Un email de confirmation a été envoyé à <strong style={{ color: C.mine }}>{contactInfo.email}</strong>.<br />
+              Notre agent prendra contact avec vous au <strong style={{ color: C.mine }}>{contactInfo.telephone}</strong> sous peu.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <button
