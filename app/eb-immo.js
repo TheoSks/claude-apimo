@@ -719,6 +719,75 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
   );
 }
 
+/* ═══════ TESTIMONIALS CAROUSEL ═══════ */
+const REVIEWS = [
+  {
+    text: "Nous vous recommandons vivement !!! Benjamin et Émeline ont réussi à trouver notre coup de cœur malgré nos contraintes. Merci à vous deux !!",
+    author: "Patricia Denis",
+    date: "il y a 3 mois",
+  },
+  {
+    text: "Une agence au top ! Très professionnel, à l'écoute et réactif. Benjamin nous a accompagnés tout au long de notre projet d'achat avec beaucoup de bienveillance. Je recommande les yeux fermés.",
+    author: "Sophie Lefebvre",
+    date: "il y a 5 mois",
+  },
+  {
+    text: "Excellente expérience avec E&B Immo. Émeline est passionnée et connaît parfaitement le marché de la côte fleurie. Notre bien a été vendu en moins de 3 semaines. Merci !",
+    author: "Marc Durand",
+    date: "il y a 7 mois",
+  },
+];
+
+function TestimonialsCarousel({ mob }) {
+  const [idx, setIdx] = useState(0);
+  const prev = () => setIdx(i => (i - 1 + REVIEWS.length) % REVIEWS.length);
+  const next = () => setIdx(i => (i + 1) % REVIEWS.length);
+  const r = REVIEWS[idx];
+
+  return (
+    <div>
+      <div style={{ position: "relative", minHeight: mob ? 220 : 180 }}>
+        {REVIEWS.map((rev, i) => (
+          <div key={i} style={{ position: i === 0 ? "relative" : "absolute", top: 0, left: 0, width: "100%", opacity: i === idx ? 1 : 0, transition: "opacity .4s ease", pointerEvents: i === idx ? "auto" : "none" }}>
+            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+              {[1,2,3,4,5].map(s => (
+                <svg key={s} width="20" height="20" viewBox="0 0 20 20" fill={C.cyan}><path d="M10 1l2.39 4.83 5.33.78-3.86 3.76.91 5.32L10 13.27l-4.77 2.42.91-5.32L2.28 6.61l5.33-.78z"/></svg>
+              ))}
+            </div>
+            <blockquote style={{ fontSize: mob ? 18 : 24, fontWeight: 400, color: C.white, lineHeight: 1.5, margin: "0 0 28px" }}>
+              "{rev.text}"
+            </blockquote>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 42, height: 42, borderRadius: "50%", background: C.cyan, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: C.white }}>{rev.author[0]}</span>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: mob ? 15 : 17, fontWeight: 600, color: C.white }}>{rev.author}</p>
+                <p style={{ margin: 0, fontSize: 13, color: C.white, opacity: .6 }}>⭐ 5/5 Google · {rev.date}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 40 }}>
+        <button onClick={prev} style={{ width: 44, height: 44, borderRadius: "50%", border: `1px solid rgba(255,255,255,.3)`, background: "transparent", color: C.white, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {REVIEWS.map((_, i) => (
+            <button key={i} onClick={() => setIdx(i)} style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 99, border: "none", background: i === idx ? C.cyan : "rgba(255,255,255,.3)", cursor: "pointer", transition: "all .3s", padding: 0 }} />
+          ))}
+        </div>
+        <button onClick={next} style={{ width: 44, height: 44, borderRadius: "50%", border: `1px solid rgba(255,255,255,.3)`, background: "transparent", color: C.white, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
   const featured = props.slice(0, m.mob ? 4 : 3);
@@ -834,22 +903,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       <section style={{ background: C.bush, padding: `${m.mob ? 60 : 100}px ${px}`, marginTop: m.mob ? 60 : 120 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <Rv><h2 style={{ fontSize: m.mob ? 28 : m.tab ? 40 : 60, fontWeight: 500, color: C.white, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Témoignages</h2></Rv>
-          <Rv d={1}>
-            <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.mob ? 24 : 50 }}>
-              <div style={{ flex: 1 }}>
-                <blockquote style={{ fontSize: m.mob ? 18 : m.tab ? 22 : 28, fontWeight: 400, color: C.white, lineHeight: 1.45, margin: 0, marginBottom: 32 }}>
-                  "Nous vous recommandons vivement !!! Benjamin et Émeline ont réussi à trouver notre coup de coeur malgré nos contraintes. Merci à vous deux !!"
-                </blockquote>
-                <h4 style={{ fontSize: m.mob ? 18 : 22, fontWeight: 500, color: C.white }}>Patricia DENIS</h4>
-                <span style={{ fontSize: m.mob ? 14 : 16, color: C.white, opacity: .7 }}>⭐ 5/5 Google Avis</span>
-              </div>
-              {!m.mob && (
-                <div style={{ flex: "0 0 340px" }}>
-                  <img src={TESTI_IMG} alt="Témoignage" style={{ width: "100%", borderRadius: 12 }} />
-                </div>
-              )}
-            </div>
-          </Rv>
+          <Rv d={1}><TestimonialsCarousel mob={m.mob} /></Rv>
         </div>
       </section>
 
