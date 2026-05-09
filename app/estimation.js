@@ -168,25 +168,9 @@ export default function Estimation({ go, m, px }) {
 
     setSending(true);
     try {
-      const message = [
-        `--- DEMANDE D'ESTIMATION EN LIGNE ---`,
-        `Type de bien : ${f.typeBien}`,
-        `Surface : ${f.surface} m²`,
-        `Pièces : ${f.nbPieces} | Chambres : ${f.nbChambres} | SDB : ${f.nbSalleBain}`,
-        f.etage ? `Étage : ${f.etage} sur ${f.nbEtages || "?"}` : "",
-        f.anneeConstruction ? `Année de construction : ${f.anneeConstruction}` : "",
-        f.refaisNeuf ? `Refait à neuf : ${f.refaisNeuf}` : "",
-        f.travaux.length ? `Travaux à prévoir : ${f.travaux.join(", ")}` : "",
-        f.materiaux ? `Matériaux : ${f.materiaux}` : "",
-        f.caracs.length ? `Caractéristiques : ${f.caracs.join(", ")}` : "",
-        f.parking ? `Parking : ${f.parking}` : "",
-        f.annexes.length ? `Annexes : ${f.annexes.join(", ")}` : "",
-        f.vue ? `Vue : ${f.vue}` : "",
-        f.proprietaire !== null ? `Propriétaire : ${f.proprietaire ? "Oui" : "Non"}` : "",
-        f.intentionVente ? `Intention de vente : ${f.intentionVente}` : "",
-      ].filter(Boolean).join("\n");
+      const est = computeEstimate(f);
 
-      const res = await fetch("/api/contact", {
+      const res = await fetch("/api/estimation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -195,17 +179,31 @@ export default function Estimation({ go, m, px }) {
           email: f.email,
           telephone: f.telephone,
           adresse: f.adresse,
+          cp: f.cp,
           ville: f.ville,
-          codePostal: f.cp,
           typeBien: f.typeBien,
-          superficie: f.surface,
+          surface: f.surface,
+          nbPieces: f.nbPieces,
           nbChambres: f.nbChambres,
+          nbSalleBain: f.nbSalleBain,
+          etage: f.etage,
+          nbEtages: f.nbEtages,
+          connaitAnnee: f.connaitAnnee,
           anneeConstruction: f.anneeConstruction,
-          message,
+          refaisNeuf: f.refaisNeuf,
+          travaux: f.travaux,
+          materiaux: f.materiaux,
+          caracs: f.caracs,
+          parking: f.parking,
+          annexes: f.annexes,
+          vue: f.vue,
+          estimateLow: est?.low,
+          estimateHigh: est?.high,
+          estimateCenter: est?.center,
         }),
       });
       if (!res.ok) throw new Error();
-      setEstimate(computeEstimate(f));
+      setEstimate(est);
       setSent(true);
       setStep(TOTAL_STEPS);
       window.scrollTo({ top: 0, behavior: "smooth" });
