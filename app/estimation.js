@@ -96,6 +96,67 @@ function computeEstimate(f) {
 
 const fmtP = n => Number(n).toLocaleString("fr-FR") + " €";
 
+/* ════ MODULE-LEVEL COMPONENTS (stable identity — no focus loss) ════ */
+
+function Progress({ step, sent, xs }) {
+  if (step === 0 || sent) return null;
+  const pct = ((step - 1) / (TOTAL_STEPS - 1)) * 100;
+  return (
+    <div style={{ marginBottom: xs ? 24 : 36 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, fontSize: xs ? 13 : 14, color: C.abbey }}>
+        <span>Étape {step} / {TOTAL_STEPS - 1}</span>
+        <span>{Math.round(pct)} %</span>
+      </div>
+      <div style={{ width: "100%", height: 6, background: C.cinder10, borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: C.cyan, transition: "width .35s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+function WizardWrapper({ children, m, px, step, sent }) {
+  return (
+    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120, background: C.bg, minHeight: "100vh" }}>
+      <section style={{ padding: `${m.xs ? 24 : 40}px ${px} ${m.xs ? 60 : 100}px`, maxWidth: 760, margin: "0 auto" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: m.xs ? 20 : m.mob ? 28 : 40, boxShadow: "0 12px 40px rgba(9,38,29,0.06)" }}>
+          <Progress step={step} sent={sent} xs={m.xs} />
+          {children}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function Stepper({ label, initValue = "", onChange, min = 0, suffix, xs }) {
+  const [val, setVal] = useState(String(initValue));
+  const update = newVal => { const s = String(newVal); setVal(s); onChange(s); };
+  return (
+    <div style={{ flex: 1, minWidth: xs ? "100%" : 140 }}>
+      <label style={{ display: "block", fontSize: xs ? 13 : 14, color: C.abbey, marginBottom: 8, fontWeight: 500 }}>{label}</label>
+      <div style={{ display: "flex", alignItems: "center", height: 50, border: `1px solid ${C.cinder10}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
+        <button
+          type="button"
+          onClick={() => update(Math.max(min, (Number(val) || 0) - 1))}
+          style={{ width: 44, height: "100%", border: "none", background: "transparent", color: C.bush, cursor: "pointer", fontSize: 20, fontWeight: 500 }}
+          aria-label="Diminuer">−</button>
+        <input
+          type="number"
+          value={val}
+          onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ""); setVal(v); onChange(v); }}
+          min={min}
+          style={{ flex: 1, height: "100%", border: "none", textAlign: "center", fontFamily: "Urbanist, sans-serif", fontSize: 16, color: C.mine, outline: "none", minWidth: 0, MozAppearance: "textfield" }}
+        />
+        <button
+          type="button"
+          onClick={() => update((Number(val) || 0) + 1)}
+          style={{ width: 44, height: "100%", border: "none", background: "transparent", color: C.bush, cursor: "pointer", fontSize: 20, fontWeight: 500 }}
+          aria-label="Augmenter">+</button>
+        {suffix && <span style={{ paddingRight: 14, fontSize: 13, color: C.abbey }}>{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════ ESTIMATION COMPONENT ════════════════════ */
 export default function Estimation({ go, m, px }) {
   const [step, setStep] = useState(0); // 0 = landing
@@ -279,54 +340,6 @@ export default function Estimation({ go, m, px }) {
     </button>
   );
 
-  /* ── Number stepper (self-contained — prevents parent re-render / focus loss) ── */
-  const Stepper = ({ label, initValue = "", onChange, min = 0, suffix }) => {
-    const [val, setVal] = useState(String(initValue));
-    const update = newVal => { const s = String(newVal); setVal(s); onChange(s); };
-    return (
-    <div style={{ flex: 1, minWidth: m.xs ? "100%" : 140 }}>
-      <label style={{ display: "block", fontSize: m.xs ? 13 : 14, color: C.abbey, marginBottom: 8, fontWeight: 500 }}>{label}</label>
-      <div style={{ display: "flex", alignItems: "center", height: 50, border: `1px solid ${C.cinder10}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
-        <button
-          type="button"
-          onClick={() => update(Math.max(min, (Number(val) || 0) - 1))}
-          style={{ width: 44, height: "100%", border: "none", background: "transparent", color: C.bush, cursor: "pointer", fontSize: 20, fontWeight: 500 }}
-          aria-label="Diminuer">−</button>
-        <input
-          type="number"
-          value={val}
-          onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ""); setVal(v); onChange(v); }}
-          min={min}
-          style={{ flex: 1, height: "100%", border: "none", textAlign: "center", fontFamily: "Urbanist, sans-serif", fontSize: 16, color: C.mine, outline: "none", minWidth: 0, MozAppearance: "textfield" }}
-        />
-        <button
-          type="button"
-          onClick={() => update((Number(val) || 0) + 1)}
-          style={{ width: 44, height: "100%", border: "none", background: "transparent", color: C.bush, cursor: "pointer", fontSize: 20, fontWeight: 500 }}
-          aria-label="Augmenter">+</button>
-        {suffix && <span style={{ paddingRight: 14, fontSize: 13, color: C.abbey }}>{suffix}</span>}
-      </div>
-    </div>
-    );
-  };
-
-  /* ── Progress bar ── */
-  const Progress = () => {
-    if (step === 0 || sent) return null;
-    const pct = ((step - 1) / (TOTAL_STEPS - 1)) * 100;
-    return (
-      <div style={{ marginBottom: m.xs ? 24 : 36 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, fontSize: m.xs ? 13 : 14, color: C.abbey }}>
-          <span>Étape {step} / {TOTAL_STEPS - 1}</span>
-          <span>{Math.round(pct)} %</span>
-        </div>
-        <div style={{ width: "100%", height: 6, background: C.cinder10, borderRadius: 99, overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: C.cyan, transition: "width .35s ease" }} />
-        </div>
-      </div>
-    );
-  };
-
   /* ── Action bar (back / next / submit) ── */
   const ActionBar = ({ onNext, nextDisabled, nextLabel = "Continuer", showBack = true, isSubmit = false }) => (
     <div style={{ display: "flex", gap: 12, marginTop: m.xs ? 24 : 36, flexDirection: m.xs ? "column-reverse" : "row" }}>
@@ -434,22 +447,10 @@ export default function Estimation({ go, m, px }) {
     );
   }
 
-  /* ─── Wizard wrapper for steps 1+ ─── */
-  const WizardWrapper = ({ children }) => (
-    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120, background: C.bg, minHeight: "100vh" }}>
-      <section style={{ padding: `${m.xs ? 24 : 40}px ${px} ${m.xs ? 60 : 100}px`, maxWidth: 760, margin: "0 auto" }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: m.xs ? 20 : m.mob ? 28 : 40, boxShadow: "0 12px 40px rgba(9,38,29,0.06)" }}>
-          <Progress />
-          {children}
-        </div>
-      </section>
-    </main>
-  );
-
   /* ─── Step 1 : TYPE DE BIEN ─── */
   if (step === 1) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>De quel type de bien s'agit-il ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, flexDirection: m.xs ? "column" : "row" }}>
           <BigCard
@@ -476,18 +477,18 @@ export default function Estimation({ go, m, px }) {
   if (step === 2) {
     const isApart = f.typeBien === "appartement";
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Caractéristiques principales</SectionTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <Stepper label="Surface (m²)" initValue={vals.current.surface} onChange={v => { vals.current.surface = v; setStep2Ready(p => ({ ...p, surface: !!v && Number(v) > 0 })); }} min={1} suffix="m²" />
+          <Stepper xs={m.xs} label="Surface (m²)" initValue={vals.current.surface} onChange={v => { vals.current.surface = v; setStep2Ready(p => ({ ...p, surface: !!v && Number(v) > 0 })); }} min={1} suffix="m²" />
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <Stepper label="Nombre de pièces" initValue={vals.current.nbPieces} onChange={v => { vals.current.nbPieces = v; setStep2Ready(p => ({ ...p, pieces: !!v && Number(v) > 0 })); }} min={1} />
-            <Stepper label="Nombre de chambres" initValue={vals.current.nbChambres} onChange={v => { vals.current.nbChambres = v; }} min={0} />
+            <Stepper xs={m.xs} label="Nombre de pièces" initValue={vals.current.nbPieces} onChange={v => { vals.current.nbPieces = v; setStep2Ready(p => ({ ...p, pieces: !!v && Number(v) > 0 })); }} min={1} />
+            <Stepper xs={m.xs} label="Nombre de chambres" initValue={vals.current.nbChambres} onChange={v => { vals.current.nbChambres = v; }} min={0} />
           </div>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <Stepper label="Salles de bain" initValue={vals.current.nbSalleBain} onChange={v => { vals.current.nbSalleBain = v; }} min={0} />
-            {isApart && <Stepper label="Étage du bien" initValue={vals.current.etage} onChange={v => { vals.current.etage = v; }} min={0} />}
-            {isApart && <Stepper label="Étages dans l'immeuble" initValue={vals.current.nbEtages} onChange={v => { vals.current.nbEtages = v; }} min={0} />}
+            <Stepper xs={m.xs} label="Salles de bain" initValue={vals.current.nbSalleBain} onChange={v => { vals.current.nbSalleBain = v; }} min={0} />
+            {isApart && <Stepper xs={m.xs} label="Étage du bien" initValue={vals.current.etage} onChange={v => { vals.current.etage = v; }} min={0} />}
+            {isApart && <Stepper xs={m.xs} label="Étages dans l'immeuble" initValue={vals.current.nbEtages} onChange={v => { vals.current.nbEtages = v; }} min={0} />}
           </div>
         </div>
         <ActionBar onNext={next} nextDisabled={!step2Ready.surface || !step2Ready.pieces} />
@@ -498,7 +499,7 @@ export default function Estimation({ go, m, px }) {
   /* ─── Step 3 : ANNÉE DE CONSTRUCTION ─── */
   if (step === 3) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Connaissez-vous l'année de construction ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, marginBottom: 20, flexDirection: m.xs ? "column" : "row" }}>
           <BigCard active={f.connaitAnnee === true} onClick={() => set("connaitAnnee", true)} label="Oui" />
@@ -526,7 +527,7 @@ export default function Estimation({ go, m, px }) {
   /* ─── Step 4 : ÉTAT / TRAVAUX ─── */
   if (step === 4) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Le bien est-il refait à neuf ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, marginBottom: 28, flexDirection: m.xs ? "column" : "row" }}>
           <BigCard active={f.refaisNeuf === "oui"} onClick={() => { set("refaisNeuf", "oui"); set("travaux", []); }} label="Oui" subtitle="Aucun travaux à prévoir" />
@@ -561,7 +562,7 @@ export default function Estimation({ go, m, px }) {
   /* ─── Step 5 : MATÉRIAUX & CARACTÉRISTIQUES ─── */
   if (step === 5) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Quel est le standing du bien ?</SectionTitle>
         <p style={{ fontSize: 14, color: C.abbey, marginBottom: 14, fontWeight: 500 }}>Qualité des matériaux</p>
         <div style={{ display: "flex", gap: m.xs ? 8 : 14, marginBottom: 28, flexDirection: m.xs ? "column" : "row" }}>
@@ -589,7 +590,7 @@ export default function Estimation({ go, m, px }) {
   /* ─── Step 6 : ANNEXES ─── */
   if (step === 6) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Le bien dispose-t-il d'annexes ?</SectionTitle>
         <p style={{ fontSize: 14, color: C.abbey, marginBottom: 14, textAlign: "center" }}>Cochez les éléments présents</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
@@ -605,7 +606,7 @@ export default function Estimation({ go, m, px }) {
   /* ─── Step 7 : VIS-À-VIS / VUE ─── */
   if (step === 7) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Quelle est la vue du bien ?</SectionTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {VIS_VUE.map(([k, l]) => (
@@ -638,7 +639,7 @@ export default function Estimation({ go, m, px }) {
   /* ─── Step 8 : COORDONNÉES ─── */
   if (step === 8) {
     return (
-      <WizardWrapper>
+      <WizardWrapper m={m} px={px} step={step} sent={sent}>
         <SectionTitle>Recevez votre estimation</SectionTitle>
         <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, textAlign: "center", marginBottom: m.xs ? 24 : 32, lineHeight: 1.6 }}>
           Renseignez vos coordonnées pour découvrir l'estimation de votre bien.
