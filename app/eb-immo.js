@@ -934,18 +934,20 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
 
   return (
     <main style={{ paddingTop: m.mob ? 80 : 120 }}>
-      {/* Search bar band */}
-      <div style={{ background: C.bush, padding: `24px ${px} 0` }}>
-        <FilterBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => {}} m={m} />
-      </div>
+      <div style={{ background: C.bush, padding: `24px ${px} 24px` }} />
 
       <section style={{ padding: `40px ${px} 80px`, maxWidth: 1440, margin: "0 auto" }}>
         <Rv>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
             <h1 style={{ fontSize: m.mob ? 30 : m.tab ? 44 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15, margin: 0 }}>Nos propriétés</h1>
             <span style={{ fontSize: m.mob ? 15 : 17, color: C.abbey }}>
               {ld ? "Chargement..." : `${fl.length} bien${fl.length > 1 ? "s" : ""} trouvé${fl.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
             </span>
+          </div>
+        </Rv>
+        <Rv>
+          <div style={{ marginBottom: 32 }}>
+            <FilterBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => {}} m={m} />
           </div>
         </Rv>
 
