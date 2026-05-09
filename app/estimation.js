@@ -157,6 +157,98 @@ function Stepper({ label, initValue = "", onChange, min = 0, suffix, xs }) {
   );
 }
 
+/* ════════════════════ MODULE-LEVEL UI COMPONENTS ════════════════════ */
+
+function SectionTitle({ children, xs }) {
+  return (
+    <h2 style={{ fontSize: "clamp(22px, 4.5vw, 34px)", fontWeight: 600, color: C.bush, lineHeight: 1.2, marginBottom: xs ? 20 : 28, textAlign: "center" }}>
+      {children}
+    </h2>
+  );
+}
+
+function BigCard({ active, onClick, icon, label, subtitle, xs }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        padding: xs ? "20px 14px" : "32px 24px",
+        border: `2px solid ${active ? C.cyan : C.cinder15}`,
+        borderRadius: 16,
+        background: active ? "rgba(36,175,197,0.08)" : "#fff",
+        color: active ? C.bush : C.mine,
+        cursor: "pointer",
+        fontFamily: "Urbanist, sans-serif",
+        textAlign: "center",
+        transition: "all .2s",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: xs ? 10 : 14,
+      }}>
+      {icon && (
+        <div style={{ width: xs ? 48 : 64, height: xs ? 48 : 64, borderRadius: "50%", background: active ? C.cyan : "rgba(36,175,197,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: active ? "#fff" : C.cyan, transition: "all .2s" }}>
+          {icon}
+        </div>
+      )}
+      <div>
+        <div style={{ fontSize: xs ? 15 : 18, fontWeight: 600 }}>{label}</div>
+        {subtitle && <div style={{ fontSize: xs ? 12 : 13, color: C.abbey, marginTop: 4 }}>{subtitle}</div>}
+      </div>
+    </button>
+  );
+}
+
+function Pill({ active, onClick, children, xs }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "12px 20px",
+        border: `1.5px solid ${active ? C.cyan : C.cinder15}`,
+        borderRadius: 99,
+        background: active ? C.cyan : "#fff",
+        color: active ? "#fff" : C.mine,
+        fontFamily: "Urbanist, sans-serif",
+        fontSize: xs ? 13 : 14,
+        fontWeight: 500,
+        cursor: "pointer",
+        transition: "all .2s",
+        whiteSpace: "nowrap",
+      }}>
+      {children}
+    </button>
+  );
+}
+
+function ActionBar({ onNext, onBack, nextDisabled, nextLabel = "Continuer", showBack = true, isSubmit = false, sending, xs }) {
+  return (
+    <div style={{ display: "flex", gap: 12, marginTop: xs ? 24 : 36, flexDirection: xs ? "column" : "row" }}>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={nextDisabled || sending}
+        style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: nextDisabled ? "#bdbdbd" : C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: nextDisabled || sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }}>
+        {sending && isSubmit ? "Envoi en cours…" : nextLabel}
+        {!sending && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </button>
+      {showBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          style={{ height: 52, padding: "0 22px", borderRadius: 12, border: `1px solid ${C.cinder15}`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 15, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Retour
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ════════════════════ ESTIMATION COMPONENT ════════════════════ */
 export default function Estimation({ go, m, px }) {
   const [step, setStep] = useState(0); // 0 = landing
@@ -277,92 +369,6 @@ export default function Estimation({ go, m, px }) {
     }
   }
 
-  /* ── Section title ── */
-  const SectionTitle = ({ children }) => (
-    <h2 style={{ fontSize: "clamp(22px, 4.5vw, 34px)", fontWeight: 600, color: C.bush, lineHeight: 1.2, marginBottom: m.xs ? 20 : 28, textAlign: "center" }}>
-      {children}
-    </h2>
-  );
-
-  /* ── Big card option (radio-like) ── */
-  const BigCard = ({ active, onClick, icon, label, subtitle }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        flex: 1,
-        minWidth: 0,
-        padding: m.xs ? "20px 14px" : "32px 24px",
-        border: `2px solid ${active ? C.cyan : C.cinder15}`,
-        borderRadius: 16,
-        background: active ? "rgba(36,175,197,0.08)" : "#fff",
-        color: active ? C.bush : C.mine,
-        cursor: "pointer",
-        fontFamily: "Urbanist, sans-serif",
-        textAlign: "center",
-        transition: "all .2s",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: m.xs ? 10 : 14,
-      }}>
-      {icon && (
-        <div style={{ width: m.xs ? 48 : 64, height: m.xs ? 48 : 64, borderRadius: "50%", background: active ? C.cyan : "rgba(36,175,197,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: active ? "#fff" : C.cyan, transition: "all .2s" }}>
-          {icon}
-        </div>
-      )}
-      <div>
-        <div style={{ fontSize: m.xs ? 15 : 18, fontWeight: 600 }}>{label}</div>
-        {subtitle && <div style={{ fontSize: m.xs ? 12 : 13, color: C.abbey, marginTop: 4 }}>{subtitle}</div>}
-      </div>
-    </button>
-  );
-
-  /* ── Pill choice (for groups of options) ── */
-  const Pill = ({ active, onClick, children }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        padding: "12px 20px",
-        border: `1.5px solid ${active ? C.cyan : C.cinder15}`,
-        borderRadius: 99,
-        background: active ? C.cyan : "#fff",
-        color: active ? "#fff" : C.mine,
-        fontFamily: "Urbanist, sans-serif",
-        fontSize: m.xs ? 13 : 14,
-        fontWeight: 500,
-        cursor: "pointer",
-        transition: "all .2s",
-        whiteSpace: "nowrap",
-      }}>
-      {children}
-    </button>
-  );
-
-  /* ── Action bar (back / next / submit) ── */
-  const ActionBar = ({ onNext, nextDisabled, nextLabel = "Continuer", showBack = true, isSubmit = false }) => (
-    <div style={{ display: "flex", gap: 12, marginTop: m.xs ? 24 : 36, flexDirection: m.xs ? "column-reverse" : "row" }}>
-      {showBack && (
-        <button
-          type="button"
-          onClick={back}
-          style={{ height: 52, padding: "0 22px", borderRadius: 12, border: `1px solid ${C.cinder15}`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 15, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          Retour
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={onNext || next}
-        disabled={nextDisabled || sending}
-        style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: nextDisabled ? "#bdbdbd" : C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: nextDisabled || sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }}>
-        {sending && isSubmit ? "Envoi en cours…" : nextLabel}
-        {!sending && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-      </button>
-    </div>
-  );
-
   /* ════════════════════ RENDER ════════════════════ */
 
   /* ─── Step 0 : LANDING ─── */
@@ -451,9 +457,10 @@ export default function Estimation({ go, m, px }) {
   if (step === 1) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>De quel type de bien s'agit-il ?</SectionTitle>
+        <SectionTitle xs={m.xs}>De quel type de bien s'agit-il ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, flexDirection: m.xs ? "column" : "row" }}>
           <BigCard
+            xs={m.xs}
             active={f.typeBien === "maison"}
             onClick={() => set("typeBien", "maison")}
             label="Maison"
@@ -461,6 +468,7 @@ export default function Estimation({ go, m, px }) {
             icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3l9 9M5 10v10h14V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           />
           <BigCard
+            xs={m.xs}
             active={f.typeBien === "appartement"}
             onClick={() => set("typeBien", "appartement")}
             label="Appartement"
@@ -468,7 +476,7 @@ export default function Estimation({ go, m, px }) {
             icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M4 21V8l8-5 8 5v13M9 21V12h6v9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           />
         </div>
-        <ActionBar onNext={next} nextDisabled={!f.typeBien} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} nextDisabled={!f.typeBien} />
       </WizardWrapper>
     );
   }
@@ -478,7 +486,7 @@ export default function Estimation({ go, m, px }) {
     const isApart = f.typeBien === "appartement";
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Caractéristiques principales</SectionTitle>
+        <SectionTitle xs={m.xs}>Caractéristiques principales</SectionTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <Stepper xs={m.xs} label="Surface (m²)" initValue={vals.current.surface} onChange={v => { vals.current.surface = v; setStep2Ready(p => ({ ...p, surface: !!v && Number(v) > 0 })); }} min={1} suffix="m²" />
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -491,7 +499,7 @@ export default function Estimation({ go, m, px }) {
             {isApart && <Stepper xs={m.xs} label="Étages dans l'immeuble" initValue={vals.current.nbEtages} onChange={v => { vals.current.nbEtages = v; }} min={0} />}
           </div>
         </div>
-        <ActionBar onNext={next} nextDisabled={!step2Ready.surface || !step2Ready.pieces} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} nextDisabled={!step2Ready.surface || !step2Ready.pieces} />
       </WizardWrapper>
     );
   }
@@ -500,10 +508,10 @@ export default function Estimation({ go, m, px }) {
   if (step === 3) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Connaissez-vous l'année de construction ?</SectionTitle>
+        <SectionTitle xs={m.xs}>Connaissez-vous l'année de construction ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, marginBottom: 20, flexDirection: m.xs ? "column" : "row" }}>
-          <BigCard active={f.connaitAnnee === true} onClick={() => set("connaitAnnee", true)} label="Oui" />
-          <BigCard active={f.connaitAnnee === false} onClick={() => { set("connaitAnnee", false); vals.current.anneeConstruction = ""; setAnneeOk(false); }} label="Non" />
+          <BigCard xs={m.xs} active={f.connaitAnnee === true} onClick={() => set("connaitAnnee", true)} label="Oui" />
+          <BigCard xs={m.xs} active={f.connaitAnnee === false} onClick={() => { set("connaitAnnee", false); vals.current.anneeConstruction = ""; setAnneeOk(false); }} label="Non" />
         </div>
         {f.connaitAnnee === true && (
           <div>
@@ -519,7 +527,7 @@ export default function Estimation({ go, m, px }) {
             />
           </div>
         )}
-        <ActionBar onNext={next} nextDisabled={f.connaitAnnee === null || (f.connaitAnnee === true && !anneeOk)} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} nextDisabled={f.connaitAnnee === null || (f.connaitAnnee === true && !anneeOk)} />
       </WizardWrapper>
     );
   }
@@ -528,10 +536,10 @@ export default function Estimation({ go, m, px }) {
   if (step === 4) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Le bien est-il refait à neuf ?</SectionTitle>
+        <SectionTitle xs={m.xs}>Le bien est-il refait à neuf ?</SectionTitle>
         <div style={{ display: "flex", gap: m.xs ? 12 : 20, marginBottom: 28, flexDirection: m.xs ? "column" : "row" }}>
-          <BigCard active={f.refaisNeuf === "oui"} onClick={() => { set("refaisNeuf", "oui"); set("travaux", []); }} label="Oui" subtitle="Aucun travaux à prévoir" />
-          <BigCard active={f.refaisNeuf === "non"} onClick={() => set("refaisNeuf", "non")} label="Non" subtitle="Travaux à prévoir" />
+          <BigCard xs={m.xs} active={f.refaisNeuf === "oui"} onClick={() => { set("refaisNeuf", "oui"); set("travaux", []); }} label="Oui" subtitle="Aucun travaux à prévoir" />
+          <BigCard xs={m.xs} active={f.refaisNeuf === "non"} onClick={() => set("refaisNeuf", "non")} label="Non" subtitle="Travaux à prévoir" />
         </div>
         {f.refaisNeuf === "non" && (
           <>
@@ -540,7 +548,7 @@ export default function Estimation({ go, m, px }) {
               <p style={{ fontSize: 13, color: C.abbey, marginBottom: 10, fontWeight: 500 }}>Gros travaux</p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TRAVAUX_GROS.map(([k, l]) => (
-                  <Pill key={k} active={f.travaux.includes(k)} onClick={() => toggleArr("travaux", k)}>{l}</Pill>
+                  <Pill key={k} xs={m.xs} active={f.travaux.includes(k)} onClick={() => toggleArr("travaux", k)}>{l}</Pill>
                 ))}
               </div>
             </div>
@@ -548,13 +556,13 @@ export default function Estimation({ go, m, px }) {
               <p style={{ fontSize: 13, color: C.abbey, marginBottom: 10, fontWeight: 500 }}>Petits travaux</p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TRAVAUX_PETITS.map(([k, l]) => (
-                  <Pill key={k} active={f.travaux.includes(k)} onClick={() => toggleArr("travaux", k)}>{l}</Pill>
+                  <Pill key={k} xs={m.xs} active={f.travaux.includes(k)} onClick={() => toggleArr("travaux", k)}>{l}</Pill>
                 ))}
               </div>
             </div>
           </>
         )}
-        <ActionBar onNext={next} nextDisabled={f.refaisNeuf === null} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} nextDisabled={f.refaisNeuf === null} />
       </WizardWrapper>
     );
   }
@@ -563,26 +571,26 @@ export default function Estimation({ go, m, px }) {
   if (step === 5) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Quel est le standing du bien ?</SectionTitle>
+        <SectionTitle xs={m.xs}>Quel est le standing du bien ?</SectionTitle>
         <p style={{ fontSize: 14, color: C.abbey, marginBottom: 14, fontWeight: 500 }}>Qualité des matériaux</p>
         <div style={{ display: "flex", gap: m.xs ? 8 : 14, marginBottom: 28, flexDirection: m.xs ? "column" : "row" }}>
           {[["standard", "Standard"], ["moyen", "Moyen"], ["haut", "Haut de gamme"]].map(([k, l]) => (
-            <BigCard key={k} active={f.materiaux === k} onClick={() => set("materiaux", k)} label={l} />
+            <BigCard key={k} xs={m.xs} active={f.materiaux === k} onClick={() => set("materiaux", k)} label={l} />
           ))}
         </div>
         <p style={{ fontSize: 14, color: C.abbey, marginBottom: 10, fontWeight: 500 }}>Caractéristiques particulières</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
           {CARACS.map(([k, l]) => (
-            <Pill key={k} active={f.caracs.includes(k)} onClick={() => toggleArr("caracs", k)}>{l}</Pill>
+            <Pill key={k} xs={m.xs} active={f.caracs.includes(k)} onClick={() => toggleArr("caracs", k)}>{l}</Pill>
           ))}
         </div>
         <p style={{ fontSize: 14, color: C.abbey, marginBottom: 10, fontWeight: 500 }}>Stationnement</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {PARKING.map(([k, l]) => (
-            <Pill key={k} active={f.parking === k} onClick={() => set("parking", f.parking === k ? "" : k)}>{l}</Pill>
+            <Pill key={k} xs={m.xs} active={f.parking === k} onClick={() => set("parking", f.parking === k ? "" : k)}>{l}</Pill>
           ))}
         </div>
-        <ActionBar onNext={next} nextDisabled={!f.materiaux} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} nextDisabled={!f.materiaux} />
       </WizardWrapper>
     );
   }
@@ -591,14 +599,14 @@ export default function Estimation({ go, m, px }) {
   if (step === 6) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Le bien dispose-t-il d'annexes ?</SectionTitle>
+        <SectionTitle xs={m.xs}>Le bien dispose-t-il d'annexes ?</SectionTitle>
         <p style={{ fontSize: 14, color: C.abbey, marginBottom: 14, textAlign: "center" }}>Cochez les éléments présents</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
           {ANNEXES.map(([k, l]) => (
-            <Pill key={k} active={f.annexes.includes(k)} onClick={() => toggleArr("annexes", k)}>{l}</Pill>
+            <Pill key={k} xs={m.xs} active={f.annexes.includes(k)} onClick={() => toggleArr("annexes", k)}>{l}</Pill>
           ))}
         </div>
-        <ActionBar onNext={next} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} />
       </WizardWrapper>
     );
   }
@@ -607,7 +615,7 @@ export default function Estimation({ go, m, px }) {
   if (step === 7) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Quelle est la vue du bien ?</SectionTitle>
+        <SectionTitle xs={m.xs}>Quelle est la vue du bien ?</SectionTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {VIS_VUE.map(([k, l]) => (
             <button
@@ -631,7 +639,7 @@ export default function Estimation({ go, m, px }) {
             </button>
           ))}
         </div>
-        <ActionBar onNext={next} nextDisabled={!f.vue} />
+        <ActionBar onNext={next} onBack={back} sending={sending} xs={m.xs} nextDisabled={!f.vue} />
       </WizardWrapper>
     );
   }
@@ -640,7 +648,7 @@ export default function Estimation({ go, m, px }) {
   if (step === 8) {
     return (
       <WizardWrapper m={m} px={px} step={step} sent={sent}>
-        <SectionTitle>Recevez votre estimation</SectionTitle>
+        <SectionTitle xs={m.xs}>Recevez votre estimation</SectionTitle>
         <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, textAlign: "center", marginBottom: m.xs ? 24 : 32, lineHeight: 1.6 }}>
           Renseignez vos coordonnées pour découvrir l'estimation de votre bien.
           <br />Un agent E&B Immo pourra vous recontacter pour affiner le résultat.
@@ -658,7 +666,7 @@ export default function Estimation({ go, m, px }) {
           </span>
         </label>
         {errors.submit && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 12, textAlign: "center" }}>{errors.submit}</p>}
-        <ActionBar onNext={submitFinal} nextLabel="Voir mon estimation" isSubmit />
+        <ActionBar onNext={submitFinal} onBack={back} sending={sending} xs={m.xs} nextLabel="Voir mon estimation" isSubmit />
       </WizardWrapper>
     );
   }
