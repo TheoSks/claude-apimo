@@ -1024,23 +1024,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", alignItems: "center", gap: m.xs ? 32 : m.mob ? 40 : m.md ? 50 : 80, maxWidth: 1440, margin: "0 auto", padding: m.mob ? `${m.xs ? 48 : 60}px ${px}` : `0 ${px}` }}>
 
           {/* Images */}
-          <div style={{ position: "relative", flexShrink: 0, width: m.mob ? "100%" : m.tab ? 320 : m.lg ? 420 : 500, height: m.xs ? 320 : m.sm ? 380 : m.tab ? 480 : m.lg ? 580 : 680 }}>
-            {/* Grand cercle — maison */}
-            <div style={{ position: "absolute", top: 0, left: 0, width: "82%", aspectRatio: "1/1", borderRadius: "50%", overflow: "hidden" }}>
-              <img
-                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80"
-                alt="Maison"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
-            {/* Petit cercle — agent */}
-            <div style={{ position: "absolute", bottom: 0, right: 0, width: "42%", aspectRatio: "1/1", borderRadius: "50%", overflow: "hidden", border: `5px solid ${C.bush}` }}>
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
-                alt="Agent"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
+          <div style={{ flexShrink: 0, width: m.mob ? "100%" : m.tab ? 320 : m.lg ? 420 : 500 }}>
+            <img src={CTA_IMG} alt="Immobilier" style={{ width: "100%", display: "block" }} />
           </div>
 
           {/* Text */}
