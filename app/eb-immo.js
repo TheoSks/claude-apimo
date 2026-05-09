@@ -359,17 +359,35 @@ function PropCard({ p, onClick, idx = 0, mob }) {
 function PropRow({ p, onClick, idx = 0, mob }) {
   const area = p.area?.value || p.area?.total || 0;
   const [h, setH] = useState(false);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const title = p.displayTitle || p.title;
+
+  const photos = p.photos?.length > 0 ? p.photos : [p.thumbnail || fb(idx)];
+  const total = photos.length;
+  const prevPhoto = (e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + total) % total); };
+  const nextPhoto = (e) => { e.stopPropagation(); setPhotoIdx(i => (i + 1) % total); };
+
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{ display: "flex", flexDirection: mob ? "column" : "row", gap: mob ? 20 : 30, paddingBottom: mob ? 32 : 50, borderBottom: `1px solid ${C.cinder50}`, cursor: "pointer" }}>
       <div style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: mob ? 220 : 380, position: "relative" }}>
-        <img src={p.thumbnail || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s", transform: h ? "scale(1.03)" : "" }} />
-        {p.photos?.length > 1 && (
-          <div style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 8, padding: "5px 10px", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" strokeWidth="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="#fff"/><path d="M21 15l-5-5L5 21" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            {p.photos.length}
-          </div>
+        <img key={photoIdx} src={photos[photoIdx] || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s, opacity .3s", transform: h ? "scale(1.03)" : "" }} />
+        {total > 1 && (
+          <>
+            <button onClick={prevPhoto} style={{ position: "absolute", top: "50%", left: 12, transform: "translateY(-50%)", width: 38, height: 38, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.45)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: h ? 1 : 0, transition: "opacity .25s", zIndex: 2, backdropFilter: "blur(4px)" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <button onClick={nextPhoto} style={{ position: "absolute", top: "50%", right: 12, transform: "translateY(-50%)", width: 38, height: 38, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.45)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: h ? 1 : 0, transition: "opacity .25s", zIndex: 2, backdropFilter: "blur(4px)" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 6, zIndex: 2 }}>
+              {total <= 10 ? photos.map((_, i) => (
+                <div key={i} onClick={(e) => { e.stopPropagation(); setPhotoIdx(i); }} style={{ width: i === photoIdx ? 20 : 7, height: 7, borderRadius: 4, background: i === photoIdx ? "#fff" : "rgba(255,255,255,.5)", transition: "all .25s", cursor: "pointer" }} />
+              )) : (
+                <div style={{ background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 13, fontWeight: 500 }}>{photoIdx + 1} / {total}</div>
+              )}
+            </div>
+          </>
         )}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
