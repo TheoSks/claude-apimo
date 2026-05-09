@@ -232,7 +232,7 @@ function ActionBar({ onNext, onBack, nextDisabled, nextLabel = "Continuer", show
         type="button"
         onClick={onNext}
         disabled={nextDisabled || sending}
-        style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: nextDisabled ? "#bdbdbd" : C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: nextDisabled || sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }}>
+        style={{ flex: 1, width: xs ? "100%" : "auto", height: 52, borderRadius: 12, border: "none", background: nextDisabled ? "#bdbdbd" : C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: nextDisabled || sending ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background .2s" }}>
         {sending && isSubmit ? "Envoi en cours…" : nextLabel}
         {!sending && <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
       </button>
@@ -240,7 +240,7 @@ function ActionBar({ onNext, onBack, nextDisabled, nextLabel = "Continuer", show
         <button
           type="button"
           onClick={onBack}
-          style={{ height: 52, padding: "0 22px", borderRadius: 12, border: `1px solid ${C.cinder15}`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 15, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          style={{ width: xs ? "100%" : "auto", height: 52, padding: "0 22px", borderRadius: 12, border: `1px solid ${C.cinder15}`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 15, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Retour
         </button>
