@@ -526,21 +526,21 @@ function Home({ props, ld, go, m, px }) {
         <Rv>
           <div ref={searchBarRef}>
             {/* ── Collapsed pill bar ── */}
-            <div style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden" }}>
+            <div style={{ background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden", boxShadow: activeTab ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
               {TABS.map((t, i) => {
                 const isActive = activeTab === t.key;
                 const hasValue = t.key === "city" ? !!sq.city : t.key === "types" ? sq.types.length > 0 : t.key === "budget" ? !!(sq.budgetMin || sq.budgetMax) : !!(sq.areaMin || sq.areaMax);
                 const valueLabel = t.key === "city" ? sq.city : t.key === "types" ? sq.types.map(k => TYPE_OPTIONS.find(x => x[0] === k)?.[1]).join(", ") : t.key === "budget" ? (sq.budgetMin && sq.budgetMax ? `${Number(sq.budgetMin).toLocaleString("fr-FR")} – ${Number(sq.budgetMax).toLocaleString("fr-FR")} €` : sq.budgetMin ? `≥ ${Number(sq.budgetMin).toLocaleString("fr-FR")} €` : `≤ ${Number(sq.budgetMax).toLocaleString("fr-FR")} €`) : (sq.areaMin && sq.areaMax ? `${sq.areaMin} – ${sq.areaMax} m²` : sq.areaMin ? `≥ ${sq.areaMin} m²` : `≤ ${sq.areaMax} m²`);
                 return (
                   <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
-                    style={{ flex: 1, height: m.mob ? 52 : 62, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? "1px solid rgba(255,255,255,0.25)" : "none", background: isActive ? C.white : "transparent", color: isActive ? C.mine : C.white, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: isActive || hasValue ? 600 : 400, cursor: "pointer", transition: "background .2s, color .2s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    style={{ flex: 1, height: m.mob ? 52 : 62, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: isActive ? "rgba(9,38,29,0.06)" : "transparent", color: isActive ? C.bush : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: isActive || hasValue ? 600 : 400, cursor: "pointer", transition: "background .2s, color .2s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {hasValue ? valueLabel : t.label}
                   </button>
                 );
               })}
               {/* Search icon button */}
-              <button onClick={() => applyAndSearch()} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: "1px solid rgba(255,255,255,0.25)", background: activeTab ? C.white : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke={activeTab ? C.mine : C.white} strokeWidth="1.8" strokeLinecap="round"/></svg>
+              <button onClick={() => applyAndSearch()} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke={C.white} strokeWidth="1.8" strokeLinecap="round"/></svg>
               </button>
             </div>
 
