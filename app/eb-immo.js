@@ -134,11 +134,35 @@ async function fetchProperties() {
 
 const fmtP = (n) => Number(n).toLocaleString("fr-FR") + " €";
 
-/* ═══ Responsive hook ═══ */
+/* ═══ Responsive hook (mobile-first granular breakpoints) ═══
+   xs  < 480   small mobile (320–479)
+   sm  480–767 mobile / phablet
+   md  768–1023 tablet
+   lg  1024–1279 laptop
+   xl  1280–1919 desktop
+   xxl >= 1920 large desktop                              */
 function useMedia() {
-  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
-  useEffect(() => { const h = () => setW(window.innerWidth); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
-  return { mob: w < 768, tab: w >= 768 && w < 1024, desk: w >= 1024, w };
+  const [w, setW] = useState(1200);
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    h();
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  const xs  = w < 480;
+  const sm  = w >= 480 && w < 768;
+  const md  = w >= 768 && w < 1024;
+  const lg  = w >= 1024 && w < 1280;
+  const xl  = w >= 1280 && w < 1920;
+  const xxl = w >= 1920;
+  return {
+    w,
+    xs, sm, md, lg, xl, xxl,
+    /* legacy aliases used across the file */
+    mob: w < 768,
+    tab: w >= 768 && w < 1024,
+    desk: w >= 1024,
+  };
 }
 
 /* ═══ Images (inline SVG data URIs) ═══ */
@@ -292,7 +316,7 @@ function PillBtn({ children, variant = "outline-cyan", onClick, style: s = {}, h
 }
 
 /* ═══ Property Card (UNI-style responsive) ═══ */
-function PropCard({ p, onClick, idx = 0, mob }) {
+function PropCard({ p, onClick, idx = 0, mob, xs }) {
   const area = p.area?.value || p.area?.total || 0;
   const [h, setH] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -341,22 +365,22 @@ function PropCard({ p, onClick, idx = 0, mob }) {
         )}
       </div>
       <div style={{ marginTop: mob ? 10 : 16 }}>
-        <h3 style={{ fontSize: mob ? 14 : 17, fontWeight: 500, color: C.bush, margin: 0, lineHeight: 1.35, marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</h3>
-        <div style={{ fontSize: mob ? 12 : 14, color: C.abbey, marginBottom: 8 }}>
+        <h3 style={{ fontSize: xs ? 13 : mob ? 14 : 17, fontWeight: 500, color: C.bush, margin: 0, lineHeight: 1.35, marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</h3>
+        <div style={{ fontSize: xs ? 11 : mob ? 12 : 14, color: C.abbey, marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {p.city && <span>{p.zipcode || ""} {p.city}</span>}
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-          {p.rooms > 0 && <span style={{ fontSize: mob ? 11 : 12, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "3px 8px" }}>Nb pièces : {p.rooms}</span>}
-          {area > 0 && <span style={{ fontSize: mob ? 11 : 12, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "3px 8px" }}>Surface : {area}m²</span>}
+        <div style={{ display: "flex", gap: xs ? 4 : 8, flexWrap: "wrap", marginBottom: 8 }}>
+          {p.rooms > 0 && <span style={{ fontSize: xs ? 10 : mob ? 11 : 12, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: xs ? "2px 6px" : "3px 8px", whiteSpace: "nowrap" }}>{xs ? `${p.rooms} pcs` : `Nb pièces : ${p.rooms}`}</span>}
+          {area > 0 && <span style={{ fontSize: xs ? 10 : mob ? 11 : 12, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: xs ? "2px 6px" : "3px 8px", whiteSpace: "nowrap" }}>{xs ? `${area}m²` : `Surface : ${area}m²`}</span>}
         </div>
-        <span style={{ fontSize: mob ? 18 : 22, fontWeight: 600, color: C.bush }}>{fmtP(p.price)}</span>
+        <span style={{ fontSize: xs ? 16 : mob ? 18 : 22, fontWeight: 600, color: C.bush }}>{fmtP(p.price)}</span>
       </div>
     </div>
   );
 }
 
 /* ═══ Property Row (UNI-style responsive) ═══ */
-function PropRow({ p, onClick, idx = 0, mob }) {
+function PropRow({ p, onClick, idx = 0, mob, xs }) {
   const area = p.area?.value || p.area?.total || 0;
   const [h, setH] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -370,7 +394,7 @@ function PropRow({ p, onClick, idx = 0, mob }) {
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{ display: "flex", flexDirection: mob ? "column" : "row", gap: mob ? 20 : 30, paddingBottom: mob ? 32 : 50, borderBottom: `1px solid ${C.cinder50}`, cursor: "pointer" }}>
-      <div style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: mob ? 220 : 380, position: "relative" }}>
+      <div style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: xs ? 180 : mob ? 220 : 380, position: "relative" }}>
         <img key={photoIdx} src={photos[photoIdx] || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s, opacity .3s", transform: h ? "scale(1.03)" : "" }} />
         {total > 1 && (
           <>
@@ -390,38 +414,38 @@ function PropRow({ p, onClick, idx = 0, mob }) {
           </>
         )}
       </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12, minWidth: 0 }}>
         <div>
-          <h3 style={{ fontSize: mob ? 22 : 34, fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: 6 }}>{title}</h3>
-          {p.city && <div style={{ fontSize: mob ? 14 : 16, color: C.abbey, marginBottom: 12 }}>{p.zipcode || ""} {p.city}</div>}
+          <h3 style={{ fontSize: xs ? 18 : mob ? 22 : 34, fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: 6, overflowWrap: "anywhere" }}>{title}</h3>
+          {p.city && <div style={{ fontSize: xs ? 13 : mob ? 14 : 16, color: C.abbey, marginBottom: 12 }}>{p.zipcode || ""} {p.city}</div>}
           {/* Characteristics row */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-            {p.rooms > 0 && <span style={{ fontSize: 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "4px 10px" }}>Nb pièces : {p.rooms}</span>}
-            {area > 0 && <span style={{ fontSize: 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "4px 10px" }}>Surface : {area}m²</span>}
-            {p.bedrooms > 0 && <span style={{ fontSize: 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: "4px 10px" }}>Chambres : {p.bedrooms}</span>}
+          <div style={{ display: "flex", gap: xs ? 6 : 10, flexWrap: "wrap", marginBottom: 14 }}>
+            {p.rooms > 0 && <span style={{ fontSize: xs ? 12 : 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: xs ? "3px 8px" : "4px 10px" }}>Nb pièces : {p.rooms}</span>}
+            {area > 0 && <span style={{ fontSize: xs ? 12 : 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: xs ? "3px 8px" : "4px 10px" }}>Surface : {area}m²</span>}
+            {p.bedrooms > 0 && <span style={{ fontSize: xs ? 12 : 13, color: C.abbey, background: "#f3f3f3", borderRadius: 6, padding: xs ? "3px 8px" : "4px 10px" }}>Chambres : {p.bedrooms}</span>}
           </div>
-          <p style={{ fontSize: mob ? 14 : 16, color: C.abbey, lineHeight: 1.65, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: mob ? 3 : 4, WebkitBoxOrient: "vertical" }}>{p.description}</p>
+          <p style={{ fontSize: xs ? 13 : mob ? 14 : 16, color: C.abbey, lineHeight: 1.65, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: xs ? 2 : mob ? 3 : 4, WebkitBoxOrient: "vertical" }}>{p.description}</p>
         </div>
-        <span style={{ fontSize: mob ? 24 : 32, fontWeight: 600, color: C.bush }}>{fmtP(p.price)}</span>
+        <span style={{ fontSize: xs ? 20 : mob ? 24 : 32, fontWeight: 600, color: C.bush }}>{fmtP(p.price)}</span>
       </div>
     </div>
   );
 }
 
 /* ═══ FAQ ═══ */
-function FaqItem({ q, a, idx, mob }) {
+function FaqItem({ q, a, idx, mob, xs }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderBottom: `1px solid ${C.bush15}` }}>
-      <button onClick={() => setOpen(!open)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, padding: mob ? "24px 0" : "36px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-        <span style={{ fontSize: mob ? 18 : 26, fontWeight: 500, color: C.mine, lineHeight: 1.3 }}>{idx}. {q}</span>
+      <button onClick={() => setOpen(!open)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: xs ? 12 : 16, padding: xs ? "20px 0" : mob ? "24px 0" : "36px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+        <span style={{ fontSize: "clamp(16px, 3vw, 26px)", fontWeight: 500, color: C.mine, lineHeight: 1.3, overflowWrap: "anywhere" }}>{idx}. {q}</span>
         <div style={{ marginTop: 6, position: "relative", width: 20, height: 20, flexShrink: 0 }}>
           <div style={{ position: "absolute", top: "50%", left: 0, width: 20, height: 1.5, background: C.cyan, transform: "translateY(-50%)" }} />
           <div style={{ position: "absolute", top: 0, left: "50%", width: 1.5, height: 20, background: C.cyan, transform: `translateX(-50%) ${open ? "scaleY(0)" : "scaleY(1)"}`, transition: "transform .3s" }} />
         </div>
       </button>
       <div style={{ maxHeight: open ? 400 : 0, overflow: "hidden", transition: "max-height .4s cubic-bezier(.22,1,.36,1)" }}>
-        <p style={{ fontSize: mob ? 15 : 17, color: C.abbey, lineHeight: 1.65, padding: mob ? "0 0 20px" : "0 0 28px" }}>{a}</p>
+        <p style={{ fontSize: xs ? 14 : mob ? 15 : 17, color: C.abbey, lineHeight: 1.65, padding: xs ? "0 0 18px" : mob ? "0 0 20px" : "0 0 28px" }}>{a}</p>
       </div>
     </div>
   );
@@ -443,13 +467,14 @@ export default function App() {
   useEffect(() => { fetchProperties().then(d => { setProps(d); setLd(false); }).catch(() => setLd(false)); }, []);
   const go = useCallback((p, id) => { setPg(p); if (id !== undefined) setSid(id); window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
 
-  const px = m.mob ? "20px" : m.tab ? "40px" : "80px";
+  /* Fluid horizontal padding: 16px on tiny phones → 80px on desktop */
+  const px = m.xs ? "16px" : m.sm ? "20px" : m.md ? "32px" : m.lg ? "48px" : "80px";
   const searchProps = { sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange };
 
   return (
     <div style={{ fontFamily: "Urbanist, sans-serif", color: C.bush, background: C.white, minHeight: "100vh", overflowX: "hidden" }}>
       {/* ═══ NAV (responsive: hamburger on mobile) ═══ */}
-      <Nav pg={pg} go={go} mob={m.mob} px={px} />
+      <Nav pg={pg} go={go} m={m} px={px} />
 
       {pg === "home" && <Home props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
@@ -460,32 +485,37 @@ export default function App() {
 }
 
 /* ═══════ NAV ═══════ */
-function Nav({ pg, go, mob, px }) {
+function Nav({ pg, go, m, px }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const mob = m.mob;
+  /* Logo height: 36 on tiny phones → 60 on desktop */
+  const logoH = m.xs ? 36 : m.sm ? 44 : m.md ? 50 : 60;
+  /* Vertical padding: 10 on xs, 14 on bigger */
+  const padY = m.xs ? 10 : 14;
   return (
     <>
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, padding: `14px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: pg === "home" ? "rgba(9,38,29,.85)" : "rgba(9,38,29,.97)", backdropFilter: "blur(12px)", transition: "background .3s" }}>
-        <img src={LOGO} alt="E&B Immo" style={{ height: mob ? 44 : 60, cursor: "pointer", filter: "brightness(10)" }} onClick={() => { go("home"); setMenuOpen(false); }} />
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, padding: `${padY}px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: pg === "home" ? "rgba(9,38,29,.85)" : "rgba(9,38,29,.97)", backdropFilter: "blur(12px)", transition: "background .3s" }}>
+        <img src={LOGO} alt="E&B Immo" style={{ height: logoH, width: "auto", cursor: "pointer", filter: "brightness(10)", flexShrink: 0 }} onClick={() => { go("home"); setMenuOpen(false); }} />
         {mob ? (
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8 }}>
+          <button aria-label="Menu" onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, flexShrink: 0 }}>
             <div style={{ width: 24, height: 2, background: "#fff", marginBottom: 6, transition: "all .3s", transform: menuOpen ? "rotate(45deg) translate(3px,3px)" : "" }} />
             <div style={{ width: 24, height: 2, background: "#fff", marginBottom: 6, opacity: menuOpen ? 0 : 1, transition: "all .2s" }} />
             <div style={{ width: 24, height: 2, background: "#fff", transition: "all .3s", transform: menuOpen ? "rotate(-45deg) translate(3px,-3px)" : "" }} />
           </button>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: m.md ? 20 : m.lg ? 28 : 40, flexWrap: "nowrap" }}>
             {[["Accueil", "home"], ["Propriétés", "annonces"], ["Nous contacter", "contact"]].map(([l, p]) => (
-              <a key={p} onClick={() => go(p)} style={{ fontSize: 16, color: C.white, cursor: "pointer", textDecoration: "none", opacity: pg === p ? 1 : .7, transition: "opacity .2s" }}>{l}</a>
+              <a key={p} onClick={() => go(p)} style={{ fontSize: m.md ? 14 : 16, color: C.white, cursor: "pointer", textDecoration: "none", opacity: pg === p ? 1 : .7, transition: "opacity .2s", whiteSpace: "nowrap" }}>{l}</a>
             ))}
-            <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ padding: "10px 24px", fontSize: 15 }}>Prendre contact</PillBtn>
+            <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ padding: m.md ? "8px 18px" : "10px 24px", fontSize: m.md ? 13 : 15 }}>Prendre contact</PillBtn>
           </div>
         )}
       </nav>
       {/* Mobile menu overlay */}
       {mob && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: "rgba(9,38,29,.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transition: "opacity .3s" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: "rgba(9,38,29,.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: m.xs ? 24 : 32, padding: 24, opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transition: "opacity .3s" }}>
           {[["Accueil", "home"], ["Propriétés", "annonces"], ["Nous contacter", "contact"]].map(([l, p]) => (
-            <a key={p} onClick={() => { go(p); setMenuOpen(false); }} style={{ fontSize: 28, fontWeight: 500, color: C.white, cursor: "pointer", textDecoration: "none" }}>{l}</a>
+            <a key={p} onClick={() => { go(p); setMenuOpen(false); }} style={{ fontSize: m.xs ? 24 : 28, fontWeight: 500, color: C.white, cursor: "pointer", textDecoration: "none" }}>{l}</a>
           ))}
           <PillBtn variant="outline-white" onClick={() => { go("contact"); setMenuOpen(false); }}>Prendre contact</PillBtn>
         </div>
@@ -533,12 +563,13 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
     : "Surface";
 
   const pillStyle = (active) => ({
-    height: m.mob ? 36 : 40, padding: m.mob ? "0 12px" : "0 16px", borderRadius: 99,
+    height: m.xs ? 34 : m.mob ? 36 : 40, padding: m.xs ? "0 10px" : m.mob ? "0 12px" : "0 16px", borderRadius: 99,
     border: `1px solid ${active ? C.bush : C.cinder15}`,
     background: active ? "rgba(9,38,29,0.08)" : C.white,
     color: active ? C.bush : C.abbey,
-    fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 14 : 16, fontWeight: active ? 600 : 400,
+    fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 13 : m.mob ? 14 : 16, fontWeight: active ? 600 : 400,
     cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+    maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis",
   });
   const chevron = (open) => (
     <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
@@ -556,7 +587,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             {hasCity ? sq.city : "Localité"} {chevron(openFilter === "city")}
           </button>
           {openFilter === "city" && (
-            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: 280 }}>
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: "min(280px, calc(100vw - 32px))", maxWidth: 320 }}>
               <div ref={cityWrapRef} style={{ position: "relative" }}>
                 <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
                   onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
@@ -582,7 +613,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             {hasTypes ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") : "Type de bien"} {chevron(openFilter === "types")}
           </button>
           {openFilter === "types" && (
-            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: 260 }}>
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: "min(260px, calc(100vw - 32px))", maxWidth: 300 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {TYPE_OPTIONS.map(([key, label]) => {
                   const on = sq.types.includes(key);
@@ -605,7 +636,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             {budgetLabel} {chevron(openFilter === "budget")}
           </button>
           {openFilter === "budget" && (
-            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", width: 280 }}>
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", width: "min(280px, calc(100vw - 32px))", maxWidth: 320 }}>
               <DualRangeSlider min={0} max={1500000} step={10000} valueMin={budgetRange[0]} valueMax={budgetRange[1]} onChange={(lo, hi) => setBudgetRange([lo, hi])} />
               {hasBudget && <div style={{ padding: "0 16px 14px", textAlign: "right" }}><button onClick={() => setBudgetRange([0, 1500000])} style={{ fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button></div>}
             </div>
@@ -618,7 +649,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             {surfaceLabel} {chevron(openFilter === "surface")}
           </button>
           {openFilter === "surface" && (
-            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", width: 280 }}>
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", width: "min(280px, calc(100vw - 32px))", maxWidth: 320 }}>
               <DualRangeSlider min={0} max={500} step={5} valueMin={areaRange[0]} valueMax={areaRange[1]} onChange={(lo, hi) => setAreaRange([lo, hi])} unit="m²" maxLabel="500+ m²" />
               {hasSurface && <div style={{ padding: "0 16px 14px", textAlign: "right" }}><button onClick={() => setAreaRange([0, 500])} style={{ fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button></div>}
             </div>
@@ -675,10 +706,14 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
     { key: "surface", label: "Surface min (m²)" },
   ];
 
+  /* On very small screens (xs/sm) we stack tabs vertically — labels would never fit on a 320px row of 4 tabs. */
+  const stack = m.mob;
+  const tabH = m.xs ? 52 : m.sm ? 56 : 72;
+
   return (
     <div ref={searchBarRef}>
       {/* ── Collapsed pill bar ── */}
-      <div style={{ background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden", boxShadow: activeTab ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
+      <div style={{ background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? (stack ? "16px" : "16px 16px 0 0") : (stack ? 16 : 99), display: "flex", flexDirection: stack ? "column" : "row", alignItems: stack ? "stretch" : "center", overflow: "hidden", boxShadow: activeTab && !stack ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
         {TABS.map((t, i) => {
           const isActive = activeTab === t.key;
           const hasValue =
@@ -699,24 +734,25 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             );
           return (
             <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
-              style={{ position: "relative", flex: 1, height: m.mob ? 56 : 72, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, overflow: "hidden" }}>
-              <span style={{ fontSize: m.mob ? 13 : 15, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
-              {hasValue && <span style={{ fontSize: m.mob ? 13 : 15, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
+              style={{ position: "relative", flex: stack ? "none" : 1, width: stack ? "100%" : "auto", height: tabH, padding: stack ? "0 16px" : (hasValue ? "0 22px 0 8px" : "0 8px"), border: "none", borderRight: !stack && i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", borderBottom: stack ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: stack ? "row" : "column", alignItems: "center", justifyContent: stack ? "space-between" : "center", gap: stack ? 12 : 3, overflow: "hidden", textAlign: "left" }}>
+              <span style={{ fontSize: m.xs ? 13 : m.sm ? 14 : 15, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap", flexShrink: 0 }}>{t.label}</span>
+              {hasValue && <span style={{ fontSize: m.xs ? 13 : m.sm ? 14 : 15, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: stack ? "60%" : "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
               {hasValue && (
                 <span onClick={e => { e.stopPropagation(); clearTab(t.key); }}
-                  style={{ position: "absolute", top: 7, right: 6, width: 15, height: 15, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</span>
+                  style={{ position: stack ? "static" : "absolute", top: 7, right: 6, width: 18, height: 18, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0, marginLeft: stack ? 8 : 0 }}>✕</span>
               )}
             </button>
           );
         })}
-        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: m.mob ? 56 : 72, height: m.mob ? 56 : 72, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: stack ? "100%" : tabH, height: stack ? 52 : tabH, flexShrink: 0, border: "none", borderLeft: stack ? "none" : `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "#fff", fontFamily: "Urbanist, sans-serif", fontWeight: 600, fontSize: 15 }}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
+          {stack && <span>Rechercher</span>}
         </button>
       </div>
 
       {/* ── Expanded panel ── */}
       {activeTab && (
-        <div style={{ background: "#fff", borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
+        <div style={{ background: "#fff", borderRadius: stack ? 16 : "0 0 16px 16px", marginTop: stack ? 8 : 0, boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", borderBottom: `1px solid ${C.cinder10}` }}>
             <button onClick={() => setActiveTab(null)} style={{ width: 52, height: 44, flexShrink: 0, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
@@ -724,7 +760,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
           </div>
           <div>
             {activeTab === "city" && (
-              <div style={{ padding: "20px 24px" }}>
+              <div style={{ padding: m.xs ? "16px" : "20px 24px" }}>
                 <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
                   <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
                     onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
@@ -741,7 +777,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
               </div>
             )}
             {activeTab === "types" && (
-              <div style={{ padding: "20px 24px", display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <div style={{ padding: m.xs ? "16px" : "20px 24px", display: "flex", flexWrap: "wrap", gap: 10 }}>
                 {TYPE_OPTIONS.map(([key, label]) => {
                   const on = sq.types.includes(key);
                   return (
@@ -760,7 +796,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
               <DualRangeSlider min={0} max={500} step={5} valueMin={areaRange[0]} valueMax={areaRange[1]} onChange={(lo, hi) => setAreaRange([lo, hi])} unit="m²" maxLabel="500+ m²" />
             )}
           </div>
-          <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
+          <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: m.xs ? "12px 16px" : "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
             <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
             <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
           </div>
@@ -789,7 +825,7 @@ const REVIEWS = [
   },
 ];
 
-function TestimonialsCarousel({ mob }) {
+function TestimonialsCarousel({ mob, xs }) {
   const [idx, setIdx] = useState(0);
   const prev = () => setIdx(i => (i - 1 + REVIEWS.length) % REVIEWS.length);
   const next = () => setIdx(i => (i + 1) % REVIEWS.length);
@@ -797,7 +833,7 @@ function TestimonialsCarousel({ mob }) {
 
   return (
     <div>
-      <div style={{ position: "relative", minHeight: mob ? 220 : 180 }}>
+      <div style={{ position: "relative", minHeight: xs ? 280 : mob ? 240 : 180 }}>
         {REVIEWS.map((rev, i) => (
           <div key={i} style={{ position: i === 0 ? "relative" : "absolute", top: 0, left: 0, width: "100%", opacity: i === idx ? 1 : 0, transition: "opacity .4s ease", pointerEvents: i === idx ? "auto" : "none" }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
@@ -805,7 +841,7 @@ function TestimonialsCarousel({ mob }) {
                 <svg key={s} width="20" height="20" viewBox="0 0 20 20" fill={C.cyan}><path d="M10 1l2.39 4.83 5.33.78-3.86 3.76.91 5.32L10 13.27l-4.77 2.42.91-5.32L2.28 6.61l5.33-.78z"/></svg>
               ))}
             </div>
-            <blockquote style={{ fontSize: mob ? 18 : 24, fontWeight: 400, color: C.white, lineHeight: 1.5, margin: "0 0 28px" }}>
+            <blockquote style={{ fontSize: xs ? 16 : mob ? 18 : 24, fontWeight: 400, color: C.white, lineHeight: 1.5, margin: "0 0 28px" }}>
               "{rev.text}"
             </blockquote>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -841,31 +877,32 @@ function TestimonialsCarousel({ mob }) {
 
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
-  const featured = props.slice(0, m.mob ? 4 : 3);
+  /* xs (1 col) → 3 cards, sm/md (2 col) → 4 cards, lg+ (3 col) → 3 cards */
+  const featured = props.slice(0, m.xs ? 3 : m.mob ? 4 : 3);
   const listed = props.slice(0, 3);
 
   return (
     <main>
       {/* ═══ HERO ═══ */}
-      <section style={{ background: C.bush, padding: m.mob ? `100px ${px} 40px` : `148px ${px} 60px`, overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.mob ? 40 : 40, alignItems: m.mob ? "flex-start" : "stretch" }}>
-          <div style={{ flex: m.mob ? "none" : "0 0 auto", minWidth: m.mob ? "auto" : m.tab ? 400 : 620, display: "flex", flexDirection: "column", gap: m.mob ? 32 : 50, justifyContent: "flex-end" }}>
+      <section style={{ background: C.bush, padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", maxWidth: 1600, margin: "0 auto" }}>
+          <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
-              <h1 style={{ fontSize: m.mob ? 36 : m.tab ? 52 : 80, fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0 }}>
+              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere" }}>
                 Agence<br />immobilière<br />digitale<br />De la côte fleurie
               </h1>
             </Rv>
             <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
           </div>
           {/* Hero image with dome clip */}
-          <div style={{ flex: 1, display: "flex", justifyContent: m.mob ? "center" : "flex-end", alignItems: "flex-end", position: "relative" }}>
+          <div style={{ flex: 1, display: "flex", justifyContent: m.mob ? "center" : "flex-end", alignItems: "flex-end", position: "relative", width: m.mob ? "100%" : "auto" }}>
             <Rv d={3}>
-              <div style={{ position: "relative", width: m.mob ? "100%" : m.tab ? 340 : 480, maxWidth: 520 }}>
+              <div style={{ position: "relative", width: m.xs ? "100%" : m.sm ? "85%" : m.md ? 320 : m.lg ? 400 : 480, maxWidth: 520 }}>
                 <div style={{ width: "100%", aspectRatio: "525/538", borderRadius: "50% 50% 0 0 / 48% 48% 0 0", overflow: "hidden" }}>
                   <img src={HERO_IMG} alt="Maison" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 {!m.mob && (
-                  <div style={{ position: "absolute", bottom: 30, left: -50, width: 150, height: 190, borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.25)" }}>
+                  <div style={{ position: "absolute", bottom: 30, left: m.md ? -30 : -50, width: m.md ? 110 : m.lg ? 130 : 150, height: m.md ? 140 : m.lg ? 165 : 190, borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.25)" }}>
                     <video src="/hero-video.webm" autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                 )}
@@ -883,28 +920,28 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ NOUVELLES ANNONCES ═══ */}
-      <section style={{ padding: `${m.mob ? 60 : 120}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
+      <section style={{ padding: `${m.xs ? 48 : m.mob ? 60 : m.md ? 80 : 120}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
         <Rv>
           <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", justifyContent: "space-between", alignItems: m.mob ? "flex-start" : "center", gap: 20, marginBottom: m.mob ? 32 : 50 }}>
-            <h2 style={{ fontSize: m.mob ? 28 : m.tab ? 40 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15 }}>Nouvelles annonces</h2>
+            <h2 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15 }}>Nouvelles annonces</h2>
             <PillBtn variant="outline-cyan" onClick={() => go("annonces")} style={{ fontSize: 15 }}>Tout découvrir</PillBtn>
           </div>
         </Rv>
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr 1fr" : m.tab ? "1fr 1fr" : "repeat(3, 1fr)", gap: m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "1fr 1fr" : m.lg ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
           {!ld && featured.map((p, i) => (
-            <Rv key={p.id} d={i + 1}><PropCard p={p} idx={i} mob={m.mob} onClick={() => go("bien", p.id)} /></Rv>
+            <Rv key={p.id} d={i + 1}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
         </div>
       </section>
 
       {/* ═══ ABOUT ═══ */}
-      <section style={{ background: C.bush, padding: `${m.mob ? 60 : 120}px ${px}`, marginTop: m.mob ? 60 : 120 }}>
-        <div style={{ display: "flex", flexDirection: m.mob || m.tab ? "column" : "row", gap: m.mob ? 40 : m.tab ? 50 : 100, maxWidth: 1280, margin: "0 auto" }}>
+      <section style={{ background: C.bush, padding: `${m.xs ? 48 : m.mob ? 60 : m.md ? 80 : 120}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
+        <div style={{ display: "flex", flexDirection: m.mob || m.tab ? "column" : "row", gap: m.xs ? 32 : m.mob ? 40 : m.tab ? 50 : 100, maxWidth: 1280, margin: "0 auto", alignItems: m.mob || m.tab ? "stretch" : "flex-start" }}>
           <Rv>
             <div style={{ position: "relative", width: m.mob ? "100%" : m.tab ? "100%" : 420, flexShrink: 0 }}>
               <img src={ABOUT_IMG} alt="About" style={{ width: "100%", borderRadius: 12 }} />
               {!m.mob && (
-                <div style={{ position: "absolute", bottom: "-14%", right: "-10%", width: m.tab ? 180 : 230, height: m.tab ? 180 : 230, borderRadius: "50%", overflow: "hidden" }}>
+                <div style={{ position: "absolute", bottom: "-14%", right: "-10%", width: m.tab ? 140 : m.lg ? 180 : 230, height: m.tab ? 140 : m.lg ? 180 : 230, borderRadius: "50%", overflow: "hidden" }}>
                   <img src={ABOUT_FLOAT} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               )}
@@ -912,9 +949,9 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
           </Rv>
           <Rv d={2}>
             <div style={{ color: C.white }}>
-              <span style={{ fontSize: m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12 }}>Explorer tout</span>
-              <h2 style={{ fontSize: m.mob ? 26 : m.tab ? 34 : 44, fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>L'Évolution d'une Passion Immobilière</h2>
-              <p style={{ fontSize: m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, opacity: .85, marginBottom: 32 }}>
+              <span style={{ fontSize: m.xs ? 14 : m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12 }}>Explorer tout</span>
+              <h2 style={{ fontSize: "clamp(22px, 5vw, 44px)", fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>L'Évolution d'une Passion Immobilière</h2>
+              <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, opacity: .85, marginBottom: m.xs ? 24 : 32 }}>
                 Depuis 7 ans, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
               </p>
               {[
@@ -922,13 +959,13 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
                 { t: "Répondre à vos besoins avec précision", d: "Des solutions adaptées grâce à notre connaissance du marché.", icon: "M12 2L3 7l9 5 9-5-9-5zM3 17l9 5 9-5M3 12l9 5 9-5" },
                 { t: "Votre projet, notre engagement", d: "Un accompagnement sur-mesure pour chaque projet unique.", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
               ].map((item, i) => (
-                <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: m.mob ? 24 : 32 }}>
+                <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 16, alignItems: "flex-start", marginBottom: m.xs ? 20 : m.mob ? 24 : 32 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(36,175,197,.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
-                  <div>
-                    <h4 style={{ fontSize: m.mob ? 17 : 22, fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{item.t}</h4>
-                    <p style={{ fontSize: m.mob ? 14 : 16, fontWeight: 400, lineHeight: 1.6, opacity: .8 }}>{item.d}</p>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ fontSize: m.xs ? 16 : m.mob ? 17 : 22, fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{item.t}</h4>
+                    <p style={{ fontSize: m.xs ? 13 : m.mob ? 14 : 16, fontWeight: 400, lineHeight: 1.6, opacity: .8 }}>{item.d}</p>
                   </div>
                 </div>
               ))}
@@ -938,11 +975,11 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ LISTE DES NOUVEAUTÉS ═══ */}
-      <section style={{ padding: `${m.mob ? 60 : 120}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
-        <Rv><h2 style={{ fontSize: m.mob ? 28 : m.tab ? 40 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Liste des nouveautés</h2></Rv>
+      <section style={{ padding: `${m.xs ? 48 : m.mob ? 60 : m.md ? 80 : 120}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
+        <Rv><h2 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Liste des nouveautés</h2></Rv>
         <div style={{ display: "flex", flexDirection: "column", gap: m.mob ? 32 : 50 }}>
           {!ld && listed.map((p, i) => (
-            <Rv key={p.id} d={i}><PropRow p={p} idx={i + 3} mob={m.mob} onClick={() => go("bien", p.id)} /></Rv>
+            <Rv key={p.id} d={i}><PropRow p={p} idx={i + 3} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
         </div>
         <Rv d={1} style={{ textAlign: "center", marginTop: m.mob ? 32 : 50 }}>
@@ -951,35 +988,35 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ TÉMOIGNAGES ═══ */}
-      <section style={{ background: C.bush, padding: `${m.mob ? 60 : 100}px ${px}`, marginTop: m.mob ? 60 : 120 }}>
+      <section style={{ background: C.bush, padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <Rv><h2 style={{ fontSize: m.mob ? 28 : m.tab ? 40 : 60, fontWeight: 500, color: C.white, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Témoignages</h2></Rv>
-          <Rv d={1}><TestimonialsCarousel mob={m.mob} /></Rv>
+          <Rv><h2 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.white, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Témoignages</h2></Rv>
+          <Rv d={1}><TestimonialsCarousel mob={m.mob} xs={m.xs} /></Rv>
         </div>
       </section>
 
       {/* ═══ FAQ ═══ */}
-      <section style={{ padding: `${m.mob ? 60 : 120}px ${px}`, maxWidth: 1064, margin: "0 auto" }}>
+      <section style={{ padding: `${m.xs ? 48 : m.mob ? 60 : m.md ? 80 : 120}px ${px}`, maxWidth: 1064, margin: "0 auto" }}>
         <Rv>
-          <h2 style={{ fontSize: m.mob ? 26 : m.tab ? 36 : 56, fontWeight: 500, color: C.bush, lineHeight: 1.15, textAlign: "center", marginBottom: m.mob ? 32 : 50 }}>
+          <h2 style={{ fontSize: "clamp(22px, 5.5vw, 56px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, textAlign: "center", marginBottom: m.mob ? 32 : 50 }}>
             Questions<br />fréquemment posées
           </h2>
         </Rv>
         <Rv d={1}>
           <div>
-            <FaqItem mob={m.mob} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée sur 7 ans d'expérience. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
-            <FaqItem mob={m.mob} idx={2} q="Comment prendre rendez-vous ?" a="Contactez-nous au +33 7 60 95 36 18 ou par email à contact@eb-immo.fr. Nous répondrons rapidement pour fixer un rendez-vous." />
-            <FaqItem mob={m.mob} idx={3} q="Quelle zone géographique couvrez-vous ?" a="La côte fleurie, le Calvados et la Normandie principalement. Nous avons aussi des biens en Corse et en région parisienne." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée sur 7 ans d'expérience. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={2} q="Comment prendre rendez-vous ?" a="Contactez-nous au +33 7 60 95 36 18 ou par email à contact@eb-immo.fr. Nous répondrons rapidement pour fixer un rendez-vous." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={3} q="Quelle zone géographique couvrez-vous ?" a="La côte fleurie, le Calvados et la Normandie principalement. Nous avons aussi des biens en Corse et en région parisienne." />
           </div>
         </Rv>
       </section>
 
       {/* ═══ CTA ═══ */}
       <section style={{ background: C.bush, overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", alignItems: "center", gap: m.mob ? 40 : 80, maxWidth: 1440, margin: "0 auto", padding: m.mob ? `60px ${px}` : `0 ${px}` }}>
+        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", alignItems: "center", gap: m.xs ? 32 : m.mob ? 40 : m.md ? 50 : 80, maxWidth: 1440, margin: "0 auto", padding: m.mob ? `${m.xs ? 48 : 60}px ${px}` : `0 ${px}` }}>
 
           {/* Images */}
-          <div style={{ position: "relative", flexShrink: 0, width: m.mob ? "100%" : m.tab ? 340 : 500, height: m.mob ? 380 : m.tab ? 500 : 680 }}>
+          <div style={{ position: "relative", flexShrink: 0, width: m.mob ? "100%" : m.tab ? 320 : m.lg ? 420 : 500, height: m.xs ? 320 : m.sm ? 380 : m.tab ? 480 : m.lg ? 580 : 680 }}>
             {/* Grand cercle — maison */}
             <div style={{ position: "absolute", top: 0, left: 0, width: "82%", aspectRatio: "1/1", borderRadius: "50%", overflow: "hidden" }}>
               <img
@@ -999,8 +1036,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
           </div>
 
           {/* Text */}
-          <Rv d={1} style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: m.mob ? 0 : "80px 0", flex: 1 }}>
-            <h2 style={{ fontSize: m.mob ? 32 : m.tab ? 44 : 70, fontWeight: 500, color: C.white, lineHeight: 1.14, marginBottom: 40 }}>
+          <Rv d={1} style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: m.mob ? 0 : m.md ? "60px 0" : "80px 0", flex: 1, width: m.mob ? "100%" : "auto" }}>
+            <h2 style={{ fontSize: "clamp(26px, 6.5vw, 70px)", fontWeight: 500, color: C.white, lineHeight: 1.14, marginBottom: m.xs ? 28 : 40 }}>
               Vous cherchez à<br />acheter ou à louer<br />un bien immobilier ?
             </h2>
             <PillBtn variant="outline-white" onClick={() => go("contact")}>Prendre contact</PillBtn>
@@ -1057,12 +1094,12 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
   const hasFilters = sq.city || sq.types.length > 0 || budgetRange[0] > 0 || budgetRange[1] < 1500000 || areaRange[0] > 0 || areaRange[1] < 500;
 
   return (
-    <main style={{ paddingTop: m.mob ? 80 : 120, background: C.white }}>
-      <section style={{ padding: `40px ${px} 80px`, maxWidth: 1440, margin: "0 auto" }}>
+    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120, background: C.white }}>
+      <section style={{ padding: `${m.xs ? 28 : 40}px ${px} ${m.xs ? 56 : 80}px`, maxWidth: 1440, margin: "0 auto" }}>
         <Rv>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-            <h1 style={{ fontSize: m.mob ? 30 : m.tab ? 44 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15, margin: 0 }}>Nos propriétés</h1>
-            <span style={{ fontSize: m.mob ? 15 : 17, color: C.abbey }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: m.xs ? 8 : 16, flexWrap: "wrap", marginBottom: m.xs ? 16 : 24 }}>
+            <h1 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, margin: 0 }}>Nos propriétés</h1>
+            <span style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, color: C.abbey }}>
               {ld ? "Chargement..." : `${fl.length} bien${fl.length > 1 ? "s" : ""} trouvé${fl.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
             </span>
           </div>
@@ -1084,9 +1121,9 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           </Rv>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr 1fr" : m.tab ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "repeat(2, 1fr)" : m.lg ? "repeat(3, 1fr)" : m.xl ? "repeat(3, 1fr)" : "repeat(4, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
           {!ld && paginated.map((p, i) => (
-            <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} onClick={() => go("bien", p.id)} /></Rv>
+            <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
         </div>
 
@@ -1179,15 +1216,15 @@ function Bien({ props, id, go, m, px }) {
   const title = p.displayTitle || p.title;
 
   return (
-    <main style={{ paddingTop: m.mob ? 80 : 120 }}>
-      <section style={{ padding: `32px ${px} 80px`, maxWidth: 1440, margin: "0 auto" }}>
-        <a onClick={() => go("annonces")} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 15, color: C.cyan, cursor: "pointer", marginBottom: 28, textDecoration: "none" }}>
+    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120 }}>
+      <section style={{ padding: `${m.xs ? 24 : 32}px ${px} ${m.xs ? 56 : 80}px`, maxWidth: 1440, margin: "0 auto" }}>
+        <a onClick={() => go("annonces")} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: m.xs ? 14 : 15, color: C.cyan, cursor: "pointer", marginBottom: m.xs ? 20 : 28, textDecoration: "none" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Retour aux propriétés
         </a>
 
         {/* Photo gallery */}
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : photos.length > 1 ? "2fr 1fr" : "1fr", gap: 6, marginBottom: 32, borderRadius: 16, overflow: "hidden", maxHeight: m.mob ? 280 : 500 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : photos.length > 1 ? "2fr 1fr" : "1fr", gap: 6, marginBottom: m.xs ? 20 : 32, borderRadius: m.xs ? 12 : 16, overflow: "hidden", maxHeight: m.xs ? 240 : m.mob ? 320 : m.md ? 420 : 500 }}>
           <div style={{ cursor: "pointer" }} onClick={() => {}}>
             <img src={photos[photoIdx] || fb(0)} alt={title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
@@ -1205,30 +1242,30 @@ function Bien({ props, id, go, m, px }) {
           )}
         </div>
         {photos.length > 1 && (
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 32, paddingBottom: 4 }}>
+          <div className="no-scrollbar" style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: m.xs ? 20 : 32, paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
             {photos.map((ph, i) => (
-              <div key={i} onClick={() => setPhotoIdx(i)} style={{ flex: `0 0 ${m.mob ? 64 : 80}px`, height: m.mob ? 48 : 58, borderRadius: 6, overflow: "hidden", cursor: "pointer", border: photoIdx === i ? `2px solid ${C.cyan}` : "2px solid transparent", opacity: photoIdx === i ? 1 : .7, transition: "all .2s" }}>
+              <div key={i} onClick={() => setPhotoIdx(i)} style={{ flex: `0 0 ${m.xs ? 56 : m.mob ? 64 : 80}px`, height: m.xs ? 42 : m.mob ? 48 : 58, borderRadius: 6, overflow: "hidden", cursor: "pointer", border: photoIdx === i ? `2px solid ${C.cyan}` : "2px solid transparent", opacity: photoIdx === i ? 1 : .7, transition: "all .2s" }}>
                 <img src={ph} alt="" onError={(e) => handleImgErr(e, i)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             ))}
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1.5fr 1fr", gap: m.mob ? 32 : 60, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : m.md ? "1.4fr 1fr" : "1.5fr 1fr", gap: m.xs ? 28 : m.mob ? 32 : 60, alignItems: "start" }}>
           {/* Left: title, description, informations */}
-          <div>
+          <div style={{ minWidth: 0 }}>
             {/* Title — E&B style: uppercase */}
-            <h1 style={{ fontSize: m.mob ? 22 : m.tab ? 30 : 38, fontWeight: 600, color: C.bush, lineHeight: 1.25, marginBottom: 12, textTransform: "uppercase" }}>{title}</h1>
+            <h1 className="wrap-word" style={{ fontSize: "clamp(20px, 4.5vw, 38px)", fontWeight: 600, color: C.bush, lineHeight: 1.25, marginBottom: 12, textTransform: "uppercase" }}>{title}</h1>
 
             {/* Price */}
-            <div style={{ fontSize: m.mob ? 28 : 36, fontWeight: 600, color: C.bush, marginBottom: 12 }}>€ {Number(p.price).toLocaleString("fr-FR")}</div>
+            <div style={{ fontSize: m.xs ? 24 : m.mob ? 28 : 36, fontWeight: 600, color: C.bush, marginBottom: 12 }}>€ {Number(p.price).toLocaleString("fr-FR")}</div>
 
             {/* City + zip + ref */}
-            <div style={{ fontSize: 15, color: C.abbey, marginBottom: 6 }}>{p.city}{p.zipcode ? ` - ${p.zipcode}` : ""}</div>
-            {p.reference && <div style={{ fontSize: 14, color: C.abbey, marginBottom: 24 }}>#{p.reference}</div>}
+            <div style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 6 }}>{p.city}{p.zipcode ? ` - ${p.zipcode}` : ""}</div>
+            {p.reference && <div style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, marginBottom: m.xs ? 20 : 24 }}>#{p.reference}</div>}
 
             {/* 3 badges like ebimmo.com */}
-            <div style={{ display: "flex", gap: m.mob ? 12 : 20, marginBottom: 36, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: m.xs ? 10 : m.mob ? 12 : 20, marginBottom: m.xs ? 28 : 36, flexWrap: "wrap" }}>
               {[
                 p.rooms > 0 && [`${p.rooms} Pièce${p.rooms > 1 ? "s" : ""}`, "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"],
                 [`${p.bedrooms || 0} Salle de bains`, "M21 10H7M21 6H3M21 14H3M21 18H7"],
@@ -1245,14 +1282,14 @@ function Bien({ props, id, go, m, px }) {
 
             {/* Description — white-space pre-line like ebimmo */}
             {p.description && (
-              <div style={{ marginBottom: 40 }}>
-                <p style={{ fontSize: m.mob ? 15 : 16, color: C.abbey, lineHeight: 1.75, whiteSpace: "pre-line" }}>{p.description}</p>
+              <div style={{ marginBottom: m.xs ? 28 : 40 }}>
+                <p className="wrap-word" style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 16, color: C.abbey, lineHeight: 1.75, whiteSpace: "pre-line" }}>{p.description}</p>
               </div>
             )}
 
             {/* Informations section — like ebimmo.com */}
-            <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28 }}>
-              <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Informations</h2>
+            <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
+              <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Informations</h2>
               <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
                 {[
                   p.category && ["Catégorie", p.category],
@@ -1268,9 +1305,9 @@ function Bien({ props, id, go, m, px }) {
                   p.heating && ["Chauffage", p.heating],
                   p.reference && ["Référence", p.reference],
                 ].filter(Boolean).map(([label, value], i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.cinder10}` }}>
-                    <span style={{ fontSize: 15, color: C.abbey }}>{label}:</span>
-                    <span style={{ fontSize: 15, fontWeight: 500, color: C.mine }}>{value}</span>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.cinder10}` }}>
+                    <span style={{ fontSize: m.xs ? 13 : 15, color: C.abbey }}>{label}:</span>
+                    <span className="wrap-word" style={{ fontSize: m.xs ? 13 : 15, fontWeight: 500, color: C.mine, textAlign: "right" }}>{value}</span>
                   </div>
                 ))}
               </div>
@@ -1278,13 +1315,13 @@ function Bien({ props, id, go, m, px }) {
 
             {/* Prestations section */}
             {p.services && p.services.length > 0 && (
-              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28, marginTop: 8 }}>
-                <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Prestations</h2>
-                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: "10px 40px" }}>
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Prestations</h2>
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: m.xs ? "8px 24px" : "10px 40px" }}>
                   {p.services.map((s, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={C.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      <span style={{ fontSize: 15, color: C.mine, textTransform: "capitalize" }}>{s}</span>
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M20 6L9 17l-5-5" stroke={C.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="wrap-word" style={{ fontSize: m.xs ? 14 : 15, color: C.mine, textTransform: "capitalize" }}>{s}</span>
                     </div>
                   ))}
                 </div>
@@ -1293,13 +1330,13 @@ function Bien({ props, id, go, m, px }) {
 
             {/* Location Details — Google Maps */}
             {(p.latitude && p.longitude) && (
-              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28, marginTop: 8 }}>
-                <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Location Details</h2>
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Location Details</h2>
                 <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 12, position: "relative" }}>
                   <iframe
                     title="Map"
                     width="100%"
-                    height={m.mob ? 250 : 380}
+                    height={m.xs ? 200 : m.mob ? 250 : 380}
                     style={{ border: 0 }}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
@@ -1320,8 +1357,8 @@ function Bien({ props, id, go, m, px }) {
 
             {/* Réglementation (DPE / GES) */}
             {p.regulations && Object.keys(p.regulations).length > 0 && (
-              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: 28, marginTop: 8 }}>
-                <h2 style={{ fontSize: m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 20 }}>RÉGLEMENTATION :</h2>
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>RÉGLEMENTATION :</h2>
                 <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
                   {Object.entries(p.regulations).map(([key, value], i) => {
                     const label = key.replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase());
@@ -1339,9 +1376,9 @@ function Bien({ props, id, go, m, px }) {
           </div>
 
           {/* Right: sticky agent contact card */}
-          <div style={{ position: m.mob ? "relative" : "sticky", top: m.mob ? 0 : 120 }}>
-            <div style={{ background: "#f7f7f7", borderRadius: 16, padding: m.mob ? 20 : 28, marginBottom: 20 }}>
-              <h3 style={{ fontSize: m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: 20 }}>Formulaire de contact</h3>
+          <div style={{ position: m.mob ? "relative" : "sticky", top: m.mob ? 0 : 120, minWidth: 0 }}>
+            <div style={{ background: "#f7f7f7", borderRadius: 16, padding: m.xs ? 16 : m.mob ? 20 : 28, marginBottom: 20 }}>
+              <h3 style={{ fontSize: m.xs ? 16 : m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Formulaire de contact</h3>
               {cSent ? (
                 <div style={{ textAlign: "center", padding: "24px 0" }}>
                   <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
@@ -1365,22 +1402,22 @@ function Bien({ props, id, go, m, px }) {
               )}
             </div>
             {/* Agent card — cyan background like ebimmo.com */}
-            <div style={{ background: C.cyan, borderRadius: 16, padding: m.mob ? 16 : 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <div style={{ background: C.cyan, borderRadius: 16, padding: m.xs ? 14 : m.mob ? 16 : 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: m.xs ? 12 : 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: m.xs ? 10 : 14, alignItems: "center", minWidth: 0 }}>
                 {p.agent?.photo ? (
-                  <img src={p.agent.photo} alt={p.agent.name} style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "3px solid #fff" }} />
+                  <img src={p.agent.photo} alt={p.agent.name} style={{ width: m.xs ? 48 : 56, height: m.xs ? 48 : 56, borderRadius: "50%", objectFit: "cover", border: "3px solid #fff", flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20, fontWeight: 600, border: "3px solid #fff" }}>EB</div>
+                  <div style={{ width: m.xs ? 48 : 56, height: m.xs ? 48 : 56, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: m.xs ? 17 : 20, fontWeight: 600, border: "3px solid #fff", flexShrink: 0 }}>EB</div>
                 )}
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="wrap-word" style={{ fontSize: m.xs ? 14 : 16, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
                     {p.agent?.name || "E&B Immo"}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="#fff" stroke="#fff" strokeWidth="1"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="#fff" stroke="#fff" strokeWidth="1"/></svg>
                   </div>
-                  <div style={{ fontSize: 14, color: "rgba(255,255,255,.85)" }}>Agence immobilière</div>
+                  <div style={{ fontSize: m.xs ? 12 : 14, color: "rgba(255,255,255,.85)" }}>Agence immobilière</div>
                 </div>
               </div>
-              <a href={`mailto:${p.agent?.email || "contact@eb-immo.fr"}`} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 8, padding: "10px 18px", fontSize: 15, fontWeight: 500, color: C.cyan, textDecoration: "none", whiteSpace: "nowrap" }}>
+              <a href={`mailto:${p.agent?.email || "contact@eb-immo.fr"}`} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 8, padding: m.xs ? "8px 14px" : "10px 18px", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.cyan, textDecoration: "none", whiteSpace: "nowrap" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke={C.cyan} strokeWidth="1.5"/><polyline points="22,6 12,13 2,6" stroke={C.cyan} strokeWidth="1.5"/></svg>
                 Send Email
               </a>
@@ -1437,41 +1474,41 @@ function Contact({ go, m, px }) {
   const selStyle = (hasErr) => ({ ...inpS, border: `1px solid ${hasErr ? "#e53935" : "rgba(13,14,19,0.1)"}`, color: form.type ? C.mine : C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", transition: "border .2s" });
 
   return (
-    <main style={{ paddingTop: m.mob ? 80 : 120 }}>
-      <section style={{ padding: `40px ${px} 80px`, maxWidth: 1280, margin: "0 auto" }}>
-        <Rv><h1 style={{ fontSize: m.mob ? 30 : m.tab ? 44 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Nous contacter</h1></Rv>
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: m.mob ? 32 : 60 }}>
+    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120 }}>
+      <section style={{ padding: `${m.xs ? 28 : 40}px ${px} ${m.xs ? 56 : 80}px`, maxWidth: 1280, margin: "0 auto" }}>
+        <Rv><h1 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.xs ? 24 : m.mob ? 32 : 50 }}>Nous contacter</h1></Rv>
+        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: m.xs ? 24 : m.mob ? 32 : 60 }}>
           <Rv d={1}>
             <div>
-              <p style={{ fontSize: m.mob ? 15 : 17, color: C.abbey, lineHeight: 1.65, marginBottom: 32 }}>
+              <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, color: C.abbey, lineHeight: 1.65, marginBottom: m.xs ? 24 : 32 }}>
                 Notre équipe est disponible pour répondre à toutes vos questions et vous accompagner dans votre projet immobilier.
               </p>
               {[["📞", "+33 7 60 95 36 18"], ["✉️", "contact@eb-immo.fr"], ["📍", "1 rue Jacques Pasquier, 14390 Petiville"]].map(([ic, v], i) => (
-                <div key={i} style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 20 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 10, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{ic}</div>
-                  <span style={{ fontSize: m.mob ? 15 : 17, fontWeight: 500, color: C.abbey }}>{v}</span>
+                <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 14, alignItems: "center", marginBottom: 20 }}>
+                  <div style={{ width: m.xs ? 40 : 44, height: m.xs ? 40 : 44, borderRadius: 10, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: m.xs ? 16 : 18, flexShrink: 0 }}>{ic}</div>
+                  <span className="wrap-word" style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 500, color: C.abbey }}>{v}</span>
                 </div>
               ))}
             </div>
           </Rv>
           <Rv d={2}>
-            <div style={{ background: "#f5f5f5", borderRadius: 16, padding: m.mob ? 24 : 40 }}>
+            <div style={{ background: "#f5f5f5", borderRadius: 16, padding: m.xs ? 18 : m.mob ? 24 : 40 }}>
 
               {/* ── Step indicator ── */}
               {!sent && (
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 32 }}>
+                <div style={{ display: "flex", alignItems: "center", marginBottom: m.xs ? 24 : 32 }}>
                   {[{ n: 1, label: "Vos coordonnées" }, { n: 2, label: "Votre projet" }].map(({ n, label }, i) => (
                     <React.Fragment key={n}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: step >= n ? C.cyan : "transparent", border: `2px solid ${step >= n ? C.cyan : "rgba(13,14,19,0.15)"}`, color: step >= n ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 0 }}>
+                        <div style={{ width: m.xs ? 32 : 36, height: m.xs ? 32 : 36, borderRadius: "50%", background: step >= n ? C.cyan : "transparent", border: `2px solid ${step >= n ? C.cyan : "rgba(13,14,19,0.15)"}`, color: step >= n ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
                           {step > n
                             ? <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4L13 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             : n}
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: step === n ? 600 : 400, color: step === n ? C.cyan : C.abbey, whiteSpace: "nowrap", transition: "all .3s" }}>{label}</span>
+                        <span style={{ fontSize: m.xs ? 11 : 12, fontWeight: step === n ? 600 : 400, color: step === n ? C.cyan : C.abbey, whiteSpace: "nowrap", transition: "all .3s" }}>{label}</span>
                       </div>
                       {i < 1 && (
-                        <div style={{ flex: 1, height: 2, margin: "0 12px", marginBottom: 22, background: `linear-gradient(to right, ${C.cyan} ${step > 1 ? "100%" : "0%"}, rgba(13,14,19,0.12) 0%)`, transition: "background .4s" }} />
+                        <div style={{ flex: 1, height: 2, margin: m.xs ? "0 8px 22px" : "0 12px 22px", background: `linear-gradient(to right, ${C.cyan} ${step > 1 ? "100%" : "0%"}, rgba(13,14,19,0.12) 0%)`, transition: "background .4s" }} />
                       )}
                     </React.Fragment>
                   ))}
@@ -1516,9 +1553,9 @@ function Contact({ go, m, px }) {
                     <input value={form.chambres} onChange={set("chambres")} placeholder="Nombre de chambres" type="number" style={inpS} />
                   </div>
                   <input value={form.annee} onChange={set("annee")} placeholder="Année de construction" type="number" style={inpS} />
-                  <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+                  <div style={{ display: "flex", gap: m.xs ? 8 : 12, marginTop: 4 }}>
                     <button onClick={() => { setErrors({}); setStep(1); }}
-                      style={{ height: 52, padding: "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                      style={{ height: 52, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       Retour
                     </button>
@@ -1577,33 +1614,33 @@ const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,1
 /* ═══════ FOOTER ═══════ */
 function Footer({ go, m, px }) {
   return (
-    <footer style={{ padding: `${m.mob ? 48 : 80}px ${px} 24px`, maxWidth: 1440, margin: "0 auto" }}>
-      <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.mob ? 40 : m.tab ? 60 : 120, marginBottom: m.mob ? 32 : 50 }}>
+    <footer style={{ padding: `${m.xs ? 40 : m.mob ? 48 : 80}px ${px} 24px`, maxWidth: 1440, margin: "0 auto" }}>
+      <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : m.mob ? 40 : m.tab ? 50 : 120, marginBottom: m.xs ? 28 : m.mob ? 32 : 50 }}>
         <div style={{ maxWidth: m.mob ? "100%" : 300, flexShrink: 0 }}>
           <img src={LOGO} alt="E&B Immo" style={{ width: 100, marginBottom: 16 }} />
-          <p style={{ fontSize: 15, color: C.bush, lineHeight: 1.65, marginBottom: 20 }}>
+          <p style={{ fontSize: m.xs ? 14 : 15, color: C.bush, lineHeight: 1.65, marginBottom: 20 }}>
             Votre partenaire de confiance pour tous vos besoins immobiliers.
           </p>
           <PillBtn variant="outline-cyan" onClick={() => go("contact")} style={{ fontSize: 14, padding: "8px 22px" }}>Prendre contact</PillBtn>
         </div>
-        <div style={{ display: "flex", gap: m.mob ? 40 : 60, flex: 1, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: m.xs ? 24 : m.mob ? 40 : m.tab ? 30 : 60, flex: 1, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 120 }}>
             <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Pages</h4>
             {["Accueil", "Propriétés", "Contact"].map((l, i) => (
-              <a key={i} onClick={() => go(["home", "annonces", "contact"][i])} style={{ display: "block", fontSize: 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
+              <a key={i} onClick={() => go(["home", "annonces", "contact"][i])} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
             ))}
           </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ flex: 1, minWidth: m.xs ? 140 : 160 }}>
             <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Contact</h4>
-            <span style={{ display: "block", fontSize: 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>+33 7 60 95 36 18</span>
-            <span style={{ display: "block", fontSize: 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>contact@eb-immo.fr</span>
-            <span style={{ display: "block", fontSize: 15, color: C.abbey, lineHeight: 1.6 }}>1 rue Jacques Pasquier<br />14390 Petiville</span>
+            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>+33 7 60 95 36 18</span>
+            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>contact@eb-immo.fr</span>
+            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6 }}>1 rue Jacques Pasquier<br />14390 Petiville</span>
           </div>
         </div>
       </div>
       <div style={{ borderTop: `1px solid rgba(86,89,90,.3)`, paddingTop: 20, display: "flex", flexDirection: m.mob ? "column" : "row", justifyContent: "space-between", gap: 8 }}>
-        <span style={{ fontSize: 14, color: C.abbey }}>© 2025 E&B Immo. Tous droits réservés.</span>
-        <span style={{ fontSize: 14, color: C.abbey }}>Propulsé par Apimo</span>
+        <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>© 2025 E&B Immo. Tous droits réservés.</span>
+        <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>Propulsé par Apimo</span>
       </div>
     </footer>
   );

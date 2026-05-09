@@ -8,6 +8,14 @@
 
 html {
   scroll-behavior: smooth;
+  /* Avoid iOS Safari font-size zoom on form fields */
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+  /* Hard guard against horizontal overflow on very small screens */
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -33,4 +41,23 @@ body {
 
 img {
   display: block;
+  max-width: 100%;
+  height: auto;
 }
+
+/* Inputs always min 16px to prevent iOS zoom on focus */
+input, textarea, select, button {
+  font-family: inherit;
+}
+@media (max-width: 767px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Hide horizontal scrollbar on thumb-strip on mobile */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Clamp long words on small screens (URLs, references) */
+.wrap-word { overflow-wrap: anywhere; word-break: break-word; }
