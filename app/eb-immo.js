@@ -1346,6 +1346,8 @@ function Bien({ props, id, go, m, px }) {
 function Contact({ go, m, px }) {
   const [step, setStep] = useState(1);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({ nom: "", prenom: "", email: "", tel: "", adresse: "", ville: "", cp: "", type: "", surface: "", chambres: "", annee: "" });
 
@@ -1468,11 +1470,30 @@ function Contact({ go, m, px }) {
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       Retour
                     </button>
-                    <button onClick={() => { if (validateStep2()) setSent(true); }}
-                      style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>
-                      Envoyer
+                    <button onClick={async () => {
+                        if (!validateStep2()) return;
+                        setSending(true);
+                        setSendError("");
+                        try {
+                          const res = await fetch("/api/contact", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ nom: form.nom, prenom: form.prenom, email: form.email, telephone: form.tel, adresse: form.adresse, ville: form.ville, codePostal: form.cp, typeBien: form.type, superficie: form.surface, nbChambres: form.chambres, anneeConstruction: form.annee }),
+                          });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || "Erreur");
+                          setSent(true);
+                        } catch (err) {
+                          setSendError("Une erreur est survenue. Veuillez réessayer ou nous contacter directement.");
+                        } finally {
+                          setSending(false);
+                        }
+                      }}
+                      style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.7 : 1, transition: "opacity .2s" }}>
+                      {sending ? "Envoi en cours…" : "Envoyer"}
                     </button>
                   </div>
+                  {sendError && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10, textAlign: "center" }}>{sendError}</p>}
                 </div>
               )}
 
