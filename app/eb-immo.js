@@ -483,6 +483,13 @@ function Home({ props, ld, go, m, px }) {
     setActiveTab(null);
   }
 
+  function clearTab(key) {
+    if (key === "city") setSq(q => ({ ...q, city: "" }));
+    else if (key === "types") setSq(q => ({ ...q, types: [] }));
+    else if (key === "budget") setBudgetRange([0, 1500000]);
+    else if (key === "surface") setAreaRange([0, 500]);
+  }
+
   const TABS = [
     { key: "city",    label: "Localité" },
     { key: "types",   label: "Type de bien" },
@@ -529,12 +536,33 @@ function Home({ props, ld, go, m, px }) {
             <div style={{ background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden", boxShadow: activeTab ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
               {TABS.map((t, i) => {
                 const isActive = activeTab === t.key;
-                const hasValue = t.key === "city" ? !!sq.city : t.key === "types" ? sq.types.length > 0 : t.key === "budget" ? !!(sq.budgetMin || sq.budgetMax) : !!(sq.areaMin || sq.areaMax);
-                const valueLabel = t.key === "city" ? sq.city : t.key === "types" ? sq.types.map(k => TYPE_OPTIONS.find(x => x[0] === k)?.[1]).join(", ") : t.key === "budget" ? (sq.budgetMin && sq.budgetMax ? `${Number(sq.budgetMin).toLocaleString("fr-FR")} – ${Number(sq.budgetMax).toLocaleString("fr-FR")} €` : sq.budgetMin ? `≥ ${Number(sq.budgetMin).toLocaleString("fr-FR")} €` : `≤ ${Number(sq.budgetMax).toLocaleString("fr-FR")} €`) : (sq.areaMin && sq.areaMax ? `${sq.areaMin} – ${sq.areaMax} m²` : sq.areaMin ? `≥ ${sq.areaMin} m²` : `≤ ${sq.areaMax} m²`);
+                const hasValue =
+                  t.key === "city" ? !!sq.city :
+                  t.key === "types" ? sq.types.length > 0 :
+                  t.key === "budget" ? (budgetRange[0] > 0 || budgetRange[1] < 1500000) :
+                  (areaRange[0] > 0 || areaRange[1] < 500);
+                const fmtK = v => v >= 1000 ? (v / 1000 % 1 === 0 ? v / 1000 + "k" : (v / 1000).toFixed(0) + "k") : String(v);
+                const valueLabel =
+                  t.key === "city" ? sq.city :
+                  t.key === "types" ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") :
+                  t.key === "budget" ? (
+                    budgetRange[0] > 0 && budgetRange[1] < 1500000 ? fmtK(budgetRange[0]) + " – " + fmtK(budgetRange[1]) + " €" :
+                    budgetRange[0] > 0 ? "≥ " + fmtK(budgetRange[0]) + " €" :
+                    "≤ " + fmtK(budgetRange[1]) + " €"
+                  ) : (
+                    areaRange[0] > 0 && areaRange[1] < 500 ? areaRange[0] + " – " + areaRange[1] + " m²" :
+                    areaRange[0] > 0 ? "≥ " + areaRange[0] + " m²" :
+                    "≤ " + areaRange[1] + " m²"
+                  );
                 return (
                   <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
-                    style={{ flex: 1, height: m.mob ? 52 : 62, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: isActive ? "rgba(9,38,29,0.06)" : "transparent", color: isActive ? C.bush : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: isActive || hasValue ? 600 : 400, cursor: "pointer", transition: "background .2s, color .2s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {hasValue ? valueLabel : t.label}
+                    style={{ position: "relative", flex: 1, height: m.mob ? 52 : 62, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, overflow: "hidden" }}>
+                    <span style={{ fontSize: m.mob ? 10 : 11, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
+                    {hasValue && <span style={{ fontSize: m.mob ? 11 : 12, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
+                    {hasValue && (
+                      <span onClick={e => { e.stopPropagation(); clearTab(t.key); }}
+                        style={{ position: "absolute", top: 7, right: 6, width: 15, height: 15, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</span>
+                    )}
                   </button>
                 );
               })}
