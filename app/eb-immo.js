@@ -1438,7 +1438,10 @@ function Contact({ go, m, px }) {
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({ nom: "", prenom: "", email: "", tel: "", adresse: "", ville: "", cp: "", type: "", surface: "", chambres: "", annee: "" });
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+  }, []);
 
   function validateStep1() {
     const e = {};
@@ -1458,16 +1461,6 @@ function Contact({ go, m, px }) {
     setErrors(e);
     return Object.keys(e).length === 0;
   }
-
-  const inp = (key, placeholder, type = "text", full = false) => (
-    <div style={{ gridColumn: full ? "1 / -1" : undefined }}>
-      <input
-        value={form[key]} onChange={set(key)} placeholder={placeholder} type={type}
-        style={{ ...inpS, border: `1px solid ${errors[key] ? "#e53935" : "rgba(13,14,19,0.1)"}`, transition: "border .2s" }}
-      />
-      {errors[key] && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
-    </div>
-  );
 
   const selStyle = (hasErr) => ({ ...inpS, border: `1px solid ${hasErr ? "#e53935" : "rgba(13,14,19,0.1)"}`, color: form.type ? C.mine : C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", transition: "border .2s" });
 
@@ -1516,13 +1509,13 @@ function Contact({ go, m, px }) {
               {/* ── Step 1 ── */}
               {!sent && step === 1 && (
                 <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                  {inp("nom", "Nom *")}
-                  {inp("prenom", "Prénom *")}
-                  {inp("email", "Email *", "email", true)}
-                  {inp("tel", "Numéro de téléphone *", "tel", true)}
-                  {inp("adresse", "Adresse", "text", true)}
-                  {inp("ville", "Ville *")}
-                  {inp("cp", "Code postal *")}
+                  <FormField name="nom" placeholder="Nom *" value={form.nom} onChange={handleChange} error={errors.nom} />
+                  <FormField name="prenom" placeholder="Prénom *" value={form.prenom} onChange={handleChange} error={errors.prenom} />
+                  <FormField name="email" placeholder="Email *" type="email" full value={form.email} onChange={handleChange} error={errors.email} />
+                  <FormField name="tel" placeholder="Numéro de téléphone *" type="tel" full value={form.tel} onChange={handleChange} error={errors.tel} />
+                  <FormField name="adresse" placeholder="Adresse" full value={form.adresse} onChange={handleChange} error={errors.adresse} />
+                  <FormField name="ville" placeholder="Ville *" value={form.ville} onChange={handleChange} error={errors.ville} />
+                  <FormField name="cp" placeholder="Code postal *" value={form.cp} onChange={handleChange} error={errors.cp} />
                   <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
                     <button onClick={() => { if (validateStep1()) setStep(2); }}
                       style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
@@ -1537,7 +1530,7 @@ function Contact({ go, m, px }) {
               {!sent && step === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div>
-                    <select value={form.type} onChange={set("type")} style={selStyle(errors.type)}>
+                    <select name="type" value={form.type} onChange={handleChange} style={selStyle(errors.type)}>
                       <option value="" disabled>Types de biens *</option>
                       <option value="maison">Maison</option>
                       <option value="appartement">Appartement</option>
@@ -1547,10 +1540,10 @@ function Contact({ go, m, px }) {
                     {errors.type && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                    <input value={form.surface} onChange={set("surface")} placeholder="Superficie (m²)" type="number" style={inpS} />
-                    <input value={form.chambres} onChange={set("chambres")} placeholder="Nombre de chambres" type="number" style={inpS} />
+                    <input name="surface" value={form.surface} onChange={handleChange} placeholder="Superficie (m²)" type="number" style={inpS} />
+                    <input name="chambres" value={form.chambres} onChange={handleChange} placeholder="Nombre de chambres" type="number" style={inpS} />
                   </div>
-                  <input value={form.annee} onChange={set("annee")} placeholder="Année de construction" type="number" style={inpS} />
+                  <input name="annee" value={form.annee} onChange={handleChange} placeholder="Année de construction" type="number" style={inpS} />
                   <div style={{ display: "flex", gap: m.xs ? 8 : 12, marginTop: 4 }}>
                     <button onClick={() => { setErrors({}); setStep(1); }}
                       style={{ height: 52, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -1605,6 +1598,16 @@ function Contact({ go, m, px }) {
 }
 
 const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,14,19,0.1)`, borderRadius: 12, fontFamily: "Urbanist, sans-serif", fontSize: 16, outline: "none", background: "#fff" };
+
+function FormField({ name, value, onChange, placeholder, type, full, error }) {
+  return (
+    <div style={{ gridColumn: full ? "1 / -1" : undefined }}>
+      <input name={name} value={value} onChange={onChange} placeholder={placeholder} type={type || "text"}
+        style={{ ...inpS, border: `1px solid ${error ? "#e53935" : "rgba(13,14,19,0.1)"}`, transition: "border .2s" }} />
+      {error && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
+    </div>
+  );
+}
 
 /* ═══════ À PROPOS ═══════ */
 function Apropos({ go, m, px }) {
