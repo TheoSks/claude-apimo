@@ -946,7 +946,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           </div>
         </Rv>
         <Rv>
-          <div style={{ marginBottom: 32 }}>
+          <div style={{ marginBottom: 32, position: "relative", zIndex: 100 }}>
             <FilterBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => {}} m={m} />
           </div>
         </Rv>
