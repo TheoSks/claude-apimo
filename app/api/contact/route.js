@@ -1,9 +1,9 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const TO_EMAIL = "gaggio880@gmail.com";
 
 export async function POST(request) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await request.json();
     const { nom, prenom, email, telephone, adresse, ville, codePostal, typeBien, superficie, nbChambres, anneeConstruction } = body;
