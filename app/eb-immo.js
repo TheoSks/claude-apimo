@@ -933,9 +933,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
   const hasFilters = sq.city || sq.types.length > 0 || budgetRange[0] > 0 || budgetRange[1] < 1500000 || areaRange[0] > 0 || areaRange[1] < 500;
 
   return (
-    <main style={{ paddingTop: m.mob ? 80 : 120 }}>
-      <div style={{ background: C.bush, padding: `24px ${px} 24px` }} />
-
+    <main style={{ paddingTop: m.mob ? 80 : 120, background: C.white }}>
       <section style={{ padding: `40px ${px} 80px`, maxWidth: 1440, margin: "0 auto" }}>
         <Rv>
           <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
