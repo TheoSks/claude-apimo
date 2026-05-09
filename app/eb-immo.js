@@ -1158,17 +1158,18 @@ function pgBtnStyle(active, mob) {
   };
 }
 
-/* ═══════ BIEN DETAIL ═══════ */
-function Bien({ props, id, go, m, px }) {
-  const p = props.find(x => x.id === id);
-  const [photoIdx, setPhotoIdx] = useState(0);
+/* ═══════ BIEN CONTACT FORM ═══════ */
+function BienContactForm({ p, m }) {
   const [cForm, setCForm] = useState({ nom: "", prenom: "", tel: "", email: "", message: "" });
   const [cErrors, setCErrors] = useState({});
   const [cSending, setCsSending] = useState(false);
   const [cSent, setCSent] = useState(false);
   const [cError, setCError] = useState("");
 
-  const setC = (k) => (e) => setCForm(f => ({ ...f, [k]: e.target.value }));
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setCForm(f => ({ ...f, [name]: value }));
+  }, []);
 
   async function handleContactSend() {
     const e = {};
@@ -1177,29 +1178,53 @@ function Bien({ props, id, go, m, px }) {
     if (!cForm.tel.trim()) e.tel = true;
     if (!cForm.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email)) e.email = true;
     if (Object.keys(e).length) { setCErrors(e); return; }
-    setCsSending(true);
-    setCError("");
+    setCsSending(true); setCError("");
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nom: cForm.nom, prenom: cForm.prenom, email: cForm.email, telephone: cForm.tel,
+      const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom: cForm.nom, prenom: cForm.prenom, email: cForm.email, telephone: cForm.tel,
           adresse: "", ville: p.city || "", codePostal: p.zipcode || "",
           typeBien: p.type || p.title, superficie: String(p.area?.value || ""),
           nbChambres: String(p.bedrooms || ""), anneeConstruction: "",
-          message: cForm.message, reference: p.reference || String(p.id),
-        }),
-      });
+          message: cForm.message, reference: p.reference || String(p.id) }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur");
       setCSent(true);
-    } catch {
-      setCError("Une erreur est survenue. Contactez-nous directement.");
-    } finally {
-      setCsSending(false);
-    }
+    } catch { setCError("Une erreur est survenue. Contactez-nous directement."); }
+    finally { setCsSending(false); }
   }
+
+  return (
+    <div style={{ background: "#f7f7f7", borderRadius: 16, padding: m.xs ? 16 : m.mob ? 20 : 28, marginBottom: 20 }}>
+      <h3 style={{ fontSize: m.xs ? 16 : m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Formulaire de contact</h3>
+      {cSent ? (
+        <div style={{ textAlign: "center", padding: "24px 0" }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 600, color: C.bush, marginBottom: 6 }}>Message envoyé !</p>
+          <p style={{ fontSize: 14, color: C.abbey }}>Nous vous répondrons dans les plus brefs délais.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input name="nom" placeholder="Nom *" value={cForm.nom} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.nom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <input name="prenom" placeholder="Prénom *" value={cForm.prenom} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.prenom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <input name="tel" placeholder="Téléphone *" type="tel" value={cForm.tel} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.tel ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <input name="email" placeholder="Email *" type="email" value={cForm.email} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.email ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <textarea name="message" placeholder="Message" rows={4} value={cForm.message} onChange={handleChange} style={{ ...inpS, resize: "vertical" }} />
+          {cError && <p style={{ fontSize: 13, color: "#c0392b", margin: 0 }}>{cError}</p>}
+          <PillBtn variant="solid-cyan" onClick={handleContactSend} style={{ width: "100%", justifyContent: "center", opacity: cSending ? 0.7 : 1, cursor: cSending ? "not-allowed" : "pointer" }} hideArrow>
+            {cSending ? "Envoi en cours…" : "Envoyer"}
+          </PillBtn>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════ BIEN DETAIL ═══════ */
+function Bien({ props, id, go, m, px }) {
+  const p = props.find(x => x.id === id);
+  const [photoIdx, setPhotoIdx] = useState(0);
 
   if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
   const area = p.area?.value || p.area?.total || 0;
@@ -1375,30 +1400,7 @@ function Bien({ props, id, go, m, px }) {
 
           {/* Right: sticky agent contact card */}
           <div style={{ position: m.mob ? "relative" : "sticky", top: m.mob ? 0 : 120, minWidth: 0 }}>
-            <div style={{ background: "#f7f7f7", borderRadius: 16, padding: m.xs ? 16 : m.mob ? 20 : 28, marginBottom: 20 }}>
-              <h3 style={{ fontSize: m.xs ? 16 : m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Formulaire de contact</h3>
-              {cSent ? (
-                <div style={{ textAlign: "center", padding: "24px 0" }}>
-                  <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                  <p style={{ fontSize: 16, fontWeight: 600, color: C.bush, marginBottom: 6 }}>Message envoyé !</p>
-                  <p style={{ fontSize: 14, color: C.abbey }}>Nous vous répondrons dans les plus brefs délais.</p>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <input placeholder="Nom *" value={cForm.nom} onChange={setC("nom")} style={{ ...inpS, border: `1px solid ${cErrors.nom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-                  <input placeholder="Prénom *" value={cForm.prenom} onChange={setC("prenom")} style={{ ...inpS, border: `1px solid ${cErrors.prenom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-                  <input placeholder="Téléphone *" type="tel" value={cForm.tel} onChange={setC("tel")} style={{ ...inpS, border: `1px solid ${cErrors.tel ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-                  <input placeholder="Email *" type="email" value={cForm.email} onChange={setC("email")} style={{ ...inpS, border: `1px solid ${cErrors.email ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-                  <textarea placeholder="Message" rows={4} value={cForm.message} onChange={setC("message")} style={{ ...inpS, resize: "vertical" }} />
-                  {cError && <p style={{ fontSize: 13, color: "#c0392b", margin: 0 }}>{cError}</p>}
-                  <PillBtn variant="solid-cyan" onClick={handleContactSend} style={{ width: "100%", justifyContent: "center", opacity: cSending ? 0.7 : 1, cursor: cSending ? "not-allowed" : "pointer" }} hideArrow>
-                    {cSending ? "Envoi en cours…" : "Envoyer"}
-                  </PillBtn>
-                </div>
-              )}
-            </div>
+            <BienContactForm p={p} m={m} />
             {/* Agent card — cyan background like ebimmo.com */}
             <div style={{ background: C.cyan, borderRadius: 16, padding: m.xs ? 14 : m.mob ? 16 : 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: m.xs ? 12 : 16, flexWrap: "wrap" }}>
               <div style={{ display: "flex", gap: m.xs ? 10 : 14, alignItems: "center", minWidth: 0 }}>
@@ -1429,8 +1431,8 @@ function Bien({ props, id, go, m, px }) {
   );
 }
 
-/* ═══════ CONTACT ═══════ */
-function Contact({ go, m, px }) {
+/* ═══════ CONTACT FORM BOX ═══════ */
+function ContactFormBox({ m }) {
   const [step, setStep] = useState(1);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -1465,6 +1467,93 @@ function Contact({ go, m, px }) {
   const selStyle = (hasErr) => ({ ...inpS, border: `1px solid ${hasErr ? "#e53935" : "rgba(13,14,19,0.1)"}`, color: form.type ? C.mine : C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", transition: "border .2s" });
 
   return (
+    <div style={{ background: "#f5f5f5", borderRadius: 16, padding: m.xs ? 18 : m.mob ? 24 : 40 }}>
+      {!sent && (
+        <div style={{ display: "flex", alignItems: "center", marginBottom: m.xs ? 24 : 32 }}>
+          {[{ n: 1, label: "Vos coordonnées" }, { n: 2, label: "Votre projet" }].map(({ n, label }, i) => (
+            <React.Fragment key={n}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <div style={{ width: m.xs ? 32 : 36, height: m.xs ? 32 : 36, borderRadius: "50%", background: step >= n ? C.cyan : "transparent", border: `2px solid ${step >= n ? C.cyan : "rgba(13,14,19,0.15)"}`, color: step >= n ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
+                  {step > n ? <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4L13 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> : n}
+                </div>
+                <span style={{ fontSize: m.xs ? 11 : 12, fontWeight: step === n ? 600 : 400, color: step === n ? C.cyan : C.abbey, whiteSpace: "nowrap", transition: "all .3s" }}>{label}</span>
+              </div>
+              {i < 1 && <div style={{ flex: 1, height: 2, margin: m.xs ? "0 8px 22px" : "0 12px 22px", background: `linear-gradient(to right, ${C.cyan} ${step > 1 ? "100%" : "0%"}, rgba(13,14,19,0.12) 0%)`, transition: "background .4s" }} />}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+      {!sent && step === 1 && (
+        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
+          <FormField name="nom" placeholder="Nom *" value={form.nom} onChange={handleChange} error={errors.nom} />
+          <FormField name="prenom" placeholder="Prénom *" value={form.prenom} onChange={handleChange} error={errors.prenom} />
+          <FormField name="email" placeholder="Email *" type="email" full value={form.email} onChange={handleChange} error={errors.email} />
+          <FormField name="tel" placeholder="Numéro de téléphone *" type="tel" full value={form.tel} onChange={handleChange} error={errors.tel} />
+          <FormField name="adresse" placeholder="Adresse" full value={form.adresse} onChange={handleChange} error={errors.adresse} />
+          <FormField name="ville" placeholder="Ville *" value={form.ville} onChange={handleChange} error={errors.ville} />
+          <FormField name="cp" placeholder="Code postal *" value={form.cp} onChange={handleChange} error={errors.cp} />
+          <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
+            <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              Continuer <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+      {!sent && step === 2 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <select name="type" value={form.type} onChange={handleChange} style={selStyle(errors.type)}>
+              <option value="" disabled>Types de biens *</option>
+              <option value="maison">Maison</option>
+              <option value="appartement">Appartement</option>
+              <option value="terrain">Terrain</option>
+              <option value="autre">Autre</option>
+            </select>
+            {errors.type && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
+            <input name="surface" value={form.surface} onChange={handleChange} placeholder="Superficie (m²)" type="number" style={inpS} />
+            <input name="chambres" value={form.chambres} onChange={handleChange} placeholder="Nombre de chambres" type="number" style={inpS} />
+          </div>
+          <input name="annee" value={form.annee} onChange={handleChange} placeholder="Année de construction" type="number" style={inpS} />
+          <div style={{ display: "flex", gap: m.xs ? 8 : 12, marginTop: 4 }}>
+            <button onClick={() => { setErrors({}); setStep(1); }} style={{ height: 52, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Retour
+            </button>
+            <button onClick={async () => {
+                if (!validateStep2()) return;
+                setSending(true); setSendError("");
+                try {
+                  const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nom: form.nom, prenom: form.prenom, email: form.email, telephone: form.tel, adresse: form.adresse, ville: form.ville, codePostal: form.cp, typeBien: form.type, superficie: form.surface, nbChambres: form.chambres, anneeConstruction: form.annee }) });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || "Erreur");
+                  setSent(true);
+                } catch { setSendError("Une erreur est survenue. Veuillez réessayer ou nous contacter directement."); }
+                finally { setSending(false); }
+              }}
+              style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.7 : 1, transition: "opacity .2s" }}>
+              {sending ? "Envoi en cours…" : "Envoyer"}
+            </button>
+          </div>
+          {sendError && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10, textAlign: "center" }}>{sendError}</p>}
+        </div>
+      )}
+      {sent && (
+        <div style={{ textAlign: "center", padding: "32px 0" }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <h3 style={{ fontSize: 22, fontWeight: 600, color: C.bush, marginBottom: 10 }}>Message envoyé !</h3>
+          <p style={{ fontSize: 16, color: C.abbey, lineHeight: 1.6 }}>Nous vous répondrons dans les plus brefs délais.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════ CONTACT ═══════ */
+function Contact({ go, m, px }) {
+  return (
     <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120 }}>
       <section style={{ padding: `${m.xs ? 28 : 40}px ${px} ${m.xs ? 56 : 80}px`, maxWidth: 1280, margin: "0 auto" }}>
         <Rv><h1 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.xs ? 24 : m.mob ? 32 : 50 }}>Nous contacter</h1></Rv>
@@ -1483,112 +1572,7 @@ function Contact({ go, m, px }) {
             </div>
           </Rv>
           <Rv d={2}>
-            <div style={{ background: "#f5f5f5", borderRadius: 16, padding: m.xs ? 18 : m.mob ? 24 : 40 }}>
-
-              {/* ── Step indicator ── */}
-              {!sent && (
-                <div style={{ display: "flex", alignItems: "center", marginBottom: m.xs ? 24 : 32 }}>
-                  {[{ n: 1, label: "Vos coordonnées" }, { n: 2, label: "Votre projet" }].map(({ n, label }, i) => (
-                    <React.Fragment key={n}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 0 }}>
-                        <div style={{ width: m.xs ? 32 : 36, height: m.xs ? 32 : 36, borderRadius: "50%", background: step >= n ? C.cyan : "transparent", border: `2px solid ${step >= n ? C.cyan : "rgba(13,14,19,0.15)"}`, color: step >= n ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
-                          {step > n
-                            ? <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4L13 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            : n}
-                        </div>
-                        <span style={{ fontSize: m.xs ? 11 : 12, fontWeight: step === n ? 600 : 400, color: step === n ? C.cyan : C.abbey, whiteSpace: "nowrap", transition: "all .3s" }}>{label}</span>
-                      </div>
-                      {i < 1 && (
-                        <div style={{ flex: 1, height: 2, margin: m.xs ? "0 8px 22px" : "0 12px 22px", background: `linear-gradient(to right, ${C.cyan} ${step > 1 ? "100%" : "0%"}, rgba(13,14,19,0.12) 0%)`, transition: "background .4s" }} />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              )}
-
-              {/* ── Step 1 ── */}
-              {!sent && step === 1 && (
-                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                  <FormField name="nom" placeholder="Nom *" value={form.nom} onChange={handleChange} error={errors.nom} />
-                  <FormField name="prenom" placeholder="Prénom *" value={form.prenom} onChange={handleChange} error={errors.prenom} />
-                  <FormField name="email" placeholder="Email *" type="email" full value={form.email} onChange={handleChange} error={errors.email} />
-                  <FormField name="tel" placeholder="Numéro de téléphone *" type="tel" full value={form.tel} onChange={handleChange} error={errors.tel} />
-                  <FormField name="adresse" placeholder="Adresse" full value={form.adresse} onChange={handleChange} error={errors.adresse} />
-                  <FormField name="ville" placeholder="Ville *" value={form.ville} onChange={handleChange} error={errors.ville} />
-                  <FormField name="cp" placeholder="Code postal *" value={form.cp} onChange={handleChange} error={errors.cp} />
-                  <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
-                    <button onClick={() => { if (validateStep1()) setStep(2); }}
-                      style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                      Continuer
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Step 2 ── */}
-              {!sent && step === 2 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div>
-                    <select name="type" value={form.type} onChange={handleChange} style={selStyle(errors.type)}>
-                      <option value="" disabled>Types de biens *</option>
-                      <option value="maison">Maison</option>
-                      <option value="appartement">Appartement</option>
-                      <option value="terrain">Terrain</option>
-                      <option value="autre">Autre</option>
-                    </select>
-                    {errors.type && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                    <input name="surface" value={form.surface} onChange={handleChange} placeholder="Superficie (m²)" type="number" style={inpS} />
-                    <input name="chambres" value={form.chambres} onChange={handleChange} placeholder="Nombre de chambres" type="number" style={inpS} />
-                  </div>
-                  <input name="annee" value={form.annee} onChange={handleChange} placeholder="Année de construction" type="number" style={inpS} />
-                  <div style={{ display: "flex", gap: m.xs ? 8 : 12, marginTop: 4 }}>
-                    <button onClick={() => { setErrors({}); setStep(1); }}
-                      style={{ height: 52, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      Retour
-                    </button>
-                    <button onClick={async () => {
-                        if (!validateStep2()) return;
-                        setSending(true);
-                        setSendError("");
-                        try {
-                          const res = await fetch("/api/contact", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ nom: form.nom, prenom: form.prenom, email: form.email, telephone: form.tel, adresse: form.adresse, ville: form.ville, codePostal: form.cp, typeBien: form.type, superficie: form.surface, nbChambres: form.chambres, anneeConstruction: form.annee }),
-                          });
-                          const data = await res.json();
-                          if (!res.ok) throw new Error(data.error || "Erreur");
-                          setSent(true);
-                        } catch (err) {
-                          setSendError("Une erreur est survenue. Veuillez réessayer ou nous contacter directement.");
-                        } finally {
-                          setSending(false);
-                        }
-                      }}
-                      style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.7 : 1, transition: "opacity .2s" }}>
-                      {sending ? "Envoi en cours…" : "Envoyer"}
-                    </button>
-                  </div>
-                  {sendError && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10, textAlign: "center" }}>{sendError}</p>}
-                </div>
-              )}
-
-              {/* ── Success ── */}
-              {sent && (
-                <div style={{ textAlign: "center", padding: "32px 0" }}>
-                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: 22, fontWeight: 600, color: C.bush, marginBottom: 10 }}>Message envoyé !</h3>
-                  <p style={{ fontSize: 16, color: C.abbey, lineHeight: 1.6 }}>Nous vous répondrons dans les plus brefs délais.</p>
-                </div>
-              )}
-
-            </div>
+            <ContactFormBox m={m} />
           </Rv>
         </div>
       </section>
