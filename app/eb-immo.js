@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Estimation from "./estimation";
 
 /* ═══ APIMO API CONFIG ═══ */
 const APIMO_PROVIDER = "4019";
@@ -480,6 +481,7 @@ export default function App() {
       {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "bien" && <Bien props={props} id={sid} go={go} m={m} px={px} />}
       {pg === "apropos" && <Apropos go={go} m={m} px={px} />}
+      {pg === "estimation" && <Estimation go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
     </div>
   );
@@ -513,7 +515,7 @@ function Nav({ pg, go, m, px }) {
           </button>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: m.md ? 20 : m.lg ? 28 : 40, flexWrap: "nowrap" }}>
-            {[["Accueil", "home"], ["Propriétés", "annonces"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
+            {[["Accueil", "home"], ["Propriétés", "annonces"], ["Estimation", "estimation"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
               <a key={p} onClick={() => go(p)} style={{ fontSize: m.md ? 14 : 16, color: C.white, cursor: "pointer", textDecoration: "none", opacity: pg === p ? 1 : .7, transition: "opacity .2s", whiteSpace: "nowrap" }}>{l}</a>
             ))}
             <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ padding: m.md ? "8px 18px" : "10px 24px", fontSize: m.md ? 13 : 15 }}>Prendre contact</PillBtn>
@@ -523,7 +525,7 @@ function Nav({ pg, go, m, px }) {
       {/* Mobile menu overlay */}
       {mob && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: "rgba(9,38,29,.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: m.xs ? 24 : 32, padding: 24, opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transition: "opacity .3s" }}>
-          {[["Accueil", "home"], ["Propriétés", "annonces"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
+          {[["Accueil", "home"], ["Propriétés", "annonces"], ["Estimation", "estimation"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
             <a key={p} onClick={() => { go(p); setMenuOpen(false); }} style={{ fontSize: m.xs ? 24 : 28, fontWeight: 500, color: C.white, cursor: "pointer", textDecoration: "none" }}>{l}</a>
           ))}
           <PillBtn variant="outline-white" onClick={() => { go("contact"); setMenuOpen(false); }}>Prendre contact</PillBtn>
@@ -1689,8 +1691,8 @@ function Footer({ go, m, px }) {
         <div style={{ display: "flex", gap: m.xs ? 24 : m.mob ? 40 : m.tab ? 30 : 60, flex: 1, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 120 }}>
             <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Pages</h4>
-            {["Accueil", "Propriétés", "Contact"].map((l, i) => (
-              <a key={i} onClick={() => go(["home", "annonces", "contact"][i])} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
+            {["Accueil", "Propriétés", "Estimation", "Contact"].map((l, i) => (
+              <a key={i} onClick={() => go(["home", "annonces", "estimation", "contact"][i])} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
             ))}
           </div>
           <div style={{ flex: 1, minWidth: m.xs ? 140 : 160 }}>
