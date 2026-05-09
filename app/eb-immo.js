@@ -1138,9 +1138,6 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
         )}
         {totalPages > 1 && <div style={{ textAlign: "center", marginTop: 12, fontSize: 14, color: C.abbey }}>Page {currentPage} sur {totalPages}</div>}
 
-        <div style={{ textAlign: "center", marginTop: 32 }}>
-          <a onClick={() => go("home")} style={{ fontSize: 16, color: C.abbey, cursor: "pointer", textDecoration: "underline" }}>← Retour à l'accueil</a>
-        </div>
       </section>
       <Footer go={go} m={m} px={px} />
     </main>
