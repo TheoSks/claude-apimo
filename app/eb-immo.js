@@ -925,13 +925,32 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
 
       {/* ═══ CTA ═══ */}
       <section style={{ background: C.bush, overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.mob ? 32 : 60, maxWidth: 1440, margin: "0 auto", padding: m.mob ? `60px ${px}` : `0 ${px}` }}>
-          {!m.mob && (
-            <Rv><div style={{ width: m.tab ? 360 : 500, flexShrink: 0 }}><img src={CTA_IMG} alt="CTA" style={{ width: "100%", height: "auto" }} /></div></Rv>
-          )}
-          <Rv d={2} style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: m.mob ? 0 : "100px 0" }}>
-            <h2 style={{ fontSize: m.mob ? 26 : m.tab ? 36 : 56, fontWeight: 500, color: C.white, lineHeight: 1.2, marginBottom: 32 }}>
-              Vous cherchez à acheter ou à louer un bien immobilier ?
+        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", alignItems: "center", gap: m.mob ? 40 : 80, maxWidth: 1440, margin: "0 auto", padding: m.mob ? `60px ${px}` : `0 ${px}` }}>
+
+          {/* Images */}
+          <div style={{ position: "relative", flexShrink: 0, width: m.mob ? "100%" : m.tab ? 320 : 460, height: m.mob ? 360 : m.tab ? 480 : 660 }}>
+            {/* Grand dôme — maison */}
+            <div style={{ position: "absolute", top: 0, left: 0, width: m.mob ? "85%" : "88%", aspectRatio: "1/1", borderRadius: "50% 50% 0 0", overflow: "hidden" }}>
+              <img
+                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80"
+                alt="Maison"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+            {/* Petit cercle — agent */}
+            <div style={{ position: "absolute", bottom: m.mob ? 0 : "4%", right: 0, width: m.mob ? "42%" : "44%", aspectRatio: "1/1", borderRadius: "50%", overflow: "hidden", border: `4px solid ${C.bush}` }}>
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
+                alt="Agent"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          </div>
+
+          {/* Text */}
+          <Rv d={1} style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: m.mob ? 0 : "80px 0", flex: 1 }}>
+            <h2 style={{ fontSize: m.mob ? 32 : m.tab ? 44 : 70, fontWeight: 500, color: C.white, lineHeight: 1.14, marginBottom: 40 }}>
+              Vous cherchez à<br />acheter ou à louer<br />un bien immobilier ?
             </h2>
             <PillBtn variant="outline-white" onClick={() => go("contact")}>Prendre contact</PillBtn>
           </Rv>
