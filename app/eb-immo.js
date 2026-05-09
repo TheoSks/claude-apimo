@@ -1590,7 +1590,6 @@ function Contact({ go, m, px }) {
             </div>
           </Rv>
         </div>
-        </div>
       </section>
       <Footer go={go} m={m} px={px} />
     </main>
