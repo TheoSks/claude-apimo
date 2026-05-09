@@ -185,6 +185,87 @@ function propertyMatchesSearch(x, q) {
   return true;
 }
 
+/* ═══ Dual Range Slider ═══ */
+function DualRangeSlider({ min = 0, max = 1500000, step = 10000, valueMin, valueMax, onChange, unit = "€", maxLabel = null }) {
+  const trackRef = useRef(null);
+  const dragging = useRef(null); // "min" | "max" | null
+
+  const pct = v => ((v - min) / (max - min)) * 100;
+
+  function clamp(v) { return Math.min(max, Math.max(min, Math.round(v / step) * step)); }
+
+  function posToVal(clientX) {
+    const rect = trackRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return clamp(min + ratio * (max - min));
+  }
+
+  function onMove(e) {
+    if (!dragging.current) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const v = posToVal(clientX);
+    if (dragging.current === "min") onChange(Math.min(v, valueMax - step), valueMax);
+    else onChange(valueMin, Math.max(v, valueMin + step));
+  }
+
+  function onUp() { dragging.current = null; }
+
+  useEffect(() => {
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove);
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+  });
+
+  const fmtVal = v => {
+    const atMax = v >= max;
+    const label = atMax && maxLabel ? maxLabel : v.toLocaleString("fr-FR") + (unit === "€" ? " €" : " " + unit);
+    return label;
+  };
+
+  const minLabel = unit === "€" ? "0 €" : "0 " + unit;
+  const endLabel = maxLabel || (max.toLocaleString("fr-FR") + (unit === "€" ? " €+" : "+ " + unit));
+
+  return (
+    <div style={{ padding: "32px 24px 0" }}>
+      {/* Track */}
+      <div ref={trackRef} style={{ position: "relative", height: 2, margin: "0 12px", cursor: "pointer" }}
+        onMouseDown={e => {
+          const v = posToVal(e.clientX);
+          const dMin = Math.abs(v - valueMin); const dMax = Math.abs(v - valueMax);
+          dragging.current = dMin <= dMax ? "min" : "max";
+        }}>
+        {/* Dashed grey full track */}
+        <div style={{ position: "absolute", left: 0, right: 0, top: 0, borderTop: "2px dashed #ccc" }} />
+        {/* Left handle */}
+        <div
+          onMouseDown={e => { e.stopPropagation(); dragging.current = "min"; }}
+          onTouchStart={e => { e.stopPropagation(); dragging.current = "min"; }}
+          style={{ position: "absolute", top: "50%", left: `${pct(valueMin)}%`, transform: "translate(-50%, -50%)", width: 20, height: 20, borderRadius: "50%", background: "#111", cursor: "grab", zIndex: 2, boxShadow: "0 2px 6px rgba(0,0,0,.3)", touchAction: "none" }} />
+        {/* Right handle */}
+        <div
+          onMouseDown={e => { e.stopPropagation(); dragging.current = "max"; }}
+          onTouchStart={e => { e.stopPropagation(); dragging.current = "max"; }}
+          style={{ position: "absolute", top: "50%", left: `${pct(valueMax)}%`, transform: "translate(-50%, -50%)", width: 20, height: 20, borderRadius: "50%", background: "#111", cursor: "grab", zIndex: 2, boxShadow: "0 2px 6px rgba(0,0,0,.3)", touchAction: "none" }} />
+      </div>
+      {/* Labels */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, fontSize: 13, color: "#aaa" }}>
+        <span>{minLabel}</span><span>{endLabel}</span>
+      </div>
+      {/* Selected range */}
+      <div style={{ textAlign: "center", marginTop: 12, paddingBottom: 28, fontSize: 16, fontWeight: 600, color: "#111" }}>
+        {fmtVal(valueMin)} — {fmtVal(valueMax)}
+      </div>
+    </div>
+  );
+}
+
 /* ═══ Reveal animation ═══ */
 function useRv(th = 0.1) {
   const ref = useRef(null); const [v, setV] = useState(false);
@@ -361,8 +442,11 @@ function Home({ props, ld, go, m, px }) {
   const featured = props.slice(0, m.mob ? 4 : 3);
   const listed = props.slice(0, 3);
   const [sq, setSq] = useState(DEFAULT_SEARCHQ);
-  const [showFilters, setShowFilters] = useState(null); // key of open popover
+  const [activeTab, setActiveTab] = useState(null); // null | "city"|"types"|"budget"|"surface"
   const [showCitySug, setShowCitySug] = useState(false);
+  // Slider state (separate from sq so user can cancel)
+  const [budgetRange, setBudgetRange] = useState([0, 1500000]);
+  const [areaRange, setAreaRange] = useState([0, 500]);
   const cityWrapRef = useRef(null);
   const searchBarRef = useRef(null);
   const cities = [...new Set(props.map(p => p.city).filter(Boolean))].sort();
@@ -373,11 +457,38 @@ function Home({ props, ld, go, m, px }) {
   useEffect(() => {
     const onDocClick = (e) => {
       if (cityWrapRef.current && !cityWrapRef.current.contains(e.target)) setShowCitySug(false);
-      if (searchBarRef.current && !searchBarRef.current.contains(e.target)) setShowFilters(null);
+      if (searchBarRef.current && !searchBarRef.current.contains(e.target)) setActiveTab(null);
     };
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
+
+  function applyAndSearch() {
+    const next = {
+      ...sq,
+      budgetMin: budgetRange[0] > 0 ? String(budgetRange[0]) : "",
+      budgetMax: budgetRange[1] < 1500000 ? String(budgetRange[1]) : "",
+      areaMin: areaRange[0] > 0 ? String(areaRange[0]) : "",
+      areaMax: areaRange[1] < 500 ? String(areaRange[1]) : "",
+    };
+    setSq(next);
+    setActiveTab(null);
+    go("annonces", undefined, next);
+  }
+
+  function clearAll() {
+    setSq(DEFAULT_SEARCHQ);
+    setBudgetRange([0, 1500000]);
+    setAreaRange([0, 500]);
+    setActiveTab(null);
+  }
+
+  const TABS = [
+    { key: "city",    label: "Localité" },
+    { key: "types",   label: "Type de bien" },
+    { key: "budget",  label: "Budget" },
+    { key: "surface", label: "Surface min (m²)" },
+  ];
 
   return (
     <main>
@@ -413,141 +524,107 @@ function Home({ props, ld, go, m, px }) {
       {/* ═══ SEARCH BAR ═══ */}
       <section style={{ background: `linear-gradient(to bottom, ${C.bush} 50%, ${C.white} 50%)`, padding: `0 ${px}` }}>
         <Rv>
-          <div ref={searchBarRef} style={{ background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 16, padding: m.mob ? 16 : 20, boxShadow: "4px 4px 4px rgba(0,0,0,.05)" }}>
-            {/* Row 1: text input + search button */}
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={{ position: "absolute", left: 14, pointerEvents: "none" }}><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke={C.abbey} strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input
-                  placeholder="Rechercher un bien…"
-                  value={sq.text}
-                  onChange={e => setSq(q => ({ ...q, text: e.target.value }))}
-                  onKeyDown={e => e.key === "Enter" && go("annonces", undefined, sq)}
-                  style={{ width: "100%", height: m.mob ? 48 : 56, borderRadius: 99, border: `1px solid ${C.cinder10}`, padding: "0 16px 0 42px", fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 14 : 15, color: C.mine, outline: "none", background: "transparent" }} />
-              </div>
-              <button onClick={() => go("annonces", undefined, sq)} style={{ height: m.mob ? 48 : 56, padding: m.mob ? "0 18px" : "0 28px", borderRadius: 99, background: C.cyan, border: "none", color: C.white, fontFamily: "Urbanist, sans-serif", fontWeight: 700, fontSize: 15, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>Rechercher</button>
+          <div ref={searchBarRef}>
+            {/* ── Collapsed pill bar ── */}
+            <div style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden" }}>
+              {TABS.map((t, i) => {
+                const isActive = activeTab === t.key;
+                const hasValue = t.key === "city" ? !!sq.city : t.key === "types" ? sq.types.length > 0 : t.key === "budget" ? !!(sq.budgetMin || sq.budgetMax) : !!(sq.areaMin || sq.areaMax);
+                const valueLabel = t.key === "city" ? sq.city : t.key === "types" ? sq.types.map(k => TYPE_OPTIONS.find(x => x[0] === k)?.[1]).join(", ") : t.key === "budget" ? (sq.budgetMin && sq.budgetMax ? `${Number(sq.budgetMin).toLocaleString("fr-FR")} – ${Number(sq.budgetMax).toLocaleString("fr-FR")} €` : sq.budgetMin ? `≥ ${Number(sq.budgetMin).toLocaleString("fr-FR")} €` : `≤ ${Number(sq.budgetMax).toLocaleString("fr-FR")} €`) : (sq.areaMin && sq.areaMax ? `${sq.areaMin} – ${sq.areaMax} m²` : sq.areaMin ? `≥ ${sq.areaMin} m²` : `≤ ${sq.areaMax} m²`);
+                return (
+                  <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
+                    style={{ flex: 1, height: m.mob ? 52 : 62, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? "1px solid rgba(255,255,255,0.25)" : "none", background: isActive ? C.white : "transparent", color: isActive ? C.mine : C.white, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: isActive || hasValue ? 600 : 400, cursor: "pointer", transition: "background .2s, color .2s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {hasValue ? valueLabel : t.label}
+                  </button>
+                );
+              })}
+              {/* Search icon button */}
+              <button onClick={() => applyAndSearch()} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: "1px solid rgba(255,255,255,0.25)", background: activeTab ? C.white : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke={activeTab ? C.mine : C.white} strokeWidth="1.8" strokeLinecap="round"/></svg>
+              </button>
             </div>
 
-            {/* Row 2: filter category buttons */}
-            <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {[
-                {
-                  key: "city",
-                  label: "Localité",
-                  active: !!sq.city,
-                  activeLabel: sq.city,
-                  popover: (
-                    <div style={{ padding: 16, width: 280 }}>
-                      <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: C.mine }}>Localité</p>
-                      <div ref={cityWrapRef} style={{ position: "relative" }}>
+            {/* ── Expanded panel ── */}
+            {activeTab && (
+              <div style={{ background: C.white, borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
+                {/* Tab header row */}
+                <div style={{ display: "flex", alignItems: "stretch", borderBottom: "1px solid #eee" }}>
+                  {TABS.map((t, i) => (
+                    <button key={t.key} onClick={() => setActiveTab(t.key)}
+                      style={{ flex: 1, height: 52, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? "1px solid #e8e8e8" : "none", borderBottom: activeTab === t.key ? "2px solid #111" : "2px solid transparent", background: "transparent", color: activeTab === t.key ? "#111" : "#aaa", fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: activeTab === t.key ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {t.label}
+                    </button>
+                  ))}
+                  {/* Close X */}
+                  <button onClick={() => setActiveTab(null)} style={{ width: 52, flexShrink: 0, border: "none", borderLeft: "1px solid #e8e8e8", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#999" }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                  </button>
+                </div>
+
+                {/* Tab body */}
+                <div style={{ minHeight: 160 }}>
+                  {/* ── Localité ── */}
+                  {activeTab === "city" && (
+                    <div style={{ padding: "28px 32px" }}>
+                      <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
                         <input
                           value={sq.city}
                           autoFocus
                           onFocus={() => setShowCitySug(true)}
                           onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
-                          placeholder="Ex: Cabourg"
-                          style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 12px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                          placeholder="Saisissez une ville ou un code postal…"
+                          style={{ width: "100%", height: 48, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 14px", fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", color: C.mine }} />
                         {showCitySug && citySuggestions.length > 0 && (
-                          <div style={{ position: "absolute", left: 0, right: 0, top: 46, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
+                          <div style={{ position: "absolute", left: 0, right: 0, top: 52, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 220, overflowY: "auto", zIndex: 60 }}>
                             {citySuggestions.map(c => (
-                              <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); setShowFilters(null); }} style={{ width: "100%", textAlign: "left", padding: "9px 12px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
+                              <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); }} style={{ width: "100%", textAlign: "left", padding: "11px 14px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
                             ))}
                           </div>
                         )}
                       </div>
-                      {sq.city && <button onClick={() => setSq(q => ({ ...q, city: "" }))} style={{ marginTop: 10, fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button>}
-                    </div>
-                  ),
-                },
-                {
-                  key: "types",
-                  label: "Type de bien",
-                  active: sq.types.length > 0,
-                  activeLabel: sq.types.map(t => TYPE_OPTIONS.find(x => x[0] === t)?.[1]).join(", "),
-                  popover: (
-                    <div style={{ padding: 16, width: 260 }}>
-                      <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: C.mine }}>Type de bien</p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {TYPE_OPTIONS.map(([key, label]) => {
-                          const active = sq.types.includes(key);
-                          return (
-                            <button key={key} onClick={() => setSq(q => ({ ...q, types: active ? q.types.filter(t => t !== key) : [...q.types, key] }))}
-                              style={{ height: 36, padding: "0 14px", borderRadius: 99, border: `1px solid ${active ? C.cyan : C.cinder10}`, background: active ? "rgba(36,175,197,.1)" : "transparent", color: active ? C.cyan : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {sq.types.length > 0 && <button onClick={() => setSq(q => ({ ...q, types: [] }))} style={{ marginTop: 10, fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button>}
-                    </div>
-                  ),
-                },
-                {
-                  key: "budget",
-                  label: "Budget",
-                  active: !!(sq.budgetMin || sq.budgetMax),
-                  activeLabel: sq.budgetMin && sq.budgetMax ? `${Number(sq.budgetMin).toLocaleString("fr-FR")} – ${Number(sq.budgetMax).toLocaleString("fr-FR")} €` : sq.budgetMin ? `≥ ${Number(sq.budgetMin).toLocaleString("fr-FR")} €` : `≤ ${Number(sq.budgetMax).toLocaleString("fr-FR")} €`,
-                  popover: (
-                    <div style={{ padding: 16, width: 260 }}>
-                      <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: C.mine }}>Budget (€)</p>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: 12, color: C.abbey, marginBottom: 4 }}>Minimum</label>
-                          <input type="number" min="0" placeholder="0" value={sq.budgetMin} onChange={e => setSq(q => ({ ...q, budgetMin: e.target.value }))} style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 10px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: 12, color: C.abbey, marginBottom: 4 }}>Maximum</label>
-                          <input type="number" min="0" placeholder="Illimité" value={sq.budgetMax} onChange={e => setSq(q => ({ ...q, budgetMax: e.target.value }))} style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 10px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      {(sq.budgetMin || sq.budgetMax) && <button onClick={() => setSq(q => ({ ...q, budgetMin: "", budgetMax: "" }))} style={{ marginTop: 10, fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button>}
-                    </div>
-                  ),
-                },
-                {
-                  key: "surface",
-                  label: "Surface",
-                  active: !!(sq.areaMin || sq.areaMax),
-                  activeLabel: sq.areaMin && sq.areaMax ? `${sq.areaMin} – ${sq.areaMax} m²` : sq.areaMin ? `≥ ${sq.areaMin} m²` : `≤ ${sq.areaMax} m²`,
-                  popover: (
-                    <div style={{ padding: 16, width: 260 }}>
-                      <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: C.mine }}>Surface (m²)</p>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: 12, color: C.abbey, marginBottom: 4 }}>Minimum</label>
-                          <input type="number" min="0" placeholder="0" value={sq.areaMin} onChange={e => setSq(q => ({ ...q, areaMin: e.target.value }))} style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 10px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: 12, color: C.abbey, marginBottom: 4 }}>Maximum</label>
-                          <input type="number" min="0" placeholder="Illimité" value={sq.areaMax} onChange={e => setSq(q => ({ ...q, areaMax: e.target.value }))} style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 10px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      {(sq.areaMin || sq.areaMax) && <button onClick={() => setSq(q => ({ ...q, areaMin: "", areaMax: "" }))} style={{ marginTop: 10, fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button>}
-                    </div>
-                  ),
-                },
-              ].map(f => (
-                <div key={f.key} style={{ position: "relative" }}>
-                  <button
-                    onClick={() => setShowFilters(v => v === f.key ? null : f.key)}
-                    style={{ height: 38, padding: "0 14px", borderRadius: 99, border: `1px solid ${(showFilters === f.key || f.active) ? C.cyan : C.cinder10}`, background: (showFilters === f.key || f.active) ? "rgba(36,175,197,.08)" : "transparent", color: (showFilters === f.key || f.active) ? C.cyan : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-                    {f.active ? f.activeLabel : f.label}
-                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d={showFilters === f.key ? "M9 5L5 1 1 5" : "M1 1l4 4 4-4"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </button>
-                  {showFilters === f.key && (
-                    <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", zIndex: 50 }}>
-                      {f.popover}
                     </div>
                   )}
-                </div>
-              ))}
 
-              {(sq.city || sq.types.length > 0 || sq.budgetMin || sq.budgetMax || sq.areaMin || sq.areaMax) && (
-                <button onClick={() => { setSq({ ...DEFAULT_SEARCHQ }); setShowFilters(null); }} style={{ height: 38, padding: "0 12px", borderRadius: 99, border: `1px solid ${C.cinder10}`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 13, cursor: "pointer" }}>
-                  ✕ Réinitialiser
-                </button>
-              )}
-            </div>
+                  {/* ── Type de bien ── */}
+                  {activeTab === "types" && (
+                    <div style={{ padding: "28px 32px", display: "flex", flexWrap: "wrap", gap: 10 }}>
+                      {TYPE_OPTIONS.map(([key, label]) => {
+                        const on = sq.types.includes(key);
+                        return (
+                          <button key={key} onClick={() => setSq(q => ({ ...q, types: on ? q.types.filter(t => t !== key) : [...q.types, key] }))}
+                            style={{ height: 42, padding: "0 20px", borderRadius: 99, border: `1.5px solid ${on ? "#111" : "#ccc"}`, background: on ? "#111" : "transparent", color: on ? C.white : "#555", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* ── Budget ── */}
+                  {activeTab === "budget" && (
+                    <DualRangeSlider
+                      min={0} max={1500000} step={10000}
+                      valueMin={budgetRange[0]} valueMax={budgetRange[1]}
+                      onChange={(lo, hi) => setBudgetRange([lo, hi])} />
+                  )}
+
+                  {/* ── Surface ── */}
+                  {activeTab === "surface" && (
+                    <DualRangeSlider
+                      min={0} max={500} step={5}
+                      valueMin={areaRange[0]} valueMax={areaRange[1]}
+                      onChange={(lo, hi) => setAreaRange([lo, hi])}
+                      unit="m²" maxLabel="500+ m²" />
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div style={{ background: "#f9f9f9", borderTop: "1px solid #eee", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
+                  <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: "#666", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
+                  <button onClick={applyAndSearch} style={{ height: 42, padding: "0 28px", border: "none", background: "#111", color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
+                </div>
+              </div>
+            )}
           </div>
         </Rv>
       </section>
