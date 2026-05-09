@@ -1293,6 +1293,44 @@ function Bien({ props, id, go, m, px }) {
 
 /* ═══════ CONTACT ═══════ */
 function Contact({ go, m, px }) {
+  const [step, setStep] = useState(1);
+  const [sent, setSent] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState({ nom: "", prenom: "", email: "", tel: "", adresse: "", ville: "", cp: "", type: "", surface: "", chambres: "", annee: "" });
+
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  function validateStep1() {
+    const e = {};
+    if (!form.nom.trim()) e.nom = true;
+    if (!form.prenom.trim()) e.prenom = true;
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = true;
+    if (!form.tel.trim()) e.tel = true;
+    if (!form.ville.trim()) e.ville = true;
+    if (!form.cp.trim()) e.cp = true;
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function validateStep2() {
+    const e = {};
+    if (!form.type) e.type = true;
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  const inp = (key, placeholder, type = "text", full = false) => (
+    <div style={{ gridColumn: full ? "1 / -1" : undefined }}>
+      <input
+        value={form[key]} onChange={set(key)} placeholder={placeholder} type={type}
+        style={{ ...inpS, border: `1px solid ${errors[key] ? "#e53935" : "rgba(13,14,19,0.1)"}`, transition: "border .2s" }}
+      />
+      {errors[key] && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
+    </div>
+  );
+
+  const selStyle = (hasErr) => ({ ...inpS, border: `1px solid ${hasErr ? "#e53935" : "rgba(13,14,19,0.1)"}`, color: form.type ? C.mine : C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", transition: "border .2s" });
+
   return (
     <main style={{ paddingTop: m.mob ? 80 : 120 }}>
       <section style={{ padding: `40px ${px} 80px`, maxWidth: 1280, margin: "0 auto" }}>
@@ -1313,33 +1351,89 @@ function Contact({ go, m, px }) {
           </Rv>
           <Rv d={2}>
             <div style={{ background: "#f5f5f5", borderRadius: 16, padding: m.mob ? 24 : 40 }}>
-              <h3 style={{ fontSize: m.mob ? 22 : 26, fontWeight: 500, marginBottom: 20 }}>Envoyez-nous un message</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                  <input placeholder="Nom" style={inpS} />
-                  <input placeholder="Prénom" style={inpS} />
+
+              {/* ── Step indicator ── */}
+              {!sent && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+                  {[1, 2].map((s) => (
+                    <React.Fragment key={s}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: step >= s ? C.bush : "rgba(13,14,19,0.1)", color: step >= s ? C.white : C.abbey, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, transition: "all .3s", flexShrink: 0 }}>
+                          {step > s ? <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> : s}
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: step === s ? 600 : 400, color: step >= s ? C.bush : C.abbey, whiteSpace: "nowrap" }}>
+                          {s === 1 ? "Vos coordonnées" : "Votre projet"}
+                        </span>
+                      </div>
+                      {s < 2 && <div style={{ flex: 1, height: 1, background: step > s ? C.bush : "rgba(13,14,19,0.1)", transition: "background .3s" }} />}
+                    </React.Fragment>
+                  ))}
                 </div>
-                <input placeholder="Email" type="email" style={inpS} />
-                <input placeholder="Numéro de téléphone" type="tel" style={inpS} />
-                <input placeholder="Adresse" style={inpS} />
+              )}
+
+              {/* ── Step 1 ── */}
+              {!sent && step === 1 && (
                 <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                  <input placeholder="Ville" style={inpS} />
-                  <input placeholder="Code postal" style={inpS} />
+                  {inp("nom", "Nom *")}
+                  {inp("prenom", "Prénom *")}
+                  {inp("email", "Email *", "email", true)}
+                  {inp("tel", "Numéro de téléphone *", "tel", true)}
+                  {inp("adresse", "Adresse", "text", true)}
+                  {inp("ville", "Ville *")}
+                  {inp("cp", "Code postal *")}
+                  <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
+                    <button onClick={() => { if (validateStep1()) setStep(2); }}
+                      style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.bush, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                      Continuer
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  </div>
                 </div>
-                <select style={{ ...inpS, color: C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}>
-                  <option value="" disabled selected>Types de biens</option>
-                  <option value="maison">Maison</option>
-                  <option value="appartement">Appartement</option>
-                  <option value="terrain">Terrain</option>
-                  <option value="autre">Autre</option>
-                </select>
-                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-                  <input placeholder="Superficie du terrain (en m²)" type="number" style={inpS} />
-                  <input placeholder="Nombre de chambres" type="number" style={inpS} />
+              )}
+
+              {/* ── Step 2 ── */}
+              {!sent && step === 2 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <select value={form.type} onChange={set("type")} style={selStyle(errors.type)}>
+                      <option value="" disabled>Types de biens *</option>
+                      <option value="maison">Maison</option>
+                      <option value="appartement">Appartement</option>
+                      <option value="terrain">Terrain</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                    {errors.type && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
+                    <input value={form.surface} onChange={set("surface")} placeholder="Superficie (m²)" type="number" style={inpS} />
+                    <input value={form.chambres} onChange={set("chambres")} placeholder="Nombre de chambres" type="number" style={inpS} />
+                  </div>
+                  <input value={form.annee} onChange={set("annee")} placeholder="Année de construction" type="number" style={inpS} />
+                  <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+                    <button onClick={() => { setErrors({}); setStep(1); }}
+                      style={{ height: 52, padding: "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Retour
+                    </button>
+                    <button onClick={() => { if (validateStep2()) setSent(true); }}
+                      style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>
+                      Envoyer
+                    </button>
+                  </div>
                 </div>
-                <input placeholder="Année de construction" type="number" style={inpS} />
-                <PillBtn variant="solid-cyan" onClick={() => {}} style={{ width: "100%", justifyContent: "center" }} hideArrow>Envoyer</PillBtn>
-              </div>
+              )}
+
+              {/* ── Success ── */}
+              {sent && (
+                <div style={{ textAlign: "center", padding: "32px 0" }}>
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <h3 style={{ fontSize: 22, fontWeight: 600, color: C.bush, marginBottom: 10 }}>Message envoyé !</h3>
+                  <p style={{ fontSize: 16, color: C.abbey, lineHeight: 1.6 }}>Nous vous répondrons dans les plus brefs délais.</p>
+                </div>
+              )}
+
             </div>
           </Rv>
         </div>
