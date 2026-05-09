@@ -547,17 +547,10 @@ function Home({ props, ld, go, m, px }) {
             {/* ── Expanded panel ── */}
             {activeTab && (
               <div style={{ background: C.white, borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
-                {/* Tab header row */}
-                <div style={{ display: "flex", alignItems: "stretch", borderBottom: `1px solid ${C.cinder10}` }}>
-                  {TABS.map((t, i) => (
-                    <button key={t.key} onClick={() => setActiveTab(t.key)}
-                      style={{ flex: 1, height: 52, padding: "0 4px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", borderBottom: activeTab === t.key ? `2px solid ${C.cyan}` : "2px solid transparent", background: "transparent", color: activeTab === t.key ? C.bush : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 14, fontWeight: activeTab === t.key ? 600 : 400, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {t.label}
-                    </button>
-                  ))}
-                  {/* Close X */}
-                  <button onClick={() => setActiveTab(null)} style={{ width: 52, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                {/* Close row */}
+                <div style={{ display: "flex", justifyContent: "flex-end", borderBottom: `1px solid ${C.cinder10}` }}>
+                  <button onClick={() => setActiveTab(null)} style={{ width: 52, height: 44, flexShrink: 0, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                   </button>
                 </div>
 
