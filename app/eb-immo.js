@@ -497,10 +497,18 @@ function Nav({ pg, go, m, px }) {
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, padding: `${padY}px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: pg === "home" ? "rgba(9,38,29,.85)" : "rgba(9,38,29,.97)", backdropFilter: "blur(12px)", transition: "background .3s" }}>
         <img src={LOGO} alt="E&B Immo" style={{ height: logoH, width: "auto", cursor: "pointer", filter: "brightness(10)", flexShrink: 0 }} onClick={() => { go("home"); setMenuOpen(false); }} />
         {mob ? (
-          <button aria-label="Menu" onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, flexShrink: 0 }}>
-            <div style={{ width: 24, height: 2, background: "#fff", marginBottom: 6, transition: "all .3s", transform: menuOpen ? "rotate(45deg) translate(3px,3px)" : "" }} />
-            <div style={{ width: 24, height: 2, background: "#fff", marginBottom: 6, opacity: menuOpen ? 0 : 1, transition: "all .2s" }} />
-            <div style={{ width: 24, height: 2, background: "#fff", transition: "all .3s", transform: menuOpen ? "rotate(-45deg) translate(3px,-3px)" : "" }} />
+          <button aria-label="Menu" onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: 40, height: 40, position: "relative" }}>
+            {menuOpen ? (
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <path d="M3 3L19 19M19 3L3 19" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            ) : (
+              <>
+                <div style={{ width: 24, height: 2, background: "#fff", marginBottom: 5 }} />
+                <div style={{ width: 24, height: 2, background: "#fff", marginBottom: 5 }} />
+                <div style={{ width: 24, height: 2, background: "#fff" }} />
+              </>
+            )}
           </button>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: m.md ? 20 : m.lg ? 28 : 40, flexWrap: "nowrap" }}>
