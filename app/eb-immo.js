@@ -1320,8 +1320,24 @@ function Contact({ go, m, px }) {
                   <input placeholder="Prénom" style={inpS} />
                 </div>
                 <input placeholder="Email" type="email" style={inpS} />
-                <input placeholder="Téléphone" type="tel" style={inpS} />
-                <textarea placeholder="Votre message..." rows={4} style={{ ...inpS, resize: "vertical" }} />
+                <input placeholder="Numéro de téléphone" type="tel" style={inpS} />
+                <input placeholder="Adresse" style={inpS} />
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
+                  <input placeholder="Ville" style={inpS} />
+                  <input placeholder="Code postal" style={inpS} />
+                </div>
+                <select style={{ ...inpS, color: C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}>
+                  <option value="" disabled selected>Types de biens</option>
+                  <option value="maison">Maison</option>
+                  <option value="appartement">Appartement</option>
+                  <option value="terrain">Terrain</option>
+                  <option value="autre">Autre</option>
+                </select>
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
+                  <input placeholder="Superficie du terrain (en m²)" type="number" style={inpS} />
+                  <input placeholder="Nombre de chambres" type="number" style={inpS} />
+                </div>
+                <input placeholder="Année de construction" type="number" style={inpS} />
                 <PillBtn variant="solid-cyan" onClick={() => {}} style={{ width: "100%", justifyContent: "center" }} hideArrow>Envoyer</PillBtn>
               </div>
             </div>
