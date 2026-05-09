@@ -1631,8 +1631,8 @@ function Apropos({ go, m, px }) {
         <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "1fr 1fr" : m.tab ? "repeat(3,1fr)" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
           {team.map((t) => (
             <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ width: "100%", aspectRatio: "3/4", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
-                <img src={t.photo} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
+              <div style={{ width: "100%", aspectRatio: "4/5", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
+                <img src={t.photo} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 10%" }} />
               </div>
               <h3 style={{ fontSize: m.xs ? 17 : 19, fontWeight: 600, color: C.bush, margin: 0 }}>{t.name}</h3>
               <p style={{ fontSize: 14, color: C.abbey, margin: 0 }}>{t.role}</p>
