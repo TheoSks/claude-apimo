@@ -537,11 +537,12 @@ function Nav({ pg, go, m, px }) {
 function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange, allProps, onSearch, m }) {
   const [openFilter, setOpenFilter] = useState(null); // null | "city"|"types"|"budget"|"surface"
   const [showCitySug, setShowCitySug] = useState(false);
+  const [cityText, setCityText] = useState(sq.city);
   const wrapRef = useRef(null);
   const cityWrapRef = useRef(null);
 
   const cities = [...new Set((allProps || []).map(p => p.city).filter(Boolean))].sort();
-  const citySuggestions = sq.city.trim().length < 2 ? [] : cities.filter(c => norm(c).includes(norm(sq.city))).slice(0, 8);
+  const citySuggestions = cityText.trim().length < 2 ? [] : cities.filter(c => norm(c).includes(norm(cityText))).slice(0, 8);
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -550,10 +551,11 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
+  useEffect(() => { setCityText(sq.city); }, [sq.city]);
 
-  function clearAll() { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); setOpenFilter(null); }
+  function clearAll() { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); setOpenFilter(null); setCityText(""); }
 
-  const hasCity = !!sq.city;
+  const hasCity = !!cityText;
   const hasTypes = sq.types.length > 0;
   const hasBudget = budgetRange[0] > 0 || budgetRange[1] < 1500000;
   const hasSurface = areaRange[0] > 0 || areaRange[1] < 500;
@@ -593,19 +595,20 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
         {/* ── Localité ── */}
         <div style={{ position: "relative" }}>
           <button style={pillStyle(hasCity || openFilter === "city")} onClick={() => setOpenFilter(v => v === "city" ? null : "city")}>
-            {hasCity ? sq.city : "Localité"} {chevron(openFilter === "city")}
+            {hasCity ? cityText : "Localité"} {chevron(openFilter === "city")}
           </button>
           {openFilter === "city" && (
             <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: "min(280px, calc(100vw - 32px))", maxWidth: 320 }}>
               <div ref={cityWrapRef} style={{ position: "relative" }}>
-                <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
-                  onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
+                <input value={cityText} autoFocus onFocus={() => setShowCitySug(true)}
+                  onChange={e => { setCityText(e.target.value); setShowCitySug(true); }}
+                  onBlur={e => setSq(q => ({ ...q, city: e.target.value }))}
                   placeholder="Ex : Cabourg, Deauville…"
                   style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 12px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box", color: C.mine }} />
                 {showCitySug && citySuggestions.length > 0 && (
                   <div style={{ position: "absolute", left: 0, right: 0, top: 46, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 200, overflowY: "auto", zIndex: 60 }}>
                     {citySuggestions.map(c => (
-                      <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); setOpenFilter(null); }}
+                      <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setCityText(c); setShowCitySug(false); setOpenFilter(null); }}
                         style={{ width: "100%", textAlign: "left", padding: "9px 12px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
                     ))}
                   </div>
@@ -671,7 +674,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             ✕ Réinitialiser
           </button>
         )}
-        <button onClick={() => { setOpenFilter(null); onSearch(); }}
+        <button onClick={() => { setSq(q => ({ ...q, city: cityText })); setOpenFilter(null); onSearch(); }}
           style={{ marginLeft: "auto", height: m.mob ? 36 : 44, padding: m.mob ? "0 18px" : "0 28px", borderRadius: 99, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontWeight: 700, fontSize: m.mob ? 13 : 15, cursor: "pointer", flexShrink: 0 }}>
           Rechercher
         </button>
@@ -684,11 +687,12 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
 function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange, allProps, onSearch, m }) {
   const [activeTab, setActiveTab] = useState(null);
   const [showCitySug, setShowCitySug] = useState(false);
+  const [cityText, setCityText] = useState(sq.city);
   const searchBarRef = useRef(null);
   const cityWrapRef = useRef(null);
 
   const cities = [...new Set((allProps || []).map(p => p.city).filter(Boolean))].sort();
-  const citySuggestions = sq.city.trim().length < 2 ? [] : cities.filter(c => norm(c).includes(norm(sq.city))).slice(0, 8);
+  const citySuggestions = cityText.trim().length < 2 ? [] : cities.filter(c => norm(c).includes(norm(cityText))).slice(0, 8);
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -698,11 +702,12 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
+  useEffect(() => { setCityText(sq.city); }, [sq.city]);
 
-  function clearAll() { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); setActiveTab(null); }
+  function clearAll() { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); setActiveTab(null); setCityText(""); }
 
   function clearTab(key) {
-    if (key === "city") setSq(q => ({ ...q, city: "" }));
+    if (key === "city") { setSq(q => ({ ...q, city: "" })); setCityText(""); }
     else if (key === "types") setSq(q => ({ ...q, types: [] }));
     else if (key === "budget") setBudgetRange([0, 1500000]);
     else if (key === "surface") setAreaRange([0, 500]);
@@ -726,13 +731,13 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
         {TABS.map((t, i) => {
           const isActive = activeTab === t.key;
           const hasValue =
-            t.key === "city" ? !!sq.city :
+            t.key === "city" ? !!cityText :
             t.key === "types" ? sq.types.length > 0 :
             t.key === "budget" ? (budgetRange[0] > 0 || budgetRange[1] < 1500000) :
             (areaRange[0] > 0 || areaRange[1] < 500);
           const fmtK = v => v >= 1000 ? Math.round(v / 1000) + "k" : String(v);
           const valueLabel =
-            t.key === "city" ? sq.city :
+            t.key === "city" ? cityText :
             t.key === "types" ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") :
             t.key === "budget" ? (
               budgetRange[0] > 0 && budgetRange[1] < 1500000 ? fmtK(budgetRange[0]) + " – " + fmtK(budgetRange[1]) + " €" :
@@ -753,7 +758,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             </button>
           );
         })}
-        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: stack ? "100%" : tabH, height: stack ? 52 : tabH, flexShrink: 0, border: "none", borderLeft: stack ? "none" : `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "#fff", fontFamily: "Urbanist, sans-serif", fontWeight: 600, fontSize: 15 }}>
+        <button onClick={() => { setSq(q => ({ ...q, city: cityText })); setActiveTab(null); onSearch(); }} style={{ width: stack ? "100%" : tabH, height: stack ? 52 : tabH, flexShrink: 0, border: "none", borderLeft: stack ? "none" : `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "#fff", fontFamily: "Urbanist, sans-serif", fontWeight: 600, fontSize: 15 }}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
           {stack && <span>Rechercher</span>}
         </button>
@@ -771,14 +776,15 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             {activeTab === "city" && (
               <div style={{ padding: m.xs ? "16px" : "20px 24px" }}>
                 <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
-                  <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
-                    onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
+                  <input value={cityText} autoFocus onFocus={() => setShowCitySug(true)}
+                    onChange={e => { setCityText(e.target.value); setShowCitySug(true); }}
+                    onBlur={e => setSq(q => ({ ...q, city: e.target.value }))}
                     placeholder="Saisissez une ville ou un code postal…"
                     style={{ width: "100%", height: 48, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 14px", fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", color: C.mine }} />
                   {showCitySug && citySuggestions.length > 0 && (
                     <div style={{ position: "absolute", left: 0, right: 0, top: 52, background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 220, overflowY: "auto", zIndex: 60 }}>
                       {citySuggestions.map(c => (
-                        <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); }} style={{ width: "100%", textAlign: "left", padding: "11px 14px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
+                        <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setCityText(c); setShowCitySug(false); }} style={{ width: "100%", textAlign: "left", padding: "11px 14px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
                       ))}
                     </div>
                   )}
@@ -807,7 +813,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
           </div>
           <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: m.xs ? "12px 16px" : "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
             <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
-            <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
+            <button onClick={() => { setSq(q => ({ ...q, city: cityText })); setActiveTab(null); onSearch(); }} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
           </div>
         </div>
       )}
@@ -1160,32 +1166,30 @@ function pgBtnStyle(active, mob) {
 
 /* ═══════ BIEN CONTACT FORM ═══════ */
 function BienContactForm({ p, m }) {
-  const [cForm, setCForm] = useState({ nom: "", prenom: "", tel: "", email: "", message: "" });
+  const cVals = useRef({ nom: "", prenom: "", tel: "", email: "", message: "" });
   const [cErrors, setCErrors] = useState({});
   const [cSending, setCsSending] = useState(false);
   const [cSent, setCSent] = useState(false);
   const [cError, setCError] = useState("");
 
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setCForm(f => ({ ...f, [name]: value }));
-  }, []);
+  const handleChange = useCallback((e) => { cVals.current[e.target.name] = e.target.value; }, []);
 
   async function handleContactSend() {
+    const f = cVals.current;
     const e = {};
-    if (!cForm.nom.trim()) e.nom = true;
-    if (!cForm.prenom.trim()) e.prenom = true;
-    if (!cForm.tel.trim()) e.tel = true;
-    if (!cForm.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email)) e.email = true;
+    if (!f.nom.trim()) e.nom = true;
+    if (!f.prenom.trim()) e.prenom = true;
+    if (!f.tel.trim()) e.tel = true;
+    if (!f.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = true;
     if (Object.keys(e).length) { setCErrors(e); return; }
     setCsSending(true); setCError("");
     try {
       const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom: cForm.nom, prenom: cForm.prenom, email: cForm.email, telephone: cForm.tel,
+        body: JSON.stringify({ nom: f.nom, prenom: f.prenom, email: f.email, telephone: f.tel,
           adresse: "", ville: p.city || "", codePostal: p.zipcode || "",
           typeBien: p.type || p.title, superficie: String(p.area?.value || ""),
           nbChambres: String(p.bedrooms || ""), anneeConstruction: "",
-          message: cForm.message, reference: p.reference || String(p.id) }) });
+          message: f.message, reference: p.reference || String(p.id) }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur");
       setCSent(true);
@@ -1206,11 +1210,11 @@ function BienContactForm({ p, m }) {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <input name="nom" placeholder="Nom *" value={cForm.nom} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.nom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-          <input name="prenom" placeholder="Prénom *" value={cForm.prenom} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.prenom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-          <input name="tel" placeholder="Téléphone *" type="tel" value={cForm.tel} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.tel ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-          <input name="email" placeholder="Email *" type="email" value={cForm.email} onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.email ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
-          <textarea name="message" placeholder="Message" rows={4} value={cForm.message} onChange={handleChange} style={{ ...inpS, resize: "vertical" }} />
+          <input name="nom" placeholder="Nom *" defaultValue="" onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.nom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <input name="prenom" placeholder="Prénom *" defaultValue="" onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.prenom ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <input name="tel" placeholder="Téléphone *" type="tel" defaultValue="" onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.tel ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <input name="email" placeholder="Email *" type="email" defaultValue="" onChange={handleChange} style={{ ...inpS, border: `1px solid ${cErrors.email ? "#c0392b" : "rgba(13,14,19,0.15)"}` }} />
+          <textarea name="message" placeholder="Message" rows={4} defaultValue="" onChange={handleChange} style={{ ...inpS, resize: "vertical" }} />
           {cError && <p style={{ fontSize: 13, color: "#c0392b", margin: 0 }}>{cError}</p>}
           <PillBtn variant="solid-cyan" onClick={handleContactSend} style={{ width: "100%", justifyContent: "center", opacity: cSending ? 0.7 : 1, cursor: cSending ? "not-allowed" : "pointer" }} hideArrow>
             {cSending ? "Envoi en cours…" : "Envoyer"}
@@ -1438,33 +1442,34 @@ function ContactFormBox({ m }) {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({ nom: "", prenom: "", email: "", tel: "", adresse: "", ville: "", cp: "", type: "", surface: "", chambres: "", annee: "" });
+  const [typeVal, setTypeVal] = useState("");
+  /* useRef for all text values → onChange never triggers a re-render → no focus loss */
+  const vals = useRef({ nom: "", prenom: "", email: "", tel: "", adresse: "", ville: "", cp: "", surface: "", chambres: "", annee: "" });
 
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
-  }, []);
+  const handleChange = useCallback((e) => { vals.current[e.target.name] = e.target.value; }, []);
+  const handleTypeChange = useCallback((e) => { vals.current.type = e.target.value; setTypeVal(e.target.value); }, []);
 
   function validateStep1() {
+    const f = vals.current;
     const e = {};
-    if (!form.nom.trim()) e.nom = true;
-    if (!form.prenom.trim()) e.prenom = true;
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = true;
-    if (!form.tel.trim()) e.tel = true;
-    if (!form.ville.trim()) e.ville = true;
-    if (!form.cp.trim()) e.cp = true;
+    if (!f.nom.trim()) e.nom = true;
+    if (!f.prenom.trim()) e.prenom = true;
+    if (!f.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = true;
+    if (!f.tel.trim()) e.tel = true;
+    if (!f.ville.trim()) e.ville = true;
+    if (!f.cp.trim()) e.cp = true;
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function validateStep2() {
     const e = {};
-    if (!form.type) e.type = true;
+    if (!vals.current.type) e.type = true;
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  const selStyle = (hasErr) => ({ ...inpS, border: `1px solid ${hasErr ? "#e53935" : "rgba(13,14,19,0.1)"}`, color: form.type ? C.mine : C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", transition: "border .2s" });
+  const selStyle = (hasErr) => ({ ...inpS, border: `1px solid ${hasErr ? "#e53935" : "rgba(13,14,19,0.1)"}`, color: typeVal ? C.mine : C.abbey, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2356595A' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", transition: "border .2s" });
 
   return (
     <div style={{ background: "#f5f5f5", borderRadius: 16, padding: m.xs ? 18 : m.mob ? 24 : 40 }}>
@@ -1483,61 +1488,59 @@ function ContactFormBox({ m }) {
           ))}
         </div>
       )}
-      {!sent && step === 1 && (
+      {/* Steps kept always mounted (display:none when inactive) so inputs never unmount */}
+      <div style={{ display: !sent && step === 1 ? "grid" : "none", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
+        <FormField name="nom" placeholder="Nom *" onChange={handleChange} error={errors.nom} />
+        <FormField name="prenom" placeholder="Prénom *" onChange={handleChange} error={errors.prenom} />
+        <FormField name="email" placeholder="Email *" type="email" full onChange={handleChange} error={errors.email} />
+        <FormField name="tel" placeholder="Numéro de téléphone *" type="tel" full onChange={handleChange} error={errors.tel} />
+        <FormField name="adresse" placeholder="Adresse" full onChange={handleChange} error={errors.adresse} />
+        <FormField name="ville" placeholder="Ville *" onChange={handleChange} error={errors.ville} />
+        <FormField name="cp" placeholder="Code postal *" onChange={handleChange} error={errors.cp} />
+        <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
+          <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            Continuer <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style={{ display: !sent && step === 2 ? "flex" : "none", flexDirection: "column", gap: 14 }}>
+        <div>
+          <select name="type" value={typeVal} onChange={handleTypeChange} style={selStyle(errors.type)}>
+            <option value="" disabled>Types de biens *</option>
+            <option value="maison">Maison</option>
+            <option value="appartement">Appartement</option>
+            <option value="terrain">Terrain</option>
+            <option value="autre">Autre</option>
+          </select>
+          {errors.type && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-          <FormField name="nom" placeholder="Nom *" value={form.nom} onChange={handleChange} error={errors.nom} />
-          <FormField name="prenom" placeholder="Prénom *" value={form.prenom} onChange={handleChange} error={errors.prenom} />
-          <FormField name="email" placeholder="Email *" type="email" full value={form.email} onChange={handleChange} error={errors.email} />
-          <FormField name="tel" placeholder="Numéro de téléphone *" type="tel" full value={form.tel} onChange={handleChange} error={errors.tel} />
-          <FormField name="adresse" placeholder="Adresse" full value={form.adresse} onChange={handleChange} error={errors.adresse} />
-          <FormField name="ville" placeholder="Ville *" value={form.ville} onChange={handleChange} error={errors.ville} />
-          <FormField name="cp" placeholder="Code postal *" value={form.cp} onChange={handleChange} error={errors.cp} />
-          <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
-            <button onClick={() => { if (validateStep1()) setStep(2); }} style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              Continuer <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          </div>
+          <input name="surface" defaultValue="" onChange={handleChange} placeholder="Superficie (m²)" type="number" style={inpS} />
+          <input name="chambres" defaultValue="" onChange={handleChange} placeholder="Nombre de chambres" type="number" style={inpS} />
         </div>
-      )}
-      {!sent && step === 2 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <select name="type" value={form.type} onChange={handleChange} style={selStyle(errors.type)}>
-              <option value="" disabled>Types de biens *</option>
-              <option value="maison">Maison</option>
-              <option value="appartement">Appartement</option>
-              <option value="terrain">Terrain</option>
-              <option value="autre">Autre</option>
-            </select>
-            {errors.type && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 14 }}>
-            <input name="surface" value={form.surface} onChange={handleChange} placeholder="Superficie (m²)" type="number" style={inpS} />
-            <input name="chambres" value={form.chambres} onChange={handleChange} placeholder="Nombre de chambres" type="number" style={inpS} />
-          </div>
-          <input name="annee" value={form.annee} onChange={handleChange} placeholder="Année de construction" type="number" style={inpS} />
-          <div style={{ display: "flex", gap: m.xs ? 8 : 12, marginTop: 4 }}>
-            <button onClick={() => { setErrors({}); setStep(1); }} style={{ height: 52, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Retour
-            </button>
-            <button onClick={async () => {
-                if (!validateStep2()) return;
-                setSending(true); setSendError("");
-                try {
-                  const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nom: form.nom, prenom: form.prenom, email: form.email, telephone: form.tel, adresse: form.adresse, ville: form.ville, codePostal: form.cp, typeBien: form.type, superficie: form.surface, nbChambres: form.chambres, anneeConstruction: form.annee }) });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.error || "Erreur");
-                  setSent(true);
-                } catch { setSendError("Une erreur est survenue. Veuillez réessayer ou nous contacter directement."); }
-                finally { setSending(false); }
-              }}
-              style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.7 : 1, transition: "opacity .2s" }}>
-              {sending ? "Envoi en cours…" : "Envoyer"}
-            </button>
-          </div>
-          {sendError && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10, textAlign: "center" }}>{sendError}</p>}
+        <input name="annee" defaultValue="" onChange={handleChange} placeholder="Année de construction" type="number" style={inpS} />
+        <div style={{ display: "flex", gap: m.xs ? 8 : 12, marginTop: 4 }}>
+          <button onClick={() => { setErrors({}); setStep(1); }} style={{ height: 52, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 12, border: `1px solid rgba(13,14,19,0.15)`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Retour
+          </button>
+          <button onClick={async () => {
+              if (!validateStep2()) return;
+              setSending(true); setSendError("");
+              try {
+                const f = vals.current;
+                const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nom: f.nom, prenom: f.prenom, email: f.email, telephone: f.tel, adresse: f.adresse, ville: f.ville, codePostal: f.cp, typeBien: typeVal, superficie: f.surface, nbChambres: f.chambres, anneeConstruction: f.annee }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Erreur");
+                setSent(true);
+              } catch { setSendError("Une erreur est survenue. Veuillez réessayer ou nous contacter directement."); }
+              finally { setSending(false); }
+            }}
+            style={{ flex: 1, height: 52, borderRadius: 12, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 16, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.7 : 1, transition: "opacity .2s" }}>
+            {sending ? "Envoi en cours…" : "Envoyer"}
+          </button>
         </div>
-      )}
+        {sendError && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10, textAlign: "center" }}>{sendError}</p>}
+      </div>
       {sent && (
         <div style={{ textAlign: "center", padding: "32px 0" }}>
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
@@ -1583,10 +1586,10 @@ function Contact({ go, m, px }) {
 
 const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,14,19,0.1)`, borderRadius: 12, fontFamily: "Urbanist, sans-serif", fontSize: 16, outline: "none", background: "#fff" };
 
-function FormField({ name, value, onChange, placeholder, type, full, error }) {
+function FormField({ name, onChange, placeholder, type, full, error }) {
   return (
     <div style={{ gridColumn: full ? "1 / -1" : undefined }}>
-      <input name={name} value={value} onChange={onChange} placeholder={placeholder} type={type || "text"}
+      <input name={name} defaultValue="" onChange={onChange} placeholder={placeholder} type={type || "text"}
         style={{ ...inpS, border: `1px solid ${error ? "#e53935" : "rgba(13,14,19,0.1)"}`, transition: "border .2s" }} />
       {error && <p style={{ margin: "4px 0 0 4px", fontSize: 12, color: "#e53935" }}>Champ requis</p>}
     </div>
