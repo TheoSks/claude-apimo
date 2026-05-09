@@ -1351,13 +1351,20 @@ function Bien({ props, id, go, m, px }) {
               <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
                 <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>RÉGLEMENTATION :</h2>
                 <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
-                  {Object.entries(p.regulations).map(([key, value], i) => {
-                    const label = key.replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase());
-                    const displayVal = typeof value === "object" ? JSON.stringify(value) : String(value);
+                  {Object.entries(p.regulations).map(([key, reg], i) => {
+                    if (!reg || typeof reg !== "object") return null;
+                    const REG_TYPES = { 1: "DPE – Consommation énergétique", 2: "GES – Émissions CO₂", 11: "Surface Carrez", 22: "Charges annuelles", 34: "Taxe foncière", 166: "Classe DPE", 167: "Classe GES" };
+                    const name = REG_TYPES[reg.type] || reg.label || `Type ${reg.type}`;
+                    let val = "";
+                    if (reg.type === 1) val = `${reg.value} kWh/m²/an${reg.label ? ` – Classe ${reg.label}` : ""}`;
+                    else if (reg.type === 2) val = `${reg.value} kgCO₂/m²/an${reg.label ? ` – Classe ${reg.label}` : ""}`;
+                    else if (reg.type === 166 || reg.type === 167) val = `Classe ${reg.label || reg.value}`;
+                    else val = reg.label || reg.value || "";
+                    if (!val) return null;
                     return (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.cinder10}` }}>
-                        <span style={{ fontSize: 15, color: C.abbey }}>{label}</span>
-                        <span style={{ fontSize: 15, fontWeight: 500, color: C.mine }}>{displayVal}</span>
+                        <span style={{ fontSize: 15, color: C.abbey }}>{name}</span>
+                        <span style={{ fontSize: 15, fontWeight: 500, color: C.mine }}>{val}</span>
                       </div>
                     );
                   })}
