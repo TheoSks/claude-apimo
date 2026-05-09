@@ -445,9 +445,9 @@ function Nav({ pg, go, mob, px }) {
 
 /* ═══════ SEARCH BAR COMPONENT ═══════ */
 function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange, allProps, onSearch, m }) {
-  const [activeTab, setActiveTab] = useState(null);
+  const [openFilter, setOpenFilter] = useState(null); // null | "city"|"types"|"budget"|"surface"
   const [showCitySug, setShowCitySug] = useState(false);
-  const searchBarRef = useRef(null);
+  const wrapRef = useRef(null);
   const cityWrapRef = useRef(null);
 
   const cities = [...new Set((allProps || []).map(p => p.city).filter(Boolean))].sort();
@@ -455,143 +455,136 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
 
   useEffect(() => {
     const onDocClick = (e) => {
-      if (cityWrapRef.current && !cityWrapRef.current.contains(e.target)) setShowCitySug(false);
-      if (searchBarRef.current && !searchBarRef.current.contains(e.target)) setActiveTab(null);
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) { setOpenFilter(null); setShowCitySug(false); }
     };
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  function clearAll() {
-    setSq(DEFAULT_SEARCHQ);
-    setBudgetRange([0, 1500000]);
-    setAreaRange([0, 500]);
-    setActiveTab(null);
-  }
+  function clearAll() { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); setOpenFilter(null); }
 
-  function clearTab(key) {
-    if (key === "city") setSq(q => ({ ...q, city: "" }));
-    else if (key === "types") setSq(q => ({ ...q, types: [] }));
-    else if (key === "budget") setBudgetRange([0, 1500000]);
-    else if (key === "surface") setAreaRange([0, 500]);
-  }
+  const hasCity = !!sq.city;
+  const hasTypes = sq.types.length > 0;
+  const hasBudget = budgetRange[0] > 0 || budgetRange[1] < 1500000;
+  const hasSurface = areaRange[0] > 0 || areaRange[1] < 500;
+  const hasAny = hasCity || hasTypes || hasBudget || hasSurface;
 
-  const TABS = [
-    { key: "city",    label: "Localité" },
-    { key: "types",   label: "Type de bien" },
-    { key: "budget",  label: "Budget" },
-    { key: "surface", label: "Surface min (m²)" },
-  ];
+  const fmtK = v => v >= 1000 ? Math.round(v / 1000) + "k" : String(v);
+  const budgetLabel = hasBudget
+    ? (budgetRange[0] > 0 && budgetRange[1] < 1500000 ? fmtK(budgetRange[0]) + " – " + fmtK(budgetRange[1]) + " €"
+      : budgetRange[0] > 0 ? "≥ " + fmtK(budgetRange[0]) + " €"
+      : "≤ " + fmtK(budgetRange[1]) + " €")
+    : "Budget";
+  const surfaceLabel = hasSurface
+    ? (areaRange[0] > 0 && areaRange[1] < 500 ? areaRange[0] + " – " + areaRange[1] + " m²"
+      : areaRange[0] > 0 ? "≥ " + areaRange[0] + " m²"
+      : "≤ " + areaRange[1] + " m²")
+    : "Surface";
+
+  const pillStyle = (active) => ({
+    height: m.mob ? 36 : 40, padding: m.mob ? "0 12px" : "0 16px", borderRadius: 99,
+    border: `1px solid ${active ? C.bush : C.cinder15}`,
+    background: active ? "rgba(9,38,29,0.08)" : C.white,
+    color: active ? C.bush : C.abbey,
+    fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 13, fontWeight: active ? 600 : 400,
+    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+  });
+  const chevron = (open) => (
+    <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+      <path d={open ? "M9 5L5 1 1 5" : "M1 1l4 4 4-4"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
 
   return (
-    <div ref={searchBarRef}>
-      {/* ── Collapsed pill bar ── */}
-      <div style={{ background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden", boxShadow: activeTab ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
-        {TABS.map((t, i) => {
-          const isActive = activeTab === t.key;
-          const hasValue =
-            t.key === "city" ? !!sq.city :
-            t.key === "types" ? sq.types.length > 0 :
-            t.key === "budget" ? (budgetRange[0] > 0 || budgetRange[1] < 1500000) :
-            (areaRange[0] > 0 || areaRange[1] < 500);
-          const fmtK = v => v >= 1000 ? Math.round(v / 1000) + "k" : String(v);
-          const valueLabel =
-            t.key === "city" ? sq.city :
-            t.key === "types" ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") :
-            t.key === "budget" ? (
-              budgetRange[0] > 0 && budgetRange[1] < 1500000 ? fmtK(budgetRange[0]) + " – " + fmtK(budgetRange[1]) + " €" :
-              budgetRange[0] > 0 ? "≥ " + fmtK(budgetRange[0]) + " €" : "≤ " + fmtK(budgetRange[1]) + " €"
-            ) : (
-              areaRange[0] > 0 && areaRange[1] < 500 ? areaRange[0] + " – " + areaRange[1] + " m²" :
-              areaRange[0] > 0 ? "≥ " + areaRange[0] + " m²" : "≤ " + areaRange[1] + " m²"
-            );
-          return (
-            <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
-              style={{ position: "relative", flex: 1, height: m.mob ? 52 : 62, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, overflow: "hidden" }}>
-              <span style={{ fontSize: m.mob ? 10 : 11, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
-              {hasValue && <span style={{ fontSize: m.mob ? 11 : 12, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
-              {hasValue && (
-                <span onClick={e => { e.stopPropagation(); clearTab(t.key); }}
-                  style={{ position: "absolute", top: 7, right: 6, width: 15, height: 15, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</span>
-              )}
-            </button>
-          );
-        })}
-        {/* Search icon button */}
-        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
-        </button>
-      </div>
+    <div ref={wrapRef} style={{ background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 16, padding: m.mob ? 16 : 20, boxShadow: "4px 4px 4px rgba(0,0,0,.05)" }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
 
-      {/* ── Expanded panel ── */}
-      {activeTab && (
-        <div style={{ background: "#fff", borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
-          {/* Close row */}
-          <div style={{ display: "flex", justifyContent: "flex-end", borderBottom: `1px solid ${C.cinder10}` }}>
-            <button onClick={() => setActiveTab(null)} style={{ width: 52, height: 44, flexShrink: 0, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-          </div>
-
-          {/* Tab body */}
-          <div style={{ minHeight: 160 }}>
-            {/* ── Localité ── */}
-            {activeTab === "city" && (
-              <div style={{ padding: "28px 32px" }}>
-                <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
-                  <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
-                    onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
-                    placeholder="Saisissez une ville ou un code postal…"
-                    style={{ width: "100%", height: 48, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 14px", fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", color: C.mine }} />
-                  {showCitySug && citySuggestions.length > 0 && (
-                    <div style={{ position: "absolute", left: 0, right: 0, top: 52, background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 220, overflowY: "auto", zIndex: 60 }}>
-                      {citySuggestions.map(c => (
-                        <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); }} style={{ width: "100%", textAlign: "left", padding: "11px 14px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+        {/* ── Localité ── */}
+        <div style={{ position: "relative" }}>
+          <button style={pillStyle(hasCity || openFilter === "city")} onClick={() => setOpenFilter(v => v === "city" ? null : "city")}>
+            {hasCity ? sq.city : "Localité"} {chevron(openFilter === "city")}
+          </button>
+          {openFilter === "city" && (
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: 280 }}>
+              <div ref={cityWrapRef} style={{ position: "relative" }}>
+                <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
+                  onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
+                  placeholder="Ex : Cabourg, Deauville…"
+                  style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 12px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box", color: C.mine }} />
+                {showCitySug && citySuggestions.length > 0 && (
+                  <div style={{ position: "absolute", left: 0, right: 0, top: 46, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 200, overflowY: "auto", zIndex: 60 }}>
+                    {citySuggestions.map(c => (
+                      <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); setOpenFilter(null); }}
+                        style={{ width: "100%", textAlign: "left", padding: "9px 12px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+              {hasCity && <button onClick={() => setSq(q => ({ ...q, city: "" }))} style={{ marginTop: 8, fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button>}
+            </div>
+          )}
+        </div>
 
-            {/* ── Type de bien ── */}
-            {activeTab === "types" && (
-              <div style={{ padding: "28px 32px", display: "flex", flexWrap: "wrap", gap: 10 }}>
+        {/* ── Type de bien ── */}
+        <div style={{ position: "relative" }}>
+          <button style={pillStyle(hasTypes || openFilter === "types")} onClick={() => setOpenFilter(v => v === "types" ? null : "types")}>
+            {hasTypes ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") : "Type de bien"} {chevron(openFilter === "types")}
+          </button>
+          {openFilter === "types" && (
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", padding: 16, width: 260 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {TYPE_OPTIONS.map(([key, label]) => {
                   const on = sq.types.includes(key);
                   return (
                     <button key={key} onClick={() => setSq(q => ({ ...q, types: on ? q.types.filter(t => t !== key) : [...q.types, key] }))}
-                      style={{ height: 42, padding: "0 20px", borderRadius: 99, border: `1.5px solid ${on ? C.bush : C.cinder15}`, background: on ? C.bush : "transparent", color: on ? "#fff" : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+                      style={{ height: 36, padding: "0 14px", borderRadius: 99, border: `1px solid ${on ? C.bush : C.cinder10}`, background: on ? C.bush : "transparent", color: on ? C.white : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
                       {label}
                     </button>
                   );
                 })}
               </div>
-            )}
-
-            {/* ── Budget ── */}
-            {activeTab === "budget" && (
-              <DualRangeSlider min={0} max={1500000} step={10000}
-                valueMin={budgetRange[0]} valueMax={budgetRange[1]}
-                onChange={(lo, hi) => setBudgetRange([lo, hi])} />
-            )}
-
-            {/* ── Surface ── */}
-            {activeTab === "surface" && (
-              <DualRangeSlider min={0} max={500} step={5}
-                valueMin={areaRange[0]} valueMax={areaRange[1]}
-                onChange={(lo, hi) => setAreaRange([lo, hi])}
-                unit="m²" maxLabel="500+ m²" />
-            )}
-          </div>
-
-          {/* Footer */}
-          <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
-            <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
-            <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
-          </div>
+              {hasTypes && <button onClick={() => setSq(q => ({ ...q, types: [] }))} style={{ marginTop: 8, fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button>}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* ── Budget ── */}
+        <div style={{ position: "relative" }}>
+          <button style={pillStyle(hasBudget || openFilter === "budget")} onClick={() => setOpenFilter(v => v === "budget" ? null : "budget")}>
+            {budgetLabel} {chevron(openFilter === "budget")}
+          </button>
+          {openFilter === "budget" && (
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", width: 280 }}>
+              <DualRangeSlider min={0} max={1500000} step={10000} valueMin={budgetRange[0]} valueMax={budgetRange[1]} onChange={(lo, hi) => setBudgetRange([lo, hi])} />
+              {hasBudget && <div style={{ padding: "0 16px 14px", textAlign: "right" }}><button onClick={() => setBudgetRange([0, 1500000])} style={{ fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button></div>}
+            </div>
+          )}
+        </div>
+
+        {/* ── Surface ── */}
+        <div style={{ position: "relative" }}>
+          <button style={pillStyle(hasSurface || openFilter === "surface")} onClick={() => setOpenFilter(v => v === "surface" ? null : "surface")}>
+            {surfaceLabel} {chevron(openFilter === "surface")}
+          </button>
+          {openFilter === "surface" && (
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 50, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 14, boxShadow: "0 12px 36px rgba(0,0,0,.12)", width: 280 }}>
+              <DualRangeSlider min={0} max={500} step={5} valueMin={areaRange[0]} valueMax={areaRange[1]} onChange={(lo, hi) => setAreaRange([lo, hi])} unit="m²" maxLabel="500+ m²" />
+              {hasSurface && <div style={{ padding: "0 16px 14px", textAlign: "right" }}><button onClick={() => setAreaRange([0, 500])} style={{ fontSize: 12, color: C.abbey, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Effacer</button></div>}
+            </div>
+          )}
+        </div>
+
+        {/* ── Reset + Search ── */}
+        {hasAny && (
+          <button onClick={clearAll} style={{ height: m.mob ? 36 : 40, padding: "0 12px", borderRadius: 99, border: `1px solid ${C.cinder10}`, background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 13, cursor: "pointer" }}>
+            ✕ Réinitialiser
+          </button>
+        )}
+        <button onClick={() => { setOpenFilter(null); onSearch(); }}
+          style={{ marginLeft: "auto", height: m.mob ? 36 : 44, padding: m.mob ? "0 18px" : "0 28px", borderRadius: 99, border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontWeight: 700, fontSize: m.mob ? 13 : 15, cursor: "pointer", flexShrink: 0 }}>
+          Rechercher
+        </button>
+      </div>
     </div>
   );
 }
