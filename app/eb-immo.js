@@ -1601,8 +1601,6 @@ const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,1
 
 /* ═══════ À PROPOS ═══════ */
 function Apropos({ go, m, px }) {
-  const [openFaq, setOpenFaq] = useState(null);
-
   const team = [
     { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr" },
     { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr" },
@@ -1616,12 +1614,6 @@ function Apropos({ go, m, px }) {
     { title: "Expertise locale", desc: "Notre équipe possède une connaissance approfondie du marché immobilier local. Grâce à notre expertise, nous vous guidons vers les meilleures opportunités et vous aidons à prendre des décisions éclairées." },
     { title: "Service personnalisé", desc: "Chez nous, chaque client est unique. Nous offrons un service personnalisé pour répondre à vos besoins spécifiques. Que vous soyez acheteur, vendeur ou investisseur, nous sommes là à chaque étape du processus." },
     { title: "Transparence et intégrité", desc: "Nous croyons en une communication transparente et honnête. Vous pouvez compter sur nous pour vous fournir toutes les informations nécessaires afin de prendre vos décisions en toute confiance." },
-  ];
-
-  const faqs = [
-    { q: "Qui sommes-nous ?", a: "EB Immo est votre partenaire de confiance pour tous vos besoins immobiliers. Avec notre expertise, notre engagement et notre service personnalisé, nous vous accompagnons à chaque étape de votre projet, de la recherche à la clôture, pour faire de votre rêve immobilier une réalité." },
-    { q: "Comment puis-je prendre rendez-vous avec un conseiller ?", a: "Vous pouvez nous joindre par téléphone, par e-mail ou via notre formulaire de contact. Nous vous répondrons dans les plus brefs délais pour convenir d'un rendez-vous à votre convenance." },
-    { q: "Quelle est la zone géographique couverte par EB Immo ?", a: "EB Immo intervient principalement sur Caen, Cabourg, Merville-Franceville et Villersur-Mer, ainsi que l'ensemble du Calvados et ses alentours." },
   ];
 
   return (
@@ -1671,27 +1663,6 @@ function Apropos({ go, m, px }) {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section style={{ padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, maxWidth: 1440, margin: "0 auto" }}>
-        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>FAQ</p>
-        <h2 style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 500, color: C.bush, marginBottom: m.xs ? 32 : 48 }}>Pour en savoir plus, consultez notre FAQ</h2>
-        <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 12 }}>
-          {faqs.map((f, i) => (
-            <div key={i} style={{ border: `1px solid rgba(9,38,29,.12)`, borderRadius: 12, overflow: "hidden" }}>
-              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: m.xs ? "16px 20px" : "20px 28px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-                <span style={{ fontSize: m.xs ? 15 : 17, fontWeight: 600, color: C.bush }}>{f.q}</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: "transform .3s", transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)" }}><path d="M6 9l6 6 6-6" stroke={C.bush} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              {openFaq === i && (
-                <div style={{ padding: m.xs ? "0 20px 20px" : "0 28px 24px" }}>
-                  <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.7, margin: 0 }}>{f.a}</p>
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </section>
 
