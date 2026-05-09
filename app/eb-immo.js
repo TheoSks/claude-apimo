@@ -486,7 +486,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
     border: `1px solid ${active ? C.bush : C.cinder15}`,
     background: active ? "rgba(9,38,29,0.08)" : C.white,
     color: active ? C.bush : C.abbey,
-    fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 12 : 13, fontWeight: active ? 600 : 400,
+    fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 14 : 16, fontWeight: active ? 600 : 400,
     cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
   });
   const chevron = (open) => (
