@@ -648,9 +648,9 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             );
           return (
             <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
-              style={{ position: "relative", flex: 1, height: m.mob ? 52 : 62, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, overflow: "hidden" }}>
-              <span style={{ fontSize: m.mob ? 10 : 11, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
-              {hasValue && <span style={{ fontSize: m.mob ? 11 : 12, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
+              style={{ position: "relative", flex: 1, height: m.mob ? 56 : 72, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, overflow: "hidden" }}>
+              <span style={{ fontSize: m.mob ? 13 : 15, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
+              {hasValue && <span style={{ fontSize: m.mob ? 13 : 15, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
               {hasValue && (
                 <span onClick={e => { e.stopPropagation(); clearTab(t.key); }}
                   style={{ position: "absolute", top: 7, right: 6, width: 15, height: 15, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</span>
@@ -658,7 +658,7 @@ function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
             </button>
           );
         })}
-        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: m.mob ? 56 : 72, height: m.mob ? 56 : 72, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
         </button>
       </div>
