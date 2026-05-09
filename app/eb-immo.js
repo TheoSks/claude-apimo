@@ -1602,12 +1602,12 @@ const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,1
 /* ═══════ À PROPOS ═══════ */
 function Apropos({ go, m, px }) {
   const team = [
-    { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr" },
-    { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr" },
-    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr" },
-    { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr" },
-    { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr" },
-    { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr" },
+    { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr", photo: "/team-emeline.png" },
+    { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr", photo: "/team-benjamin.jpeg" },
+    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr", photo: "/team-giulia.png" },
+    { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr", photo: "/team-aurelia.png" },
+    { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr", photo: "/team-angelique.png" },
+    { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr", photo: "/team-josselin.png" },
   ];
 
   const forces = [
@@ -1631,8 +1631,8 @@ function Apropos({ go, m, px }) {
         <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "1fr 1fr" : m.tab ? "repeat(3,1fr)" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
           {team.map((t) => (
             <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,.6)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,.6)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <div style={{ width: "100%", aspectRatio: "3/4", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
+                <img src={t.photo} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
               </div>
               <h3 style={{ fontSize: m.xs ? 17 : 19, fontWeight: 600, color: C.bush, margin: 0 }}>{t.name}</h3>
               <p style={{ fontSize: 14, color: C.abbey, margin: 0 }}>{t.role}</p>
