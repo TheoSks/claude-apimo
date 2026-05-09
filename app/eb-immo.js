@@ -1603,8 +1603,8 @@ const inpS = { width: "100%", padding: "14px 18px", border: `1px solid rgba(13,1
 function Apropos({ go, m, px }) {
   const team = [
     { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr", photo: "/team-emeline.png" },
-    { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr", photo: "/team-benjamin.jpeg" },
-    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr", photo: "/team-giulia.png" },
+    { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr", photo: "/team-benjamin.png" },
+    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr", photo: "/team-giulia.jpeg" },
     { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr", photo: "/team-aurelia.png" },
     { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr", photo: "/team-angelique.png" },
     { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr", photo: "/team-josselin.png" },
