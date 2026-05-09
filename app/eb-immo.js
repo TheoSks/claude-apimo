@@ -1590,8 +1590,6 @@ function Contact({ go, m, px }) {
             </div>
           </Rv>
         </div>
-        <div style={{ textAlign: "center", marginTop: 32 }}>
-          <a onClick={() => go("home")} style={{ fontSize: 15, color: C.abbey, cursor: "pointer", textDecoration: "underline" }}>← Retour à l'accueil</a>
         </div>
       </section>
       <Footer go={go} m={m} px={px} />
