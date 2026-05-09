@@ -384,18 +384,24 @@ export default function App() {
   const [sid, setSid] = useState(null);
   const m = useMedia();
 
+  /* ── Shared search state (Home ↔ Annonces) ── */
+  const [sq, setSq] = useState(DEFAULT_SEARCHQ);
+  const [budgetRange, setBudgetRange] = useState([0, 1500000]);
+  const [areaRange, setAreaRange] = useState([0, 500]);
+
   useEffect(() => { fetchProperties().then(d => { setProps(d); setLd(false); }).catch(() => setLd(false)); }, []);
   const go = useCallback((p, id) => { setPg(p); if (id !== undefined) setSid(id); window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
 
   const px = m.mob ? "20px" : m.tab ? "40px" : "80px";
+  const searchProps = { sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange };
 
   return (
     <div style={{ fontFamily: "Urbanist, sans-serif", color: C.bush, background: C.white, minHeight: "100vh", overflowX: "hidden" }}>
       {/* ═══ NAV (responsive: hamburger on mobile) ═══ */}
       <Nav pg={pg} go={go} mob={m.mob} px={px} />
 
-      {pg === "home" && <Home props={props} ld={ld} go={go} m={m} px={px} />}
-      {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} />}
+      {pg === "home" && <Home props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
+      {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "bien" && <Bien props={props} id={sid} go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
     </div>
@@ -437,22 +443,15 @@ function Nav({ pg, go, mob, px }) {
   );
 }
 
-/* ═══════ HOME ═══════ */
-function Home({ props, ld, go, m, px }) {
-  const featured = props.slice(0, m.mob ? 4 : 3);
-  const listed = props.slice(0, 3);
-  const [sq, setSq] = useState(DEFAULT_SEARCHQ);
-  const [activeTab, setActiveTab] = useState(null); // null | "city"|"types"|"budget"|"surface"
+/* ═══════ SEARCH BAR COMPONENT ═══════ */
+function SearchBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange, allProps, onSearch, m }) {
+  const [activeTab, setActiveTab] = useState(null);
   const [showCitySug, setShowCitySug] = useState(false);
-  // Slider state (separate from sq so user can cancel)
-  const [budgetRange, setBudgetRange] = useState([0, 1500000]);
-  const [areaRange, setAreaRange] = useState([0, 500]);
-  const cityWrapRef = useRef(null);
   const searchBarRef = useRef(null);
-  const cities = [...new Set(props.map(p => p.city).filter(Boolean))].sort();
-  const citySuggestions = sq.city.trim().length < 2
-    ? []
-    : cities.filter(c => norm(c).includes(norm(sq.city))).slice(0, 8);
+  const cityWrapRef = useRef(null);
+
+  const cities = [...new Set((allProps || []).map(p => p.city).filter(Boolean))].sort();
+  const citySuggestions = sq.city.trim().length < 2 ? [] : cities.filter(c => norm(c).includes(norm(sq.city))).slice(0, 8);
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -462,19 +461,6 @@ function Home({ props, ld, go, m, px }) {
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
-
-  function applyAndSearch() {
-    const next = {
-      ...sq,
-      budgetMin: budgetRange[0] > 0 ? String(budgetRange[0]) : "",
-      budgetMax: budgetRange[1] < 1500000 ? String(budgetRange[1]) : "",
-      areaMin: areaRange[0] > 0 ? String(areaRange[0]) : "",
-      areaMax: areaRange[1] < 500 ? String(areaRange[1]) : "",
-    };
-    setSq(next);
-    setActiveTab(null);
-    go("annonces", undefined, next);
-  }
 
   function clearAll() {
     setSq(DEFAULT_SEARCHQ);
@@ -496,6 +482,124 @@ function Home({ props, ld, go, m, px }) {
     { key: "budget",  label: "Budget" },
     { key: "surface", label: "Surface min (m²)" },
   ];
+
+  return (
+    <div ref={searchBarRef}>
+      {/* ── Collapsed pill bar ── */}
+      <div style={{ background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden", boxShadow: activeTab ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
+        {TABS.map((t, i) => {
+          const isActive = activeTab === t.key;
+          const hasValue =
+            t.key === "city" ? !!sq.city :
+            t.key === "types" ? sq.types.length > 0 :
+            t.key === "budget" ? (budgetRange[0] > 0 || budgetRange[1] < 1500000) :
+            (areaRange[0] > 0 || areaRange[1] < 500);
+          const fmtK = v => v >= 1000 ? Math.round(v / 1000) + "k" : String(v);
+          const valueLabel =
+            t.key === "city" ? sq.city :
+            t.key === "types" ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") :
+            t.key === "budget" ? (
+              budgetRange[0] > 0 && budgetRange[1] < 1500000 ? fmtK(budgetRange[0]) + " – " + fmtK(budgetRange[1]) + " €" :
+              budgetRange[0] > 0 ? "≥ " + fmtK(budgetRange[0]) + " €" : "≤ " + fmtK(budgetRange[1]) + " €"
+            ) : (
+              areaRange[0] > 0 && areaRange[1] < 500 ? areaRange[0] + " – " + areaRange[1] + " m²" :
+              areaRange[0] > 0 ? "≥ " + areaRange[0] + " m²" : "≤ " + areaRange[1] + " m²"
+            );
+          return (
+            <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
+              style={{ position: "relative", flex: 1, height: m.mob ? 52 : 62, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, overflow: "hidden" }}>
+              <span style={{ fontSize: m.mob ? 10 : 11, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
+              {hasValue && <span style={{ fontSize: m.mob ? 11 : 12, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
+              {hasValue && (
+                <span onClick={e => { e.stopPropagation(); clearTab(t.key); }}
+                  style={{ position: "absolute", top: 7, right: 6, width: 15, height: 15, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</span>
+              )}
+            </button>
+          );
+        })}
+        {/* Search icon button */}
+        <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        </button>
+      </div>
+
+      {/* ── Expanded panel ── */}
+      {activeTab && (
+        <div style={{ background: "#fff", borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
+          {/* Close row */}
+          <div style={{ display: "flex", justifyContent: "flex-end", borderBottom: `1px solid ${C.cinder10}` }}>
+            <button onClick={() => setActiveTab(null)} style={{ width: 52, height: 44, flexShrink: 0, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+
+          {/* Tab body */}
+          <div style={{ minHeight: 160 }}>
+            {/* ── Localité ── */}
+            {activeTab === "city" && (
+              <div style={{ padding: "28px 32px" }}>
+                <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
+                  <input value={sq.city} autoFocus onFocus={() => setShowCitySug(true)}
+                    onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
+                    placeholder="Saisissez une ville ou un code postal…"
+                    style={{ width: "100%", height: 48, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 14px", fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", color: C.mine }} />
+                  {showCitySug && citySuggestions.length > 0 && (
+                    <div style={{ position: "absolute", left: 0, right: 0, top: 52, background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 220, overflowY: "auto", zIndex: 60 }}>
+                      {citySuggestions.map(c => (
+                        <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); }} style={{ width: "100%", textAlign: "left", padding: "11px 14px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Type de bien ── */}
+            {activeTab === "types" && (
+              <div style={{ padding: "28px 32px", display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {TYPE_OPTIONS.map(([key, label]) => {
+                  const on = sq.types.includes(key);
+                  return (
+                    <button key={key} onClick={() => setSq(q => ({ ...q, types: on ? q.types.filter(t => t !== key) : [...q.types, key] }))}
+                      style={{ height: 42, padding: "0 20px", borderRadius: 99, border: `1.5px solid ${on ? C.bush : C.cinder15}`, background: on ? C.bush : "transparent", color: on ? "#fff" : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── Budget ── */}
+            {activeTab === "budget" && (
+              <DualRangeSlider min={0} max={1500000} step={10000}
+                valueMin={budgetRange[0]} valueMax={budgetRange[1]}
+                onChange={(lo, hi) => setBudgetRange([lo, hi])} />
+            )}
+
+            {/* ── Surface ── */}
+            {activeTab === "surface" && (
+              <DualRangeSlider min={0} max={500} step={5}
+                valueMin={areaRange[0]} valueMax={areaRange[1]}
+                onChange={(lo, hi) => setAreaRange([lo, hi])}
+                unit="m²" maxLabel="500+ m²" />
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
+            <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
+            <button onClick={() => { setActiveTab(null); onSearch(); }} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════ HOME ═══════ */
+function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
+  const featured = props.slice(0, m.mob ? 4 : 3);
+  const listed = props.slice(0, 3);
 
   return (
     <main>
@@ -531,122 +635,7 @@ function Home({ props, ld, go, m, px }) {
       {/* ═══ SEARCH BAR ═══ */}
       <section style={{ background: `linear-gradient(to bottom, ${C.bush} 50%, ${C.white} 50%)`, padding: `0 ${px}` }}>
         <Rv>
-          <div ref={searchBarRef}>
-            {/* ── Collapsed pill bar ── */}
-            <div style={{ background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: activeTab ? "16px 16px 0 0" : 99, display: "flex", alignItems: "center", overflow: "hidden", boxShadow: activeTab ? "none" : "0 4px 20px rgba(0,0,0,.12)" }}>
-              {TABS.map((t, i) => {
-                const isActive = activeTab === t.key;
-                const hasValue =
-                  t.key === "city" ? !!sq.city :
-                  t.key === "types" ? sq.types.length > 0 :
-                  t.key === "budget" ? (budgetRange[0] > 0 || budgetRange[1] < 1500000) :
-                  (areaRange[0] > 0 || areaRange[1] < 500);
-                const fmtK = v => v >= 1000 ? (v / 1000 % 1 === 0 ? v / 1000 + "k" : (v / 1000).toFixed(0) + "k") : String(v);
-                const valueLabel =
-                  t.key === "city" ? sq.city :
-                  t.key === "types" ? (sq.types.length === 1 ? TYPE_OPTIONS.find(x => x[0] === sq.types[0])?.[1] : sq.types.length + " types") :
-                  t.key === "budget" ? (
-                    budgetRange[0] > 0 && budgetRange[1] < 1500000 ? fmtK(budgetRange[0]) + " – " + fmtK(budgetRange[1]) + " €" :
-                    budgetRange[0] > 0 ? "≥ " + fmtK(budgetRange[0]) + " €" :
-                    "≤ " + fmtK(budgetRange[1]) + " €"
-                  ) : (
-                    areaRange[0] > 0 && areaRange[1] < 500 ? areaRange[0] + " – " + areaRange[1] + " m²" :
-                    areaRange[0] > 0 ? "≥ " + areaRange[0] + " m²" :
-                    "≤ " + areaRange[1] + " m²"
-                  );
-                return (
-                  <button key={t.key} onClick={() => setActiveTab(v => v === t.key ? null : t.key)}
-                    style={{ position: "relative", flex: 1, height: m.mob ? 52 : 62, padding: hasValue ? "0 22px 0 8px" : "0 8px", border: "none", borderRight: i < TABS.length - 1 ? `1px solid ${C.cinder10}` : "none", background: hasValue ? "rgba(9,38,29,0.07)" : isActive ? "rgba(9,38,29,0.04)" : "transparent", fontFamily: "Urbanist, sans-serif", cursor: "pointer", transition: "background .2s", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, overflow: "hidden" }}>
-                    <span style={{ fontSize: m.mob ? 10 : 11, color: hasValue ? C.abbey : isActive ? C.bush : C.abbey, fontWeight: 400, lineHeight: 1, whiteSpace: "nowrap" }}>{t.label}</span>
-                    {hasValue && <span style={{ fontSize: m.mob ? 11 : 12, fontWeight: 700, color: C.bush, lineHeight: 1, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{valueLabel}</span>}
-                    {hasValue && (
-                      <span onClick={e => { e.stopPropagation(); clearTab(t.key); }}
-                        style={{ position: "absolute", top: 7, right: 6, width: 15, height: 15, borderRadius: "50%", background: C.bush, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, cursor: "pointer", lineHeight: 1, flexShrink: 0 }}>✕</span>
-                    )}
-                  </button>
-                );
-              })}
-              {/* Search icon button */}
-              <button onClick={() => applyAndSearch()} style={{ width: m.mob ? 52 : 62, height: m.mob ? 52 : 62, flexShrink: 0, border: "none", borderLeft: `1px solid ${C.cinder10}`, background: C.cyan, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35" stroke={C.white} strokeWidth="1.8" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-
-            {/* ── Expanded panel ── */}
-            {activeTab && (
-              <div style={{ background: C.white, borderRadius: "0 0 16px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.14)", overflow: "hidden" }}>
-                {/* Close row */}
-                <div style={{ display: "flex", justifyContent: "flex-end", borderBottom: `1px solid ${C.cinder10}` }}>
-                  <button onClick={() => setActiveTab(null)} style={{ width: 52, height: 44, flexShrink: 0, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.abbey }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                  </button>
-                </div>
-
-                {/* Tab body */}
-                <div style={{ minHeight: 160 }}>
-                  {/* ── Localité ── */}
-                  {activeTab === "city" && (
-                    <div style={{ padding: "28px 32px" }}>
-                      <div ref={cityWrapRef} style={{ position: "relative", maxWidth: 400 }}>
-                        <input
-                          value={sq.city}
-                          autoFocus
-                          onFocus={() => setShowCitySug(true)}
-                          onChange={e => { setSq(q => ({ ...q, city: e.target.value })); setShowCitySug(true); }}
-                          placeholder="Saisissez une ville ou un code postal…"
-                          style={{ width: "100%", height: 48, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 14px", fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", color: C.mine }} />
-                        {showCitySug && citySuggestions.length > 0 && (
-                          <div style={{ position: "absolute", left: 0, right: 0, top: 52, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 220, overflowY: "auto", zIndex: 60 }}>
-                            {citySuggestions.map(c => (
-                              <button key={c} onClick={() => { setSq(q => ({ ...q, city: c })); setShowCitySug(false); }} style={{ width: "100%", textAlign: "left", padding: "11px 14px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "Urbanist, sans-serif", fontSize: 14, color: C.mine }}>{c}</button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── Type de bien ── */}
-                  {activeTab === "types" && (
-                    <div style={{ padding: "28px 32px", display: "flex", flexWrap: "wrap", gap: 10 }}>
-                      {TYPE_OPTIONS.map(([key, label]) => {
-                        const on = sq.types.includes(key);
-                        return (
-                          <button key={key} onClick={() => setSq(q => ({ ...q, types: on ? q.types.filter(t => t !== key) : [...q.types, key] }))}
-                            style={{ height: 42, padding: "0 20px", borderRadius: 99, border: `1.5px solid ${on ? C.bush : C.cinder15}`, background: on ? C.bush : "transparent", color: on ? C.white : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* ── Budget ── */}
-                  {activeTab === "budget" && (
-                    <DualRangeSlider
-                      min={0} max={1500000} step={10000}
-                      valueMin={budgetRange[0]} valueMax={budgetRange[1]}
-                      onChange={(lo, hi) => setBudgetRange([lo, hi])} />
-                  )}
-
-                  {/* ── Surface ── */}
-                  {activeTab === "surface" && (
-                    <DualRangeSlider
-                      min={0} max={500} step={5}
-                      valueMin={areaRange[0]} valueMax={areaRange[1]}
-                      onChange={(lo, hi) => setAreaRange([lo, hi])}
-                      unit="m²" maxLabel="500+ m²" />
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div style={{ background: "rgba(9,38,29,0.04)", borderTop: `1px solid ${C.cinder10}`, padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
-                  <button onClick={clearAll} style={{ height: 42, padding: "0 20px", border: "none", background: "transparent", color: C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", borderRadius: 8 }}>Tout effacer</button>
-                  <button onClick={applyAndSearch} style={{ height: 42, padding: "0 28px", border: "none", background: C.cyan, color: C.white, fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", borderRadius: 8 }}>Rechercher</button>
-                </div>
-              </div>
-            )}
-          </div>
+          <SearchBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => go("annonces")} m={m} />
         </Rv>
       </section>
 
@@ -778,31 +767,39 @@ function Home({ props, ld, go, m, px }) {
 }
 
 /* ═══════ ANNONCES ═══════ */
-function Annonces({ props, ld, go, m, px }) {
-  const [f, setF] = useState("all");
-  const [s, setS] = useState("");
+function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
   const [page, setPage] = useState(1);
   const PER_PAGE = 12;
 
-  const fl = props.filter(x => {
-    const txt = `${x.title} ${x.type || ""}`.toLowerCase();
-    if (f === "maison" && !/maison|villa|house/i.test(txt)) return false;
-    if (f === "appart" && !/appart|studio|duplex|flat/i.test(txt)) return false;
-    if (f === "terrain" && !/terrain|land/i.test(txt)) return false;
-    if (s && !txt.includes(s.toLowerCase()) && !(x.city || "").toLowerCase().includes(s.toLowerCase())) return false;
+  /* Live filtering from shared search state */
+  const fl = props.filter(p => {
+    const pt = norm(p.type || p.subtype || "");
+    if (sq.city && !norm(p.city).includes(norm(sq.city))) return false;
+    if (sq.types.length > 0) {
+      const matched = sq.types.some(t => {
+        if (t === "maison") return /maison|villa/i.test(pt);
+        if (t === "appart") return /appart|studio|duplex/i.test(pt);
+        if (t === "terrain") return /terrain/i.test(pt);
+        return false;
+      });
+      if (!matched) return false;
+    }
+    if (budgetRange[0] > 0 && p.price < budgetRange[0]) return false;
+    if (budgetRange[1] < 1500000 && p.price > budgetRange[1]) return false;
+    const area = p.area?.value || p.area?.total || 0;
+    if (areaRange[0] > 0 && area < areaRange[0]) return false;
+    if (areaRange[1] < 500 && area > areaRange[1]) return false;
     return true;
   });
+
+  /* Reset page when search changes */
+  useEffect(() => { setPage(1); }, [sq, budgetRange, areaRange]);
 
   const totalPages = Math.max(1, Math.ceil(fl.length / PER_PAGE));
   const currentPage = Math.min(page, totalPages);
   const paginated = fl.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
-
-  /* Reset page when filter or search changes */
-  const handleFilter = (v) => { setF(v); setPage(1); };
-  const handleSearch = (e) => { setS(e.target.value); setPage(1); };
   const goPage = (p) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  /* Page numbers to display */
   const pageNums = [];
   const maxVisible = m.mob ? 3 : 5;
   let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
@@ -810,21 +807,36 @@ function Annonces({ props, ld, go, m, px }) {
   if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
   for (let i = start; i <= end; i++) pageNums.push(i);
 
+  const hasFilters = sq.city || sq.types.length > 0 || budgetRange[0] > 0 || budgetRange[1] < 1500000 || areaRange[0] > 0 || areaRange[1] < 500;
+
   return (
     <main style={{ paddingTop: m.mob ? 80 : 120 }}>
+      {/* Search bar band */}
+      <div style={{ background: C.bush, padding: `24px ${px} 0` }}>
+        <SearchBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => {}} m={m} />
+      </div>
+
       <section style={{ padding: `40px ${px} 80px`, maxWidth: 1440, margin: "0 auto" }}>
         <Rv>
-          <h1 style={{ fontSize: m.mob ? 30 : m.tab ? 44 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: 8 }}>Nos propriétés</h1>
-          <span style={{ fontSize: m.mob ? 15 : 17, color: C.abbey, display: "block", marginBottom: 32 }}>{ld ? "Chargement..." : `${fl.length} bien${fl.length > 1 ? "s" : ""} trouvé${fl.length > 1 ? "s" : ""}`}</span>
-        </Rv>
-        <Rv d={1}>
-          <div style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap", alignItems: "center" }}>
-            {[["all", "Tous"], ["maison", "Maisons"], ["appart", "Apparts"], ["terrain", "Terrains"]].map(([k, l]) => (
-              <button key={k} onClick={() => handleFilter(k)} style={{ padding: m.mob ? "8px 16px" : "10px 24px", borderRadius: 99, border: `1px solid ${f === k ? C.cyan : C.cinder10}`, background: f === k ? C.cyan : "transparent", color: f === k ? C.white : C.mine, fontFamily: "Urbanist, sans-serif", fontSize: m.mob ? 13 : 15, fontWeight: 500, cursor: "pointer", transition: "all .2s" }}>{l}</button>
-            ))}
-            <input placeholder="Rechercher..." value={s} onChange={handleSearch} style={{ marginLeft: m.mob ? 0 : "auto", padding: "10px 20px", border: `1px solid ${C.cinder10}`, borderRadius: 99, fontFamily: "Urbanist, sans-serif", fontSize: 15, outline: "none", width: m.mob ? "100%" : 260, background: "transparent" }} />
+          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 32 }}>
+            <h1 style={{ fontSize: m.mob ? 30 : m.tab ? 44 : 60, fontWeight: 500, color: C.bush, lineHeight: 1.15, margin: 0 }}>Nos propriétés</h1>
+            <span style={{ fontSize: m.mob ? 15 : 17, color: C.abbey }}>
+              {ld ? "Chargement..." : `${fl.length} bien${fl.length > 1 ? "s" : ""} trouvé${fl.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
+            </span>
           </div>
         </Rv>
+
+        {/* Empty state */}
+        {!ld && fl.length === 0 && (
+          <Rv>
+            <div style={{ textAlign: "center", padding: "60px 0", color: C.abbey }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+              <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucun bien ne correspond à vos critères.</p>
+              <button onClick={() => { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); }} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Effacer les filtres</button>
+            </div>
+          </Rv>
+        )}
+
         <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr 1fr" : m.tab ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: m.mob ? 16 : 28 }}>
           {!ld && paginated.map((p, i) => (
             <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} onClick={() => go("bien", p.id)} /></Rv>
@@ -834,47 +846,20 @@ function Annonces({ props, ld, go, m, px }) {
         {/* Pagination */}
         {totalPages > 1 && (
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: m.mob ? 6 : 10, marginTop: m.mob ? 40 : 56 }}>
-            {/* Prev */}
             <button onClick={() => goPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}
-              style={{ width: m.mob ? 36 : 44, height: m.mob ? 36 : 44, borderRadius: 12, border: `1px solid ${C.cinder10}`, background: "transparent", cursor: currentPage === 1 ? "default" : "pointer", opacity: currentPage === 1 ? .3 : 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity .2s" }}>
+              style={{ width: m.mob ? 36 : 44, height: m.mob ? 36 : 44, borderRadius: 12, border: `1px solid ${C.cinder10}`, background: "transparent", cursor: currentPage === 1 ? "default" : "pointer", opacity: currentPage === 1 ? .3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke={C.mine} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-
-            {/* First + ellipsis */}
-            {start > 1 && (
-              <>
-                <button onClick={() => goPage(1)} style={pgBtnStyle(1 === currentPage, m.mob)}>1</button>
-                {start > 2 && <span style={{ fontSize: 14, color: C.abbey }}>…</span>}
-              </>
-            )}
-
-            {/* Page numbers */}
-            {pageNums.map(n => (
-              <button key={n} onClick={() => goPage(n)} style={pgBtnStyle(n === currentPage, m.mob)}>{n}</button>
-            ))}
-
-            {/* Ellipsis + last */}
-            {end < totalPages && (
-              <>
-                {end < totalPages - 1 && <span style={{ fontSize: 14, color: C.abbey }}>…</span>}
-                <button onClick={() => goPage(totalPages)} style={pgBtnStyle(totalPages === currentPage, m.mob)}>{totalPages}</button>
-              </>
-            )}
-
-            {/* Next */}
+            {start > 1 && (<><button onClick={() => goPage(1)} style={pgBtnStyle(1 === currentPage, m.mob)}>1</button>{start > 2 && <span style={{ fontSize: 14, color: C.abbey }}>…</span>}</>)}
+            {pageNums.map(n => (<button key={n} onClick={() => goPage(n)} style={pgBtnStyle(n === currentPage, m.mob)}>{n}</button>))}
+            {end < totalPages && (<>{end < totalPages - 1 && <span style={{ fontSize: 14, color: C.abbey }}>…</span>}<button onClick={() => goPage(totalPages)} style={pgBtnStyle(totalPages === currentPage, m.mob)}>{totalPages}</button></>)}
             <button onClick={() => goPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}
-              style={{ width: m.mob ? 36 : 44, height: m.mob ? 36 : 44, borderRadius: 12, border: `1px solid ${C.cinder10}`, background: "transparent", cursor: currentPage === totalPages ? "default" : "pointer", opacity: currentPage === totalPages ? .3 : 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity .2s" }}>
+              style={{ width: m.mob ? 36 : 44, height: m.mob ? 36 : 44, borderRadius: 12, border: `1px solid ${C.cinder10}`, background: "transparent", cursor: currentPage === totalPages ? "default" : "pointer", opacity: currentPage === totalPages ? .3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={C.mine} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         )}
-
-        {/* Info page */}
-        {totalPages > 1 && (
-          <div style={{ textAlign: "center", marginTop: 12, fontSize: 14, color: C.abbey }}>
-            Page {currentPage} sur {totalPages}
-          </div>
-        )}
+        {totalPages > 1 && <div style={{ textAlign: "center", marginTop: 12, fontSize: 14, color: C.abbey }}>Page {currentPage} sur {totalPages}</div>}
 
         <div style={{ textAlign: "center", marginTop: 32 }}>
           <a onClick={() => go("home")} style={{ fontSize: 16, color: C.abbey, cursor: "pointer", textDecoration: "underline" }}>← Retour à l'accueil</a>
