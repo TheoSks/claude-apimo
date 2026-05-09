@@ -170,7 +170,7 @@ const mkSvg = (w, h, body) => `data:image/svg+xml,${encodeURIComponent(`<svg xml
 const HERO_IMG = "/home-hero.avif";
 const HERO_FLOAT_UNUSED = mkSvg(400,500,`<rect width='400' height='500' fill='#FFF8E1'/><rect x='40' y='50' width='320' height='300' rx='12' fill='#E8F5E9'/><circle cx='130' cy='300' r='35' fill='#FFB74D'/><rect x='105' y='335' width='50' height='70' rx='8' fill='#42A5F5'/><circle cx='200' cy='290' r='40' fill='#A1887F'/><rect x='172' y='330' width='56' height='80' rx='8' fill='#5C6BC0'/><circle cx='270' cy='310' r='30' fill='#FFB74D'/><rect x='60' y='400' width='280' height='60' rx='8' fill='#FFF' opacity='.8'/><rect x='80' y='415' width='160' height='12' rx='6' fill='#24AFC5'/>`);
 const ABOUT_IMG = "/about-image.svg";
-const ABOUT_FLOAT = mkSvg(400,400,`<rect width='400' height='400' fill='#E0F2F1'/><circle cx='200' cy='150' r='70' fill='#FFCC80'/><rect x='145' y='220' width='110' height='130' rx='20' fill='#009688'/>`);
+const ABOUT_FLOAT = "/about-float.svg";
 const TESTI_IMG = mkSvg(600,630,`<rect width='600' height='630' rx='12' fill='#E8F5E9'/><circle cx='300' cy='220' r='100' fill='#FFCC80'/><rect x='220' y='320' width='160' height='200' rx='24' fill='#24AFC5'/>`);
 const CTA_IMG = mkSvg(700,850,`<rect width='700' height='850' fill='rgba(36,175,197,.08)'/><rect x='80' y='100' width='540' height='400' rx='16' fill='#FFF' opacity='.15'/><circle cx='350' cy='400' r='80' fill='none' stroke='#24AFC5' stroke-width='2' opacity='.2'/>`);
 const LOGO = "https://ebimmo.com/wp-content/uploads/2024/05/e_b_logo-removebg-preview-1.png";
