@@ -1033,7 +1033,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
             <h2 style={{ fontSize: "clamp(26px, 6.5vw, 70px)", fontWeight: 500, color: C.white, lineHeight: 1.14, marginBottom: m.xs ? 28 : 40 }}>
               Vous cherchez à<br />acheter ou à louer<br />un bien immobilier ?
             </h2>
-            <PillBtn variant="outline-white" onClick={() => go("contact")}>Prendre contact</PillBtn>
+            <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ alignSelf: "flex-start" }}>Prendre contact</PillBtn>
           </Rv>
         </div>
       </section>
