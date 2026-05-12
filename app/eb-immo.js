@@ -330,6 +330,27 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
   const prev = (e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + total) % total); };
   const next = (e) => { e.stopPropagation(); setPhotoIdx(i => (i + 1) % total); };
 
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const swiped = useRef(false);
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; swiped.current = false; };
+  const onTouchMove = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) swiped.current = true;
+  };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (total > 1 && Math.abs(dx) > 40) {
+      setPhotoIdx(i => dx < 0 ? (i + 1) % total : (i - 1 + total) % total);
+      swiped.current = true;
+    }
+    touchStartX.current = null; touchStartY.current = null;
+  };
+  const handleClick = (e) => { if (swiped.current) { swiped.current = false; return; } onClick?.(e); };
+
   const arrowBtn = (dir, handler) => (
     <button onClick={handler} style={{ position: "absolute", top: "50%", [dir]: 10, transform: "translateY(-50%)", width: 32, height: 32, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.45)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: h ? 1 : 0, transition: "opacity .25s", zIndex: 2, backdropFilter: "blur(4px)", flexShrink: 0 }}>
       {dir === "left"
@@ -339,8 +360,8 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
   );
 
   return (
-    <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
-      <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
+    <div onClick={handleClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
+      <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative", touchAction: "pan-y" }}>
         <img
           key={photoIdx}
           src={photos[photoIdx] || fb(idx)}
@@ -392,10 +413,31 @@ function PropRow({ p, onClick, idx = 0, mob, xs }) {
   const prevPhoto = (e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + total) % total); };
   const nextPhoto = (e) => { e.stopPropagation(); setPhotoIdx(i => (i + 1) % total); };
 
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const swiped = useRef(false);
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; swiped.current = false; };
+  const onTouchMove = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) swiped.current = true;
+  };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (total > 1 && Math.abs(dx) > 40) {
+      setPhotoIdx(i => dx < 0 ? (i + 1) % total : (i - 1 + total) % total);
+      swiped.current = true;
+    }
+    touchStartX.current = null; touchStartY.current = null;
+  };
+  const handleClick = (e) => { if (swiped.current) { swiped.current = false; return; } onClick?.(e); };
+
   return (
-    <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+    <div onClick={handleClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{ display: "flex", flexDirection: mob ? "column" : "row", gap: mob ? 20 : 30, paddingBottom: mob ? 32 : 50, borderBottom: `1px solid ${C.cinder50}`, cursor: "pointer" }}>
-      <div style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: xs ? 180 : mob ? 220 : 380, position: "relative" }}>
+      <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} style={{ flex: mob ? "none" : "0 0 50%", borderRadius: 16, overflow: "hidden", height: xs ? 180 : mob ? 220 : 380, position: "relative", touchAction: "pan-y" }}>
         <img key={photoIdx} src={photos[photoIdx] || fb(idx)} alt={title} onError={(e) => handleImgErr(e, idx)} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s, opacity .3s", transform: h ? "scale(1.03)" : "" }} />
         {total > 1 && (
           <>
