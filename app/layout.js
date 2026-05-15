@@ -63,7 +63,7 @@ export const metadata = {
       "Achat, vente, location et estimation gratuite sur la Côte Fleurie en Normandie.",
     images: ["/home-hero.avif"],
   },
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/icon.png", apple: "/apple-icon.png" },
   formatDetection: { telephone: true, email: true, address: true },
 };
 
@@ -78,7 +78,7 @@ const jsonLd = {
   "@type": "RealEstateAgent",
   name: "E&B Immo",
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.ico`,
+  logo: `${SITE_URL}/icon.png`,
   image: `${SITE_URL}/home-hero.avif`,
   description:
     "Agence immobilière digitale sur la Côte Fleurie : achat, vente, location et estimation à Deauville, Trouville, Honfleur, Cabourg et alentours.",
@@ -121,7 +121,6 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -47,7 +47,7 @@ export default async function GuidePage({ params }) {
     publisher: {
       "@type": "Organization",
       name: "E&B Immo",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/favicon.ico` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.png` },
     },
     mainEntityOfPage: `${SITE_URL}/guides/${g.slug}`,
   };
