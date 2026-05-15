@@ -3,7 +3,7 @@ import { BUCKETS } from "./_lib/buckets";
 import { GUIDES } from "./_lib/guides";
 import { getAllProperties, propertyPath } from "./_lib/apimo";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.eb-immo.fr";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
 
 export default async function sitemap() {
   const now = new Date();

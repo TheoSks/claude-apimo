@@ -12,7 +12,7 @@ import {
 } from "../../_lib/apimo";
 import { SeoHeader, SeoFooter, SEO_COLORS as C } from "../../_components/SeoShell";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.eb-immo.fr";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
 
 export const revalidate = 600;
 
