@@ -1,0 +1,60 @@
+import { CITIES } from "./_lib/cities";
+import { BUCKETS } from "./_lib/buckets";
+import { GUIDES } from "./_lib/guides";
+import { getAllProperties, propertyPath } from "./_lib/apimo";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+
+export default async function sitemap() {
+  const now = new Date();
+
+  const staticRoutes = [
+    { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
+    { url: `${SITE_URL}/#annonces`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/#estimation`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/#apropos`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/#contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/guides`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+  ];
+
+  const cityRoutes = CITIES.map((c) => ({
+    url: `${SITE_URL}/agence/${c.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.9,
+  }));
+
+  const matrixRoutes = [];
+  for (const b of BUCKETS) {
+    for (const c of CITIES) {
+      matrixRoutes.push({
+        url: `${SITE_URL}/immobilier/${b.slug}/${c.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.85,
+      });
+    }
+  }
+
+  const guideRoutes = GUIDES.map((g) => ({
+    url: `${SITE_URL}/guides/${g.slug}`,
+    lastModified: new Date(g.date),
+    changeFrequency: "monthly",
+    priority: 0.75,
+  }));
+
+  let propertyRoutes = [];
+  try {
+    const list = await getAllProperties();
+    propertyRoutes = list.map((p) => ({
+      url: `${SITE_URL}${propertyPath(p)}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
+  } catch {
+    propertyRoutes = [];
+  }
+
+  return [...staticRoutes, ...cityRoutes, ...matrixRoutes, ...guideRoutes, ...propertyRoutes];
+}
