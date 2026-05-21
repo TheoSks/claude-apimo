@@ -340,13 +340,13 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
 
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
-      <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
+      <div style={{ width: "100%", paddingBottom: "75%", height: 0, borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
         <img
           key={photoIdx}
           src={photos[photoIdx] || fb(idx)}
           alt={title}
           onError={(e) => handleImgErr(e, idx)}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
         />
         {total > 1 && arrowBtn("left", prev)}
         {total > 1 && arrowBtn("right", next)}
@@ -1123,7 +1123,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           </Rv>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "repeat(2, 1fr)" : m.lg ? "repeat(3, 1fr)" : m.xl ? "repeat(3, 1fr)" : "repeat(4, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "repeat(2, 1fr)" : m.lg ? "repeat(3, 1fr)" : m.xl ? "repeat(3, 1fr)" : "repeat(4, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28, alignItems: "start" }}>
           {!ld && paginated.map((p, i) => (
             <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
