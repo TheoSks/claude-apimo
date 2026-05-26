@@ -187,7 +187,7 @@ const fb = (i) => FALLBACKS[i % FALLBACKS.length];
 const handleImgErr = (e, i) => { e.target.onerror = null; e.target.src = fb(i || 0); };
 
 /* ═══ Colors ═══ */
-const C = { bush: "#09261D", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A", mine: "#222222", cinder10: "rgba(13,14,19,0.1)", cinder15: "rgba(13,14,19,0.15)", cinder50: "rgba(13,14,19,0.5)", bush15: "rgba(9,38,29,0.15)" };
+const C = { bush: "#09261D", cyan: "#C9A882", white: "#FFFFFF", abbey: "#56595A", mine: "#222222", cinder10: "rgba(13,14,19,0.1)", cinder15: "rgba(13,14,19,0.15)", cinder50: "rgba(13,14,19,0.5)", bush15: "rgba(9,38,29,0.15)" };
 
 /* ═══ Search helpers ═══ */
 const DEFAULT_SEARCHQ = { text: "", city: "", types: [], budgetMin: "", budgetMax: "", areaMin: "", areaMax: "" };
