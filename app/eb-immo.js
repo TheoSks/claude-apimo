@@ -77,8 +77,9 @@ function normalizeApimo(p) {
   if (p.regulations) Object.entries(p.regulations).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== "" && v !== 0) regulations[k] = v; });
   if (p.energy) regulations.energy = p.energy;
   if (p.gas) regulations.gas = p.gas;
-  /* Virtual tour */
-  const virtualTour = p.virtual_tour || p.virtual_visit || "";
+  /* Virtual tour — stored in p.medias as type:"http" entries (Giraffe360) */
+  const virtualTourMedia = (p.medias || []).find(m => m.type === "http" && m.value);
+  const virtualTour = p.virtual_tour || p.virtual_visit || virtualTourMedia?.value || "";
   /* Agent / user */
   const agent = p.user ? { name: [p.user.firstname, p.user.lastname].filter(Boolean).join(" "), phone: p.user.phone || p.user.mobile || "", email: p.user.email || "", photo: p.user.picture || "" } : null;
   return {
