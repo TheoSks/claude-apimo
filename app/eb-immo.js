@@ -897,14 +897,14 @@ function TestimonialsCarousel({ mob, xs }) {
           <div key={i} style={{ position: i === 0 ? "relative" : "absolute", top: 0, left: 0, width: "100%", opacity: i === idx ? 1 : 0, transition: "opacity .4s ease", pointerEvents: i === idx ? "auto" : "none" }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
               {[1,2,3,4,5].map(s => (
-                <svg key={s} width="20" height="20" viewBox="0 0 20 20" fill={C.cyan}><path d="M10 1l2.39 4.83 5.33.78-3.86 3.76.91 5.32L10 13.27l-4.77 2.42.91-5.32L2.28 6.61l5.33-.78z"/></svg>
+                <svg key={s} width="20" height="20" viewBox="0 0 20 20" fill={C.bush}><path d="M10 1l2.39 4.83 5.33.78-3.86 3.76.91 5.32L10 13.27l-4.77 2.42.91-5.32L2.28 6.61l5.33-.78z"/></svg>
               ))}
             </div>
             <blockquote style={{ fontSize: xs ? 16 : mob ? 18 : 24, fontWeight: 400, color: C.bush, lineHeight: 1.5, margin: "0 0 28px" }}>
               "{rev.text}"
             </blockquote>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: "50%", background: C.cyan, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div style={{ width: 42, height: 42, borderRadius: "50%", background: C.bush, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <span style={{ fontSize: 16, fontWeight: 700, color: C.white }}>{rev.author[0]}</span>
               </div>
               <div>
@@ -923,7 +923,7 @@ function TestimonialsCarousel({ mob, xs }) {
         </button>
         <div style={{ display: "flex", gap: 8 }}>
           {REVIEWS.map((_, i) => (
-            <button key={i} onClick={() => setIdx(i)} style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 99, border: "none", background: i === idx ? C.cyan : "rgba(9,38,29,.3)", cursor: "pointer", transition: "all .3s", padding: 0 }} />
+            <button key={i} onClick={() => setIdx(i)} style={{ width: i === idx ? 24 : 8, height: 8, borderRadius: 99, border: "none", background: i === idx ? C.bush : "rgba(9,38,29,.3)", cursor: "pointer", transition: "all .3s", padding: 0 }} />
           ))}
         </div>
         <button onClick={next} style={{ width: 44, height: 44, borderRadius: "50%", border: `1px solid rgba(9,38,29,.3)`, background: "transparent", color: C.bush, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1019,8 +1019,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
                 { t: "Votre projet, notre engagement", d: "Un accompagnement sur-mesure pour chaque projet unique.", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 16, alignItems: "flex-start", marginBottom: m.xs ? 20 : m.mob ? 24 : 32 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(36,175,197,.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(9,38,29,.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.bush} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <h4 style={{ fontSize: m.xs ? 16 : m.mob ? 17 : 22, fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{item.t}</h4>
@@ -1680,7 +1680,7 @@ function Apropos({ go, m, px }) {
     <main style={{ paddingTop: m.xs ? 64 : 72 }}>
       {/* Hero */}
       <section style={{ background: "#C9A882", padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, textAlign: "center" }}>
-        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 16 }}>À propos</p>
+        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.bush, textTransform: "uppercase", marginBottom: 16 }}>À propos</p>
         <h1 style={{ fontSize: "clamp(28px, 6vw, 64px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, maxWidth: 700, margin: "0 auto" }}>Accompagnement sur mesure,<br />écoute attentive</h1>
       </section>
 
