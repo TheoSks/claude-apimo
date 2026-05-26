@@ -187,7 +187,7 @@ const fb = (i) => FALLBACKS[i % FALLBACKS.length];
 const handleImgErr = (e, i) => { e.target.onerror = null; e.target.src = fb(i || 0); };
 
 /* ═══ Colors ═══ */
-const C = { bush: "#09261D", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A", mine: "#222222", cinder10: "rgba(13,14,19,0.1)", cinder15: "rgba(13,14,19,0.15)", cinder50: "rgba(13,14,19,0.5)", bush15: "rgba(9,38,29,0.15)" };
+const C = { bush: "#0D0E13", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A", mine: "#222222", cinder10: "rgba(13,14,19,0.1)", cinder15: "rgba(13,14,19,0.15)", cinder50: "rgba(13,14,19,0.5)", bush15: "rgba(13,14,19,0.15)" };
 
 /* ═══ Search helpers ═══ */
 const DEFAULT_SEARCHQ = { text: "", city: "", types: [], budgetMin: "", budgetMax: "", areaMin: "", areaMax: "" };
@@ -539,13 +539,13 @@ function Nav({ pg, go, m, px }) {
   const padY = m.xs ? 10 : 14;
   return (
     <>
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, padding: `${padY}px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "rgba(201,168,130,.92)", backdropFilter: "blur(12px)", transition: "background .3s" }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, padding: `${padY}px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "rgba(255,255,255,.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(13,14,19,.08)", transition: "background .3s" }}>
         <img src={LOGO} alt="E&B Immo" style={{ height: logoH, width: "auto", cursor: "pointer", flexShrink: 0 }} onClick={() => { go("home"); setMenuOpen(false); }} />
         {mob ? (
           <button aria-label="Menu" onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: 40, height: 40, position: "relative" }}>
             {menuOpen ? (
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path d="M3 3L19 19M19 3L3 19" stroke="#09261D" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M3 3L19 19M19 3L3 19" stroke={C.bush} strokeWidth="2" strokeLinecap="round"/>
               </svg>
             ) : (
               <>
@@ -566,7 +566,7 @@ function Nav({ pg, go, m, px }) {
       </nav>
       {/* Mobile menu overlay */}
       {mob && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: "rgba(201,168,130,.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: m.xs ? 24 : 32, padding: 24, opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transition: "opacity .3s" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: "rgba(255,255,255,.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: m.xs ? 24 : 32, padding: 24, opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transition: "opacity .3s" }}>
           {[["Accueil", "home"], ["Propriétés", "annonces"], ["Estimation", "estimation"], ["À propos", "apropos"], ["Nous contacter", "contact"]].map(([l, p]) => (
             <a key={p} onClick={() => { go(p); setMenuOpen(false); }} style={{ fontSize: m.xs ? 24 : 28, fontWeight: 500, color: C.bush, cursor: "pointer", textDecoration: "none" }}>{l}</a>
           ))}
@@ -994,7 +994,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ ABOUT ═══ */}
-      <section style={{ background: "#C9A882", padding: `${m.xs ? 48 : m.mob ? 60 : m.md ? 80 : 120}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
+      <section style={{ background: C.white, padding: `${m.xs ? 48 : m.mob ? 60 : m.md ? 80 : 120}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
         <div style={{ display: "flex", flexDirection: m.mob || m.tab ? "column" : "row", gap: m.xs ? 32 : m.mob ? 40 : m.tab ? 50 : 100, maxWidth: 1280, margin: "0 auto", alignItems: m.mob || m.tab ? "stretch" : "flex-start" }}>
           <Rv>
             <div style={{ position: "relative", width: m.mob ? "100%" : m.tab ? "100%" : 420, flexShrink: 0 }}>
@@ -1019,8 +1019,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
                 { t: "Votre projet, notre engagement", d: "Un accompagnement sur-mesure pour chaque projet unique.", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 16, alignItems: "flex-start", marginBottom: m.xs ? 20 : m.mob ? 24 : 32 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(9,38,29,.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.bush} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <h4 style={{ fontSize: m.xs ? 16 : m.mob ? 17 : 22, fontWeight: 500, lineHeight: 1.3, marginBottom: 6, color: C.bush }}>{item.t}</h4>
@@ -1047,7 +1047,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ TÉMOIGNAGES ═══ */}
-      <section style={{ background: "#C9A882", padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
+      <section style={{ background: "#F7F4EE", padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <Rv><h2 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.mob ? 32 : 50 }}>Témoignages</h2></Rv>
           <Rv d={1}><TestimonialsCarousel mob={m.mob} xs={m.xs} /></Rv>
@@ -1071,7 +1071,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section style={{ background: "#C9A882", overflow: "hidden" }}>
+      <section style={{ background: C.cyan, overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", alignItems: "center", gap: m.xs ? 32 : m.mob ? 40 : m.md ? 50 : 80, maxWidth: 1440, margin: "0 auto", padding: m.mob ? `${m.xs ? 48 : 60}px ${px}` : `0 ${px}` }}>
 
           {/* Images */}
@@ -1081,10 +1081,10 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
 
           {/* Text */}
           <Rv d={1} style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: m.mob ? 0 : m.md ? "60px 0" : "80px 0", flex: 1, width: m.mob ? "100%" : "auto" }}>
-            <h2 style={{ fontSize: "clamp(26px, 6.5vw, 70px)", fontWeight: 500, color: C.bush, lineHeight: 1.14, marginBottom: m.xs ? 28 : 40 }}>
+            <h2 style={{ fontSize: "clamp(26px, 6.5vw, 70px)", fontWeight: 500, color: C.white, lineHeight: 1.14, marginBottom: m.xs ? 28 : 40 }}>
               Vous cherchez à<br />acheter ou à louer<br />un bien immobilier ?
             </h2>
-            <PillBtn variant="outline-bush" onClick={() => go("contact")} style={{ alignSelf: "flex-start" }}>Prendre contact</PillBtn>
+            <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ alignSelf: "flex-start" }}>Prendre contact</PillBtn>
           </Rv>
         </div>
       </section>
@@ -1727,9 +1727,9 @@ function Apropos({ go, m, px }) {
       </section>
 
       {/* CTA */}
-      <section style={{ background: "#C9A882", padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, textAlign: "center" }}>
-        <h2 style={{ fontSize: "clamp(22px, 4.5vw, 52px)", fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: m.xs ? 28 : 40, maxWidth: 700, margin: "0 auto 32px" }}>Prêt à trouver votre maison de rêve ?</h2>
-        <PillBtn variant="outline-bush" onClick={() => go("contact")} style={{ alignSelf: "flex-start" }}>Nous contacter</PillBtn>
+      <section style={{ background: C.cyan, padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, textAlign: "center" }}>
+        <h2 style={{ fontSize: "clamp(22px, 4.5vw, 52px)", fontWeight: 500, color: C.white, lineHeight: 1.2, marginBottom: m.xs ? 28 : 40, maxWidth: 700, margin: "0 auto 32px" }}>Prêt à trouver votre maison de rêve ?</h2>
+        <PillBtn variant="outline-white" onClick={() => go("contact")} style={{ alignSelf: "flex-start" }}>Nous contacter</PillBtn>
       </section>
 
       <Footer go={go} m={m} px={px} />
