@@ -32,15 +32,15 @@ export async function POST(request) {
             <span style="font-size: 20px;">🏠</span>
             <div>
               <div style="color: #fff; font-size: 13px; opacity: 0.75; margin-bottom: 2px;">Annonce concernée</div>
-              <div style="color: #fff; font-weight: 700; font-size: 16px;">${typeBien || "Bien immobilier"}${reference ? ` <span style="color:#C9A882; font-size:13px; font-weight:400;">&nbsp;— réf. ${reference}</span>` : ""}${ville ? ` — ${codePostal ? codePostal + " " : ""}${ville}` : ""}</div>
+              <div style="color: #fff; font-weight: 700; font-size: 16px;">${typeBien || "Bien immobilier"}${reference ? ` <span style="color:#24AFC5; font-size:13px; font-weight:400;">&nbsp;— réf. ${reference}</span>` : ""}${ville ? ` — ${codePostal ? codePostal + " " : ""}${ville}` : ""}</div>
             </div>
           </div>` : ""}
 
           <table style="width: 100%; border-collapse: collapse;">
             <tr><td colspan="2" style="background: #f5f5f5; padding: 10px 14px; font-weight: bold; color: #09261D;">Coordonnées</td></tr>
             <tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A; width: 40%;">Nom</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;">${prenom} ${nom}</td></tr>
-            <tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A;">Email</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;"><a href="mailto:${email}" style="color: #C9A882;">${email}</a></td></tr>
-            <tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A;">Téléphone</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;"><a href="tel:${telephone}" style="color: #C9A882;">${telephone}</a></td></tr>
+            <tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A;">Email</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;"><a href="mailto:${email}" style="color: #24AFC5;">${email}</a></td></tr>
+            <tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A;">Téléphone</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;"><a href="tel:${telephone}" style="color: #24AFC5;">${telephone}</a></td></tr>
             ${adresse ? `<tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A;">Adresse</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;">${adresse}</td></tr>` : ""}
             ${ville ? `<tr><td style="padding: 10px 14px; border-bottom: 1px solid #eee; color: #56595A;">Ville</td><td style="padding: 10px 14px; border-bottom: 1px solid #eee;">${codePostal} ${ville}</td></tr>` : ""}
             ${superficie || nbChambres || anneeConstruction ? `<tr><td colspan="2" style="background: #f5f5f5; padding: 10px 14px; font-weight: bold; color: #09261D;">Projet immobilier</td></tr>` : ""}
