@@ -193,6 +193,8 @@ const C = { bush: "#09261D", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A"
 const DEFAULT_SEARCHQ = { text: "", city: "", types: [], budgetMin: "", budgetMax: "", areaMin: "", areaMax: "" };
 const TYPE_OPTIONS = [["maison", "Maison"], ["appart", "Appartement"], ["terrain", "Terrain"]];
 function norm(v) { return (v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+function slugify(s) { return norm(s).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
+function propPath(p) { return p ? `/biens/${p.reference || p.id}-${slugify(p.type || "")}-${slugify(p.city || "")}` : "/"; }
 function typeMatches(title, type, key) {
   const t = norm(title + " " + type);
   if (key === "maison") return /maison|villa|pavillon|longere|longère/.test(t);
@@ -466,8 +468,47 @@ export default function App() {
   const [budgetRange, setBudgetRange] = useState([0, 1500000]);
   const [areaRange, setAreaRange] = useState([0, 500]);
 
+  const propsRef = useRef([]);
+  useEffect(() => { propsRef.current = props; }, [props]);
+
   useEffect(() => { fetchProperties().then(d => { setProps(d); setLd(false); }).catch(() => setLd(false)); }, []);
-  const go = useCallback((p, id) => { setPg(p); if (id !== undefined) setSid(id); window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
+
+  /* Deep-link: parse URL on first load once props are available */
+  const parsedRef = useRef(false);
+  useEffect(() => {
+    if (parsedRef.current || !props.length) return;
+    parsedRef.current = true;
+    const path = window.location.pathname;
+    if (path.startsWith("/biens/")) {
+      const ref = path.replace("/biens/", "").split("-")[0];
+      const found = props.find(x => String(x.reference) === ref || String(x.id) === ref);
+      if (found) { setPg("bien"); setSid(found.id); }
+    }
+  }, [props]);
+
+  /* Back/forward support */
+  useEffect(() => {
+    const onPop = (e) => {
+      const st = e.state;
+      if (st?.pg) { setPg(st.pg); if (st.id !== undefined) setSid(st.id); }
+      else { setPg("home"); }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const go = useCallback((page, id) => {
+    setPg(page);
+    if (id !== undefined) setSid(id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (page === "bien" && id !== undefined) {
+      const p = propsRef.current.find(x => x.id === id);
+      window.history.pushState({ pg: page, id }, "", propPath(p));
+    } else {
+      window.history.pushState({ pg: page }, "", "/");
+    }
+  }, []);
 
   /* Fluid horizontal padding: 16px on tiny phones → 80px on desktop */
   const px = m.xs ? "16px" : m.sm ? "20px" : m.md ? "32px" : m.lg ? "48px" : "80px";
