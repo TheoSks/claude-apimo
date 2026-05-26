@@ -1310,6 +1310,25 @@ function Bien({ props, id, go, m, px }) {
               </div>
             )}
 
+            {/* Visite virtuelle */}
+            {p.virtualTour && (
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginBottom: m.xs ? 28 : 40 }}>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Visite virtuelle</h2>
+                <div style={{ borderRadius: 12, overflow: "hidden", position: "relative" }}>
+                  <iframe
+                    title="Visite virtuelle"
+                    width="100%"
+                    height={m.xs ? 240 : m.mob ? 320 : 460}
+                    style={{ border: 0, display: "block" }}
+                    loading="lazy"
+                    allowFullScreen
+                    allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer"
+                    src={p.virtualTour}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Informations section — like ebimmo.com */}
             <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
               <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Informations</h2>
