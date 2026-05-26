@@ -909,7 +909,7 @@ function TestimonialsCarousel({ mob, xs }) {
               </div>
               <div>
                 <p style={{ margin: 0, fontSize: mob ? 15 : 17, fontWeight: 600, color: C.bush }}>{rev.author}</p>
-                <p style={{ margin: 0, fontSize: 13, color: C.bush, opacity: .6 }}>⭐ 5/5 Google · {rev.date}</p>
+                <p style={{ margin: 0, fontSize: 13, color: C.abbey }}>⭐ 5/5 Google · {rev.date}</p>
               </div>
             </div>
           </div>
@@ -1008,9 +1008,9 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
           </Rv>
           <Rv d={2}>
             <div style={{ color: C.bush }}>
-              <span style={{ fontSize: m.xs ? 14 : m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12 }}>Explorer tout</span>
+              <span style={{ fontSize: m.xs ? 14 : m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12, color: C.abbey }}>Explorer tout</span>
               <h2 style={{ fontSize: "clamp(22px, 5vw, 44px)", fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>L'Évolution d'une Passion Immobilière</h2>
-              <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, opacity: .85, marginBottom: m.xs ? 24 : 32 }}>
+              <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, color: C.abbey, marginBottom: m.xs ? 24 : 32 }}>
                 Depuis 7 ans, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
               </p>
               {[
@@ -1023,8 +1023,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.bush} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <h4 style={{ fontSize: m.xs ? 16 : m.mob ? 17 : 22, fontWeight: 500, lineHeight: 1.3, marginBottom: 6 }}>{item.t}</h4>
-                    <p style={{ fontSize: m.xs ? 13 : m.mob ? 14 : 16, fontWeight: 400, lineHeight: 1.6, opacity: .8 }}>{item.d}</p>
+                    <h4 style={{ fontSize: m.xs ? 16 : m.mob ? 17 : 22, fontWeight: 500, lineHeight: 1.3, marginBottom: 6, color: C.bush }}>{item.t}</h4>
+                    <p style={{ fontSize: m.xs ? 13 : m.mob ? 14 : 16, fontWeight: 400, lineHeight: 1.6, color: C.abbey }}>{item.d}</p>
                   </div>
                 </div>
               ))}
@@ -1680,7 +1680,7 @@ function Apropos({ go, m, px }) {
     <main style={{ paddingTop: m.xs ? 64 : 72 }}>
       {/* Hero */}
       <section style={{ background: "#C9A882", padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, textAlign: "center" }}>
-        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.bush, textTransform: "uppercase", marginBottom: 16 }}>À propos</p>
+        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.abbey, textTransform: "uppercase", marginBottom: 16 }}>À propos</p>
         <h1 style={{ fontSize: "clamp(28px, 6vw, 64px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, maxWidth: 700, margin: "0 auto" }}>Accompagnement sur mesure,<br />écoute attentive</h1>
       </section>
 
