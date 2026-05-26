@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const C = { bush: "#0d0e13", cyan: "#24afc5", cream: "#f7f4ee" };
+const C = { bush: "#0d0e13", cyan: "#C9A882", cream: "#f7f4ee" };
 
 export function SeoHeader() {
   return (
