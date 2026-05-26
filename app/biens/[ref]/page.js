@@ -180,6 +180,23 @@ export default async function BienPage({ params }) {
           </p>
         </section>
 
+        {(() => {
+          const tourUrl = p.virtual_tour || p.virtual_visit || (p.medias || []).find(m => m.type === "http" && m.value)?.value;
+          return tourUrl ? (
+            <section style={{ marginBottom: 32 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>Visite virtuelle</h2>
+              <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden" }}>
+                <iframe
+                  src={tourUrl}
+                  title="Visite virtuelle"
+                  allowFullScreen
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                />
+              </div>
+            </section>
+          ) : null;
+        })()}
+
         <section
           style={{
             padding: 24,

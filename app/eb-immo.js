@@ -77,8 +77,9 @@ function normalizeApimo(p) {
   if (p.regulations) Object.entries(p.regulations).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== "" && v !== 0) regulations[k] = v; });
   if (p.energy) regulations.energy = p.energy;
   if (p.gas) regulations.gas = p.gas;
-  /* Virtual tour */
-  const virtualTour = p.virtual_tour || p.virtual_visit || "";
+  /* Virtual tour — stored in p.medias as type:"http" entries (Giraffe360) */
+  const virtualTourMedia = (p.medias || []).find(m => m.type === "http" && m.value);
+  const virtualTour = p.virtual_tour || p.virtual_visit || virtualTourMedia?.value || "";
   /* Agent / user */
   const agent = p.user ? { name: [p.user.firstname, p.user.lastname].filter(Boolean).join(" "), phone: p.user.phone || p.user.mobile || "", email: p.user.email || "", photo: p.user.picture || "" } : null;
   return {
@@ -192,6 +193,8 @@ const C = { bush: "#09261D", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A"
 const DEFAULT_SEARCHQ = { text: "", city: "", types: [], budgetMin: "", budgetMax: "", areaMin: "", areaMax: "" };
 const TYPE_OPTIONS = [["maison", "Maison"], ["appart", "Appartement"], ["terrain", "Terrain"]];
 function norm(v) { return (v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+function slugify(s) { return norm(s).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
+function propPath(p) { return p ? `/biens/${p.reference || p.id}-${slugify(p.type || "")}-${slugify(p.city || "")}` : "/"; }
 function typeMatches(title, type, key) {
   const t = norm(title + " " + type);
   if (key === "maison") return /maison|villa|pavillon|longere|longère/.test(t);
@@ -465,8 +468,47 @@ export default function App() {
   const [budgetRange, setBudgetRange] = useState([0, 1500000]);
   const [areaRange, setAreaRange] = useState([0, 500]);
 
+  const propsRef = useRef([]);
+  useEffect(() => { propsRef.current = props; }, [props]);
+
   useEffect(() => { fetchProperties().then(d => { setProps(d); setLd(false); }).catch(() => setLd(false)); }, []);
-  const go = useCallback((p, id) => { setPg(p); if (id !== undefined) setSid(id); window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
+
+  /* Deep-link: parse URL on first load once props are available */
+  const parsedRef = useRef(false);
+  useEffect(() => {
+    if (parsedRef.current || !props.length) return;
+    parsedRef.current = true;
+    const path = window.location.pathname;
+    if (path.startsWith("/biens/")) {
+      const ref = path.replace("/biens/", "").split("-")[0];
+      const found = props.find(x => String(x.reference) === ref || String(x.id) === ref);
+      if (found) { setPg("bien"); setSid(found.id); }
+    }
+  }, [props]);
+
+  /* Back/forward support */
+  useEffect(() => {
+    const onPop = (e) => {
+      const st = e.state;
+      if (st?.pg) { setPg(st.pg); if (st.id !== undefined) setSid(st.id); }
+      else { setPg("home"); }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const go = useCallback((page, id) => {
+    setPg(page);
+    if (id !== undefined) setSid(id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (page === "bien" && id !== undefined) {
+      const p = propsRef.current.find(x => x.id === id);
+      window.history.pushState({ pg: page, id }, "", propPath(p));
+    } else {
+      window.history.pushState({ pg: page }, "", "/");
+    }
+  }, []);
 
   /* Fluid horizontal padding: 16px on tiny phones → 80px on desktop */
   const px = m.xs ? "16px" : m.sm ? "20px" : m.md ? "32px" : m.lg ? "48px" : "80px";
@@ -906,7 +948,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
           <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
               <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere" }}>
-                Agence<br />immobilière<br />digitale<br />De la côte fleurie
+                Agence<br />immobilière<br />De la côte fleurie
               </h1>
             </Rv>
             <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
@@ -1306,6 +1348,25 @@ function Bien({ props, id, go, m, px }) {
             {p.description && (
               <div style={{ marginBottom: m.xs ? 28 : 40 }}>
                 <p className="wrap-word" style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 16, color: C.abbey, lineHeight: 1.75, whiteSpace: "pre-line" }}>{p.description}</p>
+              </div>
+            )}
+
+            {/* Visite virtuelle */}
+            {p.virtualTour && (
+              <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginBottom: m.xs ? 28 : 40 }}>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Visite virtuelle</h2>
+                <div style={{ borderRadius: 12, overflow: "hidden", position: "relative" }}>
+                  <iframe
+                    title="Visite virtuelle"
+                    width="100%"
+                    height={m.xs ? 240 : m.mob ? 320 : 460}
+                    style={{ border: 0, display: "block" }}
+                    loading="lazy"
+                    allowFullScreen
+                    allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer"
+                    src={p.virtualTour}
+                  />
+                </div>
               </div>
             )}
 

@@ -9,7 +9,7 @@ export const metadata = {
     template: "%s | E&B Immo",
   },
   description:
-    "E&B Immo, agence immobilière digitale sur la Côte Fleurie. Achat, vente, location et estimation gratuite à Deauville, Trouville, Honfleur, Cabourg, Houlgate et alentours en Normandie.",
+    "E&B Immo, agence immobilière sur la Côte Fleurie. Achat, vente, location et estimation gratuite à Deauville, Trouville, Honfleur, Cabourg, Houlgate et alentours en Normandie.",
   keywords: [
     "agence immobilière Deauville",
     "agence immobilière Trouville",
@@ -81,7 +81,7 @@ const jsonLd = {
   logo: `${SITE_URL}/favicon.ico`,
   image: `${SITE_URL}/home-hero.avif`,
   description:
-    "Agence immobilière digitale sur la Côte Fleurie : achat, vente, location et estimation à Deauville, Trouville, Honfleur, Cabourg et alentours.",
+    "Agence immobilière sur la Côte Fleurie : achat, vente, location et estimation à Deauville, Trouville, Honfleur, Cabourg et alentours.",
   email: "contact@eb-immo.fr",
   telephone: "+33760953618",
   priceRange: "€€€",

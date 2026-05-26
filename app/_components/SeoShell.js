@@ -41,7 +41,7 @@ export function SeoFooter() {
       }}
     >
       <p style={{ marginBottom: 8 }}>
-        <strong>E&amp;B Immo</strong> — Agence immobilière digitale de la Côte Fleurie
+        <strong>E&amp;B Immo</strong> — Agence immobilière de la Côte Fleurie
       </p>
       <p>
         <a href="tel:+33760953618" style={{ color: C.cyan }}>07 60 95 36 18</a> ·{" "}
