@@ -170,10 +170,10 @@ function useMedia() {
 /* ═══ Images (inline SVG data URIs) ═══ */
 const mkSvg = (w, h, body) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${body}</svg>`)}`;
 const HERO_IMG = "/home-hero.avif";
-const HERO_FLOAT_UNUSED = mkSvg(400,500,`<rect width='400' height='500' fill='#FFF8E1'/><rect x='40' y='50' width='320' height='300' rx='12' fill='#E8F5E9'/><circle cx='130' cy='300' r='35' fill='#FFB74D'/><rect x='105' y='335' width='50' height='70' rx='8' fill='#42A5F5'/><circle cx='200' cy='290' r='40' fill='#A1887F'/><rect x='172' y='330' width='56' height='80' rx='8' fill='#5C6BC0'/><circle cx='270' cy='310' r='30' fill='#FFB74D'/><rect x='60' y='400' width='280' height='60' rx='8' fill='#FFF' opacity='.8'/><rect x='80' y='415' width='160' height='12' rx='6' fill='#24AFC5'/>`);
+const HERO_FLOAT_UNUSED = mkSvg(400,500,`<rect width='400' height='500' fill='#FFF8E1'/><rect x='40' y='50' width='320' height='300' rx='12' fill='#E8F5E9'/><circle cx='130' cy='300' r='35' fill='#FFB74D'/><rect x='105' y='335' width='50' height='70' rx='8' fill='#42A5F5'/><circle cx='200' cy='290' r='40' fill='#A1887F'/><rect x='172' y='330' width='56' height='80' rx='8' fill='#5C6BC0'/><circle cx='270' cy='310' r='30' fill='#FFB74D'/><rect x='60' y='400' width='280' height='60' rx='8' fill='#FFF' opacity='.8'/><rect x='80' y='415' width='160' height='12' rx='6' fill='#C9A882'/>`);
 const ABOUT_IMG = "/about-image.svg";
 const ABOUT_FLOAT = "/about-float.svg";
-const TESTI_IMG = mkSvg(600,630,`<rect width='600' height='630' rx='12' fill='#E8F5E9'/><circle cx='300' cy='220' r='100' fill='#FFCC80'/><rect x='220' y='320' width='160' height='200' rx='24' fill='#24AFC5'/>`);
+const TESTI_IMG = mkSvg(600,630,`<rect width='600' height='630' rx='12' fill='#F5EFE6'/><circle cx='300' cy='220' r='100' fill='#FFCC80'/><rect x='220' y='320' width='160' height='200' rx='24' fill='#C9A882'/>`);
 const CTA_IMG = "/cta-image.svg";
 const LOGO = "https://ebimmo.com/wp-content/uploads/2024/05/e_b_logo-removebg-preview-1.png";
 const FALLBACKS = [
@@ -308,7 +308,7 @@ function Rv({ children, d = 0, style = {} }) {
 /* ═══ Pill button ═══ */
 function PillBtn({ children, variant = "outline-cyan", onClick, style: s = {}, hideArrow }) {
   const [h, setH] = useState(false);
-  const styles = { "outline-white": { border: `1px solid ${C.white}`, color: C.white, bg: "transparent", hBg: "rgba(255,255,255,.1)" }, "outline-cyan": { border: `1px solid ${C.cyan}`, color: C.cyan, bg: "transparent", hBg: "rgba(36,175,197,.08)" }, "solid-cyan": { border: `1px solid ${C.cyan}`, color: C.white, bg: C.cyan, hBg: "#1d9ab0" } };
+  const styles = { "outline-white": { border: `1px solid ${C.white}`, color: C.white, bg: "transparent", hBg: "rgba(255,255,255,.1)" }, "outline-cyan": { border: `1px solid ${C.cyan}`, color: C.cyan, bg: "transparent", hBg: "rgba(201,168,130,.12)" }, "solid-cyan": { border: `1px solid ${C.cyan}`, color: C.bush, bg: C.cyan, hBg: "#A8865E" } };
   const st = styles[variant];
   return (
     <button onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
@@ -1019,7 +1019,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
                 { t: "Votre projet, notre engagement", d: "Un accompagnement sur-mesure pour chaque projet unique.", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 16, alignItems: "flex-start", marginBottom: m.xs ? 20 : m.mob ? 24 : 32 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(36,175,197,.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(201,168,130,.20)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d={item.icon} stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                   <div style={{ minWidth: 0 }}>
@@ -1246,7 +1246,7 @@ function BienContactForm({ p, m }) {
       <h3 style={{ fontSize: m.xs ? 16 : m.mob ? 18 : 22, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Formulaire de contact</h3>
       {cSent ? (
         <div style={{ textAlign: "center", padding: "24px 0" }}>
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(201,168,130,.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <p style={{ fontSize: 16, fontWeight: 600, color: C.bush, marginBottom: 6 }}>Message envoyé !</p>
@@ -1606,7 +1606,7 @@ function ContactFormBox({ m }) {
       </div>
       {sent && (
         <div style={{ textAlign: "center", padding: "32px 0" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(36,175,197,.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(201,168,130,.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <h3 style={{ fontSize: 22, fontWeight: 600, color: C.bush, marginBottom: 10 }}>Message envoyé !</h3>
@@ -1715,7 +1715,7 @@ function Apropos({ go, m, px }) {
           <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
             {forces.map((f, i) => (
               <div key={i} style={{ background: C.white, borderRadius: 16, padding: m.xs ? 28 : 36, borderTop: `3px solid ${C.cyan}` }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: `rgba(36,175,197,.12)`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: `rgba(201,168,130,.15)`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke={C.cyan} strokeWidth="1.5" strokeLinejoin="round"/></svg>
                 </div>
                 <h3 style={{ fontSize: m.xs ? 17 : 20, fontWeight: 600, color: C.bush, marginBottom: 12 }}>{f.title}</h3>

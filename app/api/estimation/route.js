@@ -87,11 +87,11 @@ export async function POST(request) {
     <!-- Header -->
     <div style="background:#09261D;padding:28px 32px;">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:40px;height:40px;border-radius:50%;background:#24AFC5;display:flex;align-items:center;justify-content:center;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#C9A882;display:flex;align-items:center;justify-content:center;">
           <span style="color:#fff;font-size:20px;">🏠</span>
         </div>
         <div>
-          <div style="color:#24AFC5;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">E&amp;B Immo</div>
+          <div style="color:#C9A882;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">E&amp;B Immo</div>
           <div style="color:#fff;font-size:20px;font-weight:700;">Nouvelle demande d'estimation</div>
         </div>
       </div>
@@ -105,10 +105,10 @@ export async function POST(request) {
     <div style="background:linear-gradient(135deg,#09261D,#0d3a2b);padding:28px 32px;text-align:center;">
       <div style="color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Estimation calculée</div>
       <div style="color:#fff;font-size:32px;font-weight:700;line-height:1.2;">
-        ${fmtP(estimateLow)} <span style="color:#24AFC5;">—</span> ${fmtP(estimateHigh)}
+        ${fmtP(estimateLow)} <span style="color:#C9A882;">—</span> ${fmtP(estimateHigh)}
       </div>
       <div style="color:rgba(255,255,255,0.65);font-size:14px;margin-top:8px;">
-        Valeur centrale : <strong style="color:#24AFC5;">${fmtP(estimateCenter)}</strong>
+        Valeur centrale : <strong style="color:#C9A882;">${fmtP(estimateCenter)}</strong>
       </div>
       <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:6px;">Estimation indicative — à affiner avec l'agent</div>
     </div>` : ""}
@@ -119,8 +119,8 @@ export async function POST(request) {
 
         ${sectionHead("👤 Coordonnées du demandeur")}
         ${row("Nom complet", `${prenom} ${nom}`)}
-        ${row("Email", `<a href="mailto:${email}" style="color:#24AFC5;">${email}</a>`)}
-        ${row("Téléphone", `<a href="tel:${telephone}" style="color:#24AFC5;">${telephone}</a>`)}
+        ${row("Email", `<a href="mailto:${email}" style="color:#C9A882;">${email}</a>`)}
+        ${row("Téléphone", `<a href="tel:${telephone}" style="color:#C9A882;">${telephone}</a>`)}
 
         ${sectionHead("📍 Bien à estimer")}
         ${row("Adresse", adresse)}
@@ -148,11 +148,11 @@ export async function POST(request) {
       </table>
 
       <!-- CTA -->
-      <div style="margin-top:28px;padding:18px 20px;background:#f8f9f6;border-radius:10px;border-left:4px solid #24AFC5;">
+      <div style="margin-top:28px;padding:18px 20px;background:#f8f9f6;border-radius:10px;border-left:4px solid #C9A882;">
         <p style="margin:0;font-size:14px;color:#56595A;line-height:1.6;">
           <strong style="color:#09261D;">Action recommandée :</strong><br />
-          Contactez <strong>${prenom} ${nom}</strong> au <a href="tel:${telephone}" style="color:#24AFC5;">${telephone}</a>
-          ou par email à <a href="mailto:${email}" style="color:#24AFC5;">${email}</a>
+          Contactez <strong>${prenom} ${nom}</strong> au <a href="tel:${telephone}" style="color:#C9A882;">${telephone}</a>
+          ou par email à <a href="mailto:${email}" style="color:#C9A882;">${email}</a>
           pour confirmer l'estimation et proposer un rendez-vous.
         </p>
       </div>

@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 
 const C = {
   bush: "#09261D",
-  cyan: "#24AFC5",
+  cyan: "#C9A882",
   white: "#FFFFFF",
   abbey: "#56595A",
   mine: "#222222",
@@ -178,7 +178,7 @@ function BigCard({ active, onClick, icon, label, subtitle, xs }) {
         padding: xs ? "20px 14px" : "32px 24px",
         border: `2px solid ${active ? C.cyan : C.cinder15}`,
         borderRadius: 16,
-        background: active ? "rgba(36,175,197,0.08)" : "#fff",
+        background: active ? "rgba(201,168,130,0.10)" : "#fff",
         color: active ? C.bush : C.mine,
         cursor: "pointer",
         fontFamily: "Urbanist, sans-serif",
@@ -190,7 +190,7 @@ function BigCard({ active, onClick, icon, label, subtitle, xs }) {
         gap: xs ? 10 : 14,
       }}>
       {icon && (
-        <div style={{ width: xs ? 48 : 64, height: xs ? 48 : 64, borderRadius: "50%", background: active ? C.cyan : "rgba(36,175,197,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: active ? "#fff" : C.cyan, transition: "all .2s" }}>
+        <div style={{ width: xs ? 48 : 64, height: xs ? 48 : 64, borderRadius: "50%", background: active ? C.cyan : "rgba(201,168,130,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: active ? C.bush : C.cyan, transition: "all .2s" }}>
           {icon}
         </div>
       )}
@@ -377,7 +377,7 @@ export default function Estimation({ go, m, px }) {
       <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120, background: C.bg, minHeight: "100vh" }}>
         <section style={{ padding: `${m.xs ? 32 : 60}px ${px} ${m.xs ? 60 : 100}px`, maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: m.xs ? 32 : 48 }}>
-            <span style={{ display: "inline-block", padding: "6px 16px", background: "rgba(36,175,197,0.1)", color: C.cyan, borderRadius: 99, fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: m.xs ? 16 : 20, textTransform: "uppercase" }}>
+            <span style={{ display: "inline-block", padding: "6px 16px", background: "rgba(201,168,130,0.15)", color: C.cyan, borderRadius: 99, fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: m.xs ? 16 : 20, textTransform: "uppercase" }}>
               Estimation gratuite
             </span>
             <h1 style={{ fontSize: "clamp(28px, 6.5vw, 56px)", fontWeight: 600, color: C.bush, lineHeight: 1.15, marginBottom: m.xs ? 16 : 20, maxWidth: 780, marginLeft: "auto", marginRight: "auto" }}>
@@ -438,7 +438,7 @@ export default function Estimation({ go, m, px }) {
               { icon: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z", title: "Expertise locale", desc: "Par un agent E&B Immo" },
             ].map((it, i) => (
               <div key={i} style={{ display: "flex", gap: 14, alignItems: "center", padding: m.xs ? 16 : 20, background: "#fff", borderRadius: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(36,175,197,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(201,168,130,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={C.cyan} strokeWidth="2" style={{ display: i === 0 ? "block" : "none" }}/><path d={it.icon} stroke={C.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
                 <div>
@@ -626,7 +626,7 @@ export default function Estimation({ go, m, px }) {
                 padding: "16px 20px",
                 border: `2px solid ${f.vue === k ? C.cyan : C.cinder15}`,
                 borderRadius: 12,
-                background: f.vue === k ? "rgba(36,175,197,0.08)" : "#fff",
+                background: f.vue === k ? "rgba(201,168,130,0.10)" : "#fff",
                 color: f.vue === k ? C.bush : C.mine,
                 fontFamily: "Urbanist, sans-serif",
                 fontSize: m.xs ? 14 : 15,
@@ -677,7 +677,7 @@ export default function Estimation({ go, m, px }) {
       <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120, background: C.bg, minHeight: "100vh" }}>
         <section style={{ padding: `${m.xs ? 32 : 60}px ${px} ${m.xs ? 60 : 100}px`, maxWidth: 760, margin: "0 auto" }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: m.xs ? 24 : m.mob ? 32 : 48, boxShadow: "0 12px 40px rgba(9,38,29,0.08)", textAlign: "center" }}>
-            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(36,175,197,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(201,168,130,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
               <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke={C.cyan} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <h2 style={{ fontSize: "clamp(22px, 4.5vw, 32px)", fontWeight: 600, color: C.bush, lineHeight: 1.25, marginBottom: 12 }}>
@@ -688,7 +688,7 @@ export default function Estimation({ go, m, px }) {
               Un agent E&B Immo vous contactera pour l'affiner.
             </p>
             {estimate && (
-              <div style={{ background: "linear-gradient(135deg, rgba(36,175,197,0.08), rgba(9,38,29,0.04))", borderRadius: 16, padding: m.xs ? 24 : 32, marginBottom: m.xs ? 24 : 32 }}>
+              <div style={{ background: "linear-gradient(135deg, rgba(201,168,130,0.10), rgba(9,38,29,0.04))", borderRadius: 16, padding: m.xs ? 24 : 32, marginBottom: m.xs ? 24 : 32 }}>
                 <div style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, marginBottom: 8, fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>Fourchette estimée</div>
                 <div style={{ fontSize: "clamp(24px, 6vw, 42px)", fontWeight: 700, color: C.bush, lineHeight: 1.2 }}>
                   {fmtP(estimate.low)} <span style={{ color: C.cyan }}>—</span> {fmtP(estimate.high)}
