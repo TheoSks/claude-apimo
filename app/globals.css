@@ -30,13 +30,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C9A882;
+  background: #24afc5;
   border-radius: 2px;
 }
 
 ::selection {
-  background: #C9A882;
-  color: #09261D;
+  background: #24afc5;
+  color: #fff;
 }
 
 img {
