@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { gsap } from "gsap";
 import Estimation from "./estimation";
 
 /* ═══ APIMO API CONFIG ═══ */
@@ -497,6 +498,29 @@ function FaqItem({ q, a, idx, mob, xs }) {
   );
 }
 
+/* ═══════ INTRO (animation d'ouverture GSAP) ═══════ */
+function Intro() {
+  const [done, setDone] = useState(false);
+  const overlayRef = useRef(null);
+  const logoRef = useRef(null);
+  const lineRef = useRef(null);
+  useEffect(() => {
+    const tl = gsap.timeline({ onComplete: () => setDone(true) });
+    tl.fromTo(logoRef.current, { opacity: 0, scale: 0.8, y: 14 }, { opacity: 1, scale: 1, y: 0, duration: 0.75, ease: "power3.out" })
+      .fromTo(lineRef.current, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out" }, "-=0.35")
+      .to([logoRef.current, lineRef.current], { opacity: 0, y: -10, duration: 0.45, ease: "power2.in" }, "+=0.35")
+      .to(overlayRef.current, { yPercent: -100, duration: 0.95, ease: "power4.inOut" }, "-=0.15");
+    return () => tl.kill();
+  }, []);
+  if (done) return null;
+  return (
+    <div ref={overlayRef} style={{ position: "fixed", inset: 0, zIndex: 6000, background: "#FFFFFF", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22 }}>
+      <img ref={logoRef} src={LOGO} alt="E&B Immo" style={{ width: 132, height: "auto", opacity: 0 }} />
+      <div ref={lineRef} style={{ width: 120, height: 2, background: C.cyan, transformOrigin: "left center", transform: "scaleX(0)" }} />
+    </div>
+  );
+}
+
 /* ═══════════════ MAIN APP ═══════════════ */
 export default function App({ initialPage, initialRef } = {}) {
   const [props, setProps] = useState([]);
@@ -558,6 +582,7 @@ export default function App({ initialPage, initialRef } = {}) {
 
   return (
     <div style={{ fontFamily: "Urbanist, sans-serif", color: C.bush, background: C.white, minHeight: "100vh", overflowX: "hidden" }}>
+      {(!initialPage || initialPage === "home") && <Intro />}
       {/* ═══ NAV (responsive: hamburger on mobile) ═══ */}
       <Nav pg={pg} go={go} m={m} px={px} />
 
@@ -1001,8 +1026,22 @@ function ImmodvisorReviews({ m, px }) {
   );
 }
 
+/* Le long délai d'entrée (synchro avec l'intro) ne s'applique qu'au tout premier affichage */
+let heroIntroPlayed = false;
+
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
+  const heroRef = useRef(null);
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const delay = heroIntroPlayed ? 0.2 : 1.45;
+    heroIntroPlayed = true;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(".hl", { yPercent: 115 }, { yPercent: 0, duration: 1.05, ease: "power4.out", stagger: 0.12, delay });
+      gsap.fromTo(".hero-cta", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: delay + 0.5 });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
   /* Tri par date de mise en ligne (created_at) décroissante → vraies nouveautés en tête */
   const byNewest = [...props].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   /* xs (1 col) → 3 cards, sm/md (2 col) → 4 cards, lg+ (3 col) → 3 cards */
@@ -1014,13 +1053,12 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       {/* ═══ HERO ═══ */}
       <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `100px ${px} 48px` : m.sm ? `112px ${px} 56px` : m.md ? `132px ${px} 72px` : `160px ${px} 96px`, minHeight: m.xs ? 440 : m.sm ? 500 : m.mob ? 540 : "74vh", display: "flex", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", justifyContent: m.mob ? "flex-end" : "flex-start", width: "100%", maxWidth: 1600, margin: "0 auto" }}>
-          <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
-            <Rv>
-              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
-                Agence de la côte fleurie<br />et alentours
-              </h1>
-            </Rv>
-            <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
+          <div ref={heroRef} style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
+            <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
+              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block", transform: "translateY(115%)" }}>Agence de la côte fleurie</span></span>
+              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block", transform: "translateY(115%)" }}>et alentours</span></span>
+            </h1>
+            <div className="hero-cta" style={{ opacity: 0 }}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></div>
           </div>
         </div>
       </section>
