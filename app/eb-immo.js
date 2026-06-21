@@ -456,10 +456,10 @@ function FaqItem({ q, a, idx, mob, xs }) {
 }
 
 /* ═══════════════ MAIN APP ═══════════════ */
-export default function App() {
+export default function App({ initialPage } = {}) {
   const [props, setProps] = useState([]);
   const [ld, setLd] = useState(true);
-  const [pg, setPg] = useState("home");
+  const [pg, setPg] = useState(initialPage || "home");
   const [sid, setSid] = useState(null);
   const m = useMedia();
 
@@ -948,7 +948,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
           <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
               <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.bush, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere" }}>
-                Agence<br />immobilière<br />De la côte fleurie
+                Agence de la côte fleurie<br />et alentours
               </h1>
             </Rv>
             <Rv d={2}><PillBtn variant="outline-bush" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
@@ -1011,7 +1011,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
               <span style={{ fontSize: m.xs ? 14 : m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12, color: C.abbey }}>Explorer tout</span>
               <h2 style={{ fontSize: "clamp(22px, 5vw, 44px)", fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>L'Évolution d'une Passion Immobilière</h2>
               <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, color: C.abbey, marginBottom: m.xs ? 24 : 32 }}>
-                Depuis 7 ans, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
+                Depuis 2017, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
               </p>
               {[
                 { t: "Votre partenaire immobilier dévoué", d: "Nous conseillons et guidons à chaque étape de votre démarche.", icon: "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" },
@@ -1063,7 +1063,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
         </Rv>
         <Rv d={1}>
           <div>
-            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée sur 7 ans d'expérience. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée en 2017. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
             <FaqItem mob={m.mob} xs={m.xs} idx={2} q="Comment prendre rendez-vous ?" a="Contactez-nous au +33 7 60 95 36 18 ou par email à contact@eb-immo.fr. Nous répondrons rapidement pour fixer un rendez-vous." />
             <FaqItem mob={m.mob} xs={m.xs} idx={3} q="Quelle zone géographique couvrez-vous ?" a="La côte fleurie, le Calvados et la Normandie principalement. Nous avons aussi des biens en Corse et en région parisienne." />
           </div>
@@ -1373,7 +1373,7 @@ function Bien({ props, id, go, m, px }) {
             {/* Informations section — like ebimmo.com */}
             <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
               <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Informations</h2>
-              <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
+              <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", columnGap: m.mob ? 0 : 48, rowGap: 0 }}>
                 {[
                   p.category && ["Catégorie", p.category],
                   p.type && ["Type", `${p.type}${p.subtype ? ` / ${p.subtype}` : ""}`],
@@ -1414,7 +1414,7 @@ function Bien({ props, id, go, m, px }) {
             {/* Location Details — Google Maps */}
             {(p.latitude && p.longitude) && (
               <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
-                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Location Details</h2>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Localisation</h2>
                 <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 12, position: "relative" }}>
                   <iframe
                     title="Map"
@@ -1427,7 +1427,7 @@ function Bien({ props, id, go, m, px }) {
                   />
                   <a href={`https://www.google.com/maps?q=${p.latitude},${p.longitude}`} target="_blank" rel="noopener noreferrer"
                     style={{ position: "absolute", top: 12, left: 12, background: "#fff", border: `1px solid ${C.cinder10}`, borderRadius: 8, padding: "6px 14px", fontSize: 14, color: C.cyan, fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-                    Open in Maps
+                    Ouvrir dans Maps
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </a>
                 </div>
@@ -1442,7 +1442,7 @@ function Bien({ props, id, go, m, px }) {
             {p.regulations && Object.keys(p.regulations).length > 0 && (
               <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
                 <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>RÉGLEMENTATION :</h2>
-                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", columnGap: m.mob ? 0 : 48, rowGap: 0 }}>
                   {Object.entries(p.regulations).map(([key, reg], i) => {
                     if (!reg || typeof reg !== "object") return null;
                     const REG_TYPES = { 1: "DPE – Consommation énergétique", 2: "GES – Émissions CO₂", 11: "Surface Carrez", 22: "Charges annuelles", 34: "Taxe foncière", 166: "Classe DPE", 167: "Classe GES" };
@@ -1486,7 +1486,7 @@ function Bien({ props, id, go, m, px }) {
               </div>
               <a href={`mailto:${p.agent?.email || "contact@eb-immo.fr"}`} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 8, padding: m.xs ? "8px 14px" : "10px 18px", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.cyan, textDecoration: "none", whiteSpace: "nowrap" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke={C.cyan} strokeWidth="1.5"/><polyline points="22,6 12,13 2,6" stroke={C.cyan} strokeWidth="1.5"/></svg>
-                Send Email
+                Envoyer un email
               </a>
             </div>
             {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: 15, color: C.cyan, textDecoration: "underline" }}>Voir sur ebimmo.com</a>}
@@ -1629,12 +1629,19 @@ function Contact({ go, m, px }) {
               <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, color: C.abbey, lineHeight: 1.65, marginBottom: m.xs ? 24 : 32 }}>
                 Notre équipe est disponible pour répondre à toutes vos questions et vous accompagner dans votre projet immobilier.
               </p>
-              {[["📞", "+33 7 60 95 36 18"], ["✉️", "contact@eb-immo.fr"], ["📍", "1 rue Jacques Pasquier, 14390 Petiville"]].map(([ic, v], i) => (
+              {[["📞", "+33 7 60 95 36 18"], ["✉️", "contact@eb-immo.fr"], ["📍", "3 place du Commerce, 14860 Bavent"]].map(([ic, v], i) => (
                 <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 14, alignItems: "center", marginBottom: 20 }}>
                   <div style={{ width: m.xs ? 40 : 44, height: m.xs ? 40 : 44, borderRadius: 10, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: m.xs ? 16 : 18, flexShrink: 0 }}>{ic}</div>
                   <span className="wrap-word" style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 500, color: C.abbey }}>{v}</span>
                 </div>
               ))}
+              <div style={{ marginTop: m.xs ? 8 : 12, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.cinder15}` }}>
+                <iframe
+                  title="Localisation E&B Immo — 3 place du Commerce, 14860 Bavent"
+                  src="https://www.google.com/maps?q=3+place+du+Commerce,+14860+Bavent&output=embed"
+                  width="100%" height={m.xs ? 200 : 260} style={{ border: 0, display: "block" }}
+                  loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+              </div>
             </div>
           </Rv>
           <Rv d={2}>
@@ -1755,12 +1762,13 @@ function Footer({ go, m, px }) {
             {["Accueil", "Propriétés", "Estimation", "Contact"].map((l, i) => (
               <a key={i} onClick={() => go(["home", "annonces", "estimation", "contact"][i])} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
             ))}
+            <a href="/bareme-honoraires-2026.pdf" target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>Honoraires</a>
           </div>
           <div style={{ flex: 1, minWidth: m.xs ? 140 : 160 }}>
             <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Contact</h4>
             <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>+33 7 60 95 36 18</span>
             <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>contact@eb-immo.fr</span>
-            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6 }}>1 rue Jacques Pasquier<br />14390 Petiville</span>
+            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6 }}>3 place du Commerce<br />14860 Bavent</span>
           </div>
         </div>
       </div>
