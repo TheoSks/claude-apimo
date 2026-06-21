@@ -397,7 +397,7 @@ export default function Estimation({ go, m, px }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <input
                 type="text"
-                placeholder="Ex : 1 rue Jacques Pasquier"
+                placeholder="Ex : 12 avenue de la Mer, Cabourg"
                 defaultValue={vals.current.adresse}
                 onChange={e => { vals.current.adresse = e.target.value; }}
                 style={{ ...baseInput, border: `1px solid ${errors.adresse ? "#e53935" : C.cinder10}` }}
