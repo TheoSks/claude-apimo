@@ -190,8 +190,14 @@ const HERO_FLOAT_UNUSED = mkSvg(400,500,`<rect width='400' height='500' fill='#F
 const ABOUT_IMG = "/about-image.svg";
 const ABOUT_FLOAT = "/explorer-tout.jpg";
 const TESTI_IMG = mkSvg(600,630,`<rect width='600' height='630' rx='12' fill='#F5EFE6'/><circle cx='300' cy='220' r='100' fill='#FFCC80'/><rect x='220' y='320' width='160' height='200' rx='24' fill='#C9A882'/>`);
-const CTA_IMG = "/cta-image.svg";
-const LOGO = "https://ebimmo.com/wp-content/uploads/2024/05/e_b_logo-removebg-preview-1.png";
+const CTA_IMG = "/maison-piscine.jpg";
+const LOGO = "/logo-eb.png";
+
+/* ═══ IMMODVISOR ═══
+   Colle ici le code widget fourni dans ton Espace Client immodvisor (rubrique Widgets).
+   Ex : '<div class="..." data-pro="12345"></div><script src="https://www.immodvisor.com/...js" async></script>'
+   Tant que la chaîne est vide, la section Avis n'apparaît pas (rien de cassé). */
+const IMMODVISOR_SNIPPET = "";
 const FALLBACKS = [
   mkSvg(600,450,`<rect width='600' height='450' fill='#E8F5E9'/><rect x='80' y='120' width='440' height='250' rx='4' fill='#FFF'/><polygon points='300,40 80,150 520,150' fill='#8D6E63'/><rect x='240' y='250' width='120' height='120' rx='4' fill='#795548'/>`),
   mkSvg(600,450,`<rect width='600' height='450' fill='#E3F2FD'/><rect x='50' y='80' width='500' height='300' rx='8' fill='#FFF'/><rect x='80' y='120' width='180' height='120' rx='4' fill='#BBDEFB'/><rect x='320' y='120' width='180' height='120' rx='4' fill='#BBDEFB'/>`),
@@ -961,6 +967,31 @@ function TestimonialsCarousel({ mob, xs }) {
   );
 }
 
+/* ═══════ AVIS IMMODVISOR ═══════ */
+function ImmodvisorReviews({ m, px }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!IMMODVISOR_SNIPPET || !ref.current) return;
+    ref.current.innerHTML = IMMODVISOR_SNIPPET;
+    /* Réinjecter les <script> pour qu'ils s'exécutent (innerHTML ne les lance pas) */
+    ref.current.querySelectorAll("script").forEach((old) => {
+      const s = document.createElement("script");
+      [...old.attributes].forEach((a) => s.setAttribute(a.name, a.value));
+      s.textContent = old.textContent;
+      old.replaceWith(s);
+    });
+  }, []);
+  if (!IMMODVISOR_SNIPPET) return null;
+  return (
+    <section style={{ padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, maxWidth: 1280, margin: "0 auto" }}>
+      <Rv>
+        <h2 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.mob ? 24 : 40, textAlign: "center" }}>Avis clients</h2>
+      </Rv>
+      <Rv d={1}><div ref={ref} style={{ display: "flex", justifyContent: "center" }} /></Rv>
+    </section>
+  );
+}
+
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
   /* Tri par date de mise en ligne (created_at) décroissante → vraies nouveautés en tête */
@@ -1074,6 +1105,9 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
           <PillBtn variant="outline-cyan" onClick={() => go("annonces")}>Explorer toutes les propriétés</PillBtn>
         </Rv>
       </section>
+
+      {/* ═══ AVIS IMMODVISOR ═══ */}
+      <ImmodvisorReviews m={m} px={px} />
 
       {/* ═══ TÉMOIGNAGES ═══ */}
       <section style={{ background: "#F7F8F5", padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
