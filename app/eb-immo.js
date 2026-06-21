@@ -1012,8 +1012,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
   return (
     <main>
       {/* ═══ HERO ═══ */}
-      <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", maxWidth: 1600, margin: "0 auto" }}>
+      <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `100px ${px} 48px` : m.sm ? `112px ${px} 56px` : m.md ? `132px ${px} 72px` : `160px ${px} 96px`, minHeight: m.xs ? 440 : m.sm ? 500 : m.mob ? 540 : "74vh", display: "flex", overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", justifyContent: m.mob ? "flex-end" : "flex-start", width: "100%", maxWidth: 1600, margin: "0 auto" }}>
           <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
               <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
@@ -1026,7 +1026,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
       </section>
 
       {/* ═══ SEARCH BAR ═══ */}
-      <section style={{ background: `linear-gradient(to bottom, #C9A882 50%, ${C.white} 50%)`, padding: `0 ${px}` }}>
+      <section style={{ background: C.white, padding: `0 ${px}` }}>
         <Rv>
           <SearchBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => go("annonces")} m={m} />
         </Rv>
