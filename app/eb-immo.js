@@ -26,12 +26,21 @@ function resolveApimoField(field) {
   return String(field);
 }
 
+/* Correctif d'affichage : certains biens sont saisis "Parking" (type 4) dans Apimo
+   alors que ce sont des locaux commerciaux (prix élevés). On rétablit le bon libellé
+   côté site, sans dépendre d'une correction dans Apimo. */
+function correctedTypeLabel(p) {
+  const price = p?.price?.value || 0;
+  if (Number(p?.type) === 4 && price > 50000) return "Local commercial";
+  return resolveApimoField(p?.type);
+}
+
 /* Format title like ebimmo.com: "MAISON DE VILLE A RENOVER – 63M² – BIEVILLE-BEUVILLE" */
 function fmtTitle(p) {
   /* 1. If Apimo provides a name, use it directly */
   if (p.name && p.name.length > 3) return p.name.toUpperCase();
   /* 2. Otherwise build from type + area + city */
-  const type = resolveApimoField(p.type) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
+  const type = correctedTypeLabel(p) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
   const area = p.area?.value || p.area?.total || 0;
   const areaStr = area ? `${area}M²` : "";
   const city = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
@@ -63,7 +72,7 @@ function fmtDesc(p) {
 
 function normalizeApimo(p) {
   const photos = (p.pictures || []).map(pic => pic.url).filter(Boolean);
-  const typeName = resolveApimoField(p.type);
+  const typeName = correctedTypeLabel(p);
   const subtypeName = resolveApimoField(p.subtype);
   const categoryName = resolveApimoField(p.category);
   const cityName = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
