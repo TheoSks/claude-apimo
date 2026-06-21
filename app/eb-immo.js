@@ -26,12 +26,21 @@ function resolveApimoField(field) {
   return String(field);
 }
 
+/* Correctif d'affichage : certains biens sont saisis "Parking" (type 4) dans Apimo
+   alors que ce sont des locaux commerciaux (prix élevés). On rétablit le bon libellé
+   côté site, sans dépendre d'une correction dans Apimo. */
+function correctedTypeLabel(p) {
+  const price = p?.price?.value || 0;
+  if (Number(p?.type) === 4 && price > 50000) return "Local commercial";
+  return resolveApimoField(p?.type);
+}
+
 /* Format title like ebimmo.com: "MAISON DE VILLE A RENOVER – 63M² – BIEVILLE-BEUVILLE" */
 function fmtTitle(p) {
   /* 1. If Apimo provides a name, use it directly */
   if (p.name && p.name.length > 3) return p.name.toUpperCase();
   /* 2. Otherwise build from type + area + city */
-  const type = resolveApimoField(p.type) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
+  const type = correctedTypeLabel(p) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
   const area = p.area?.value || p.area?.total || 0;
   const areaStr = area ? `${area}M²` : "";
   const city = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
@@ -63,7 +72,7 @@ function fmtDesc(p) {
 
 function normalizeApimo(p) {
   const photos = (p.pictures || []).map(pic => pic.url).filter(Boolean);
-  const typeName = resolveApimoField(p.type);
+  const typeName = correctedTypeLabel(p);
   const subtypeName = resolveApimoField(p.subtype);
   const categoryName = resolveApimoField(p.category);
   const cityName = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
@@ -99,6 +108,9 @@ function normalizeApimo(p) {
     virtualTour,
     agent,
     condition: p.condition?.name || resolveApimoField(p.condition) || "",
+    createdAt: p.created_at || "",
+    step: p.step,
+    status: p.status,
     availability: p.available_at || p.availability || "",
     heating: p.heating ? (p.heating.device?.name || resolveApimoField(p.heating?.device) || "") : "",
     _raw: p,
@@ -136,6 +148,19 @@ async function fetchProperties() {
 
 const fmtP = (n) => Number(n).toLocaleString("fr-FR") + " €";
 
+/* ═══ Onglets annonces : Nouveautés / Vendus ═══ */
+const NEW_DAYS = 60; /* un bien est "nouveauté" s'il a été mis en ligne il y a moins de 60 jours */
+function isNewProp(p) {
+  if (!p.createdAt) return false;
+  const t = new Date(String(p.createdAt).replace(" ", "T")).getTime();
+  if (Number.isNaN(t)) return false;
+  return (Date.now() - t) / 86400000 <= NEW_DAYS;
+}
+/* Apimo: step=1 => disponible. Tout autre step (sous-compromis, vendu…) => considéré "vendu/sous offre". */
+function isSoldProp(p) {
+  return p.step != null && Number(p.step) !== 1;
+}
+
 /* ═══ Responsive hook (mobile-first granular breakpoints) ═══
    xs  < 480   small mobile (320–479)
    sm  480–767 mobile / phablet
@@ -169,13 +194,19 @@ function useMedia() {
 
 /* ═══ Images (inline SVG data URIs) ═══ */
 const mkSvg = (w, h, body) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${body}</svg>`)}`;
-const HERO_IMG = "/home-hero.avif";
+const HERO_IMG = "/chateau-beuzeval.jpg";
 const HERO_FLOAT_UNUSED = mkSvg(400,500,`<rect width='400' height='500' fill='#FFF8E1'/><rect x='40' y='50' width='320' height='300' rx='12' fill='#E8F5E9'/><circle cx='130' cy='300' r='35' fill='#FFB74D'/><rect x='105' y='335' width='50' height='70' rx='8' fill='#42A5F5'/><circle cx='200' cy='290' r='40' fill='#A1887F'/><rect x='172' y='330' width='56' height='80' rx='8' fill='#5C6BC0'/><circle cx='270' cy='310' r='30' fill='#FFB74D'/><rect x='60' y='400' width='280' height='60' rx='8' fill='#FFF' opacity='.8'/><rect x='80' y='415' width='160' height='12' rx='6' fill='#C9A882'/>`);
 const ABOUT_IMG = "/about-image.svg";
-const ABOUT_FLOAT = "/about-float.svg";
+const ABOUT_FLOAT = "/explorer-tout.jpg";
 const TESTI_IMG = mkSvg(600,630,`<rect width='600' height='630' rx='12' fill='#F5EFE6'/><circle cx='300' cy='220' r='100' fill='#FFCC80'/><rect x='220' y='320' width='160' height='200' rx='24' fill='#C9A882'/>`);
-const CTA_IMG = "/cta-image.svg";
-const LOGO = "https://ebimmo.com/wp-content/uploads/2024/05/e_b_logo-removebg-preview-1.png";
+const CTA_IMG = "/maison-piscine.jpg";
+const LOGO = "/logo-eb.png";
+
+/* ═══ IMMODVISOR ═══
+   Colle ici le code widget fourni dans ton Espace Client immodvisor (rubrique Widgets).
+   Ex : '<div class="..." data-pro="12345"></div><script src="https://www.immodvisor.com/...js" async></script>'
+   Tant que la chaîne est vide, la section Avis n'apparaît pas (rien de cassé). */
+const IMMODVISOR_SNIPPET = "";
 const FALLBACKS = [
   mkSvg(600,450,`<rect width='600' height='450' fill='#E8F5E9'/><rect x='80' y='120' width='440' height='250' rx='4' fill='#FFF'/><polygon points='300,40 80,150 520,150' fill='#8D6E63'/><rect x='240' y='250' width='120' height='120' rx='4' fill='#795548'/>`),
   mkSvg(600,450,`<rect width='600' height='450' fill='#E3F2FD'/><rect x='50' y='80' width='500' height='300' rx='8' fill='#FFF'/><rect x='80' y='120' width='180' height='120' rx='4' fill='#BBDEFB'/><rect x='320' y='120' width='180' height='120' rx='4' fill='#BBDEFB'/>`),
@@ -185,6 +216,12 @@ const FALLBACKS = [
 ];
 const fb = (i) => FALLBACKS[i % FALLBACKS.length];
 const handleImgErr = (e, i) => { e.target.onerror = null; e.target.src = fb(i || 0); };
+/* Avatar de repli (initiales) tant que la vraie photo n'est pas fournie */
+const avatarSvg = (name) => {
+  const initials = (name || "").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+  return mkSvg(400, 500, `<rect width='400' height='500' fill='#24AFC5'/><text x='50%' y='50%' dy='.35em' text-anchor='middle' font-family='Urbanist, Arial, sans-serif' font-size='150' font-weight='600' fill='#ffffff'>${initials}</text>`);
+};
+const handleAvatarErr = (e, name) => { e.target.onerror = null; e.target.src = avatarSvg(name); };
 
 /* ═══ Colors ═══ */
 const C = { bush: "#0D0E13", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A", mine: "#222222", cinder10: "rgba(13,14,19,0.1)", cinder15: "rgba(13,14,19,0.15)", cinder50: "rgba(13,14,19,0.5)", bush15: "rgba(13,14,19,0.15)" };
@@ -341,15 +378,20 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
     </button>
   );
 
+  const badge = isSoldProp(p) ? { label: "Vendu", bg: "#0D0E13" } : isNewProp(p) ? { label: "Nouveauté", bg: C.cyan } : null;
+
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
-      <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
+      <div style={{ width: "100%", position: "relative", paddingTop: "75%", borderRadius: 12, overflow: "hidden", background: "#eee" }}>
+        {badge && (
+          <span style={{ position: "absolute", top: 10, left: 10, zIndex: 3, background: badge.bg, color: "#fff", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99, letterSpacing: .3, boxShadow: "0 2px 8px rgba(0,0,0,.2)" }}>{badge.label}</span>
+        )}
         <img
           key={photoIdx}
           src={photos[photoIdx] || fb(idx)}
           alt={title}
           onError={(e) => handleImgErr(e, idx)}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
         />
         {total > 1 && arrowBtn("left", prev)}
         {total > 1 && arrowBtn("right", next)}
@@ -456,10 +498,10 @@ function FaqItem({ q, a, idx, mob, xs }) {
 }
 
 /* ═══════════════ MAIN APP ═══════════════ */
-export default function App() {
+export default function App({ initialPage } = {}) {
   const [props, setProps] = useState([]);
   const [ld, setLd] = useState(true);
-  const [pg, setPg] = useState("home");
+  const [pg, setPg] = useState(initialPage || "home");
   const [sid, setSid] = useState(null);
   const m = useMedia();
 
@@ -934,39 +976,51 @@ function TestimonialsCarousel({ mob, xs }) {
   );
 }
 
+/* ═══════ AVIS IMMODVISOR ═══════ */
+function ImmodvisorReviews({ m, px }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!IMMODVISOR_SNIPPET || !ref.current) return;
+    ref.current.innerHTML = IMMODVISOR_SNIPPET;
+    /* Réinjecter les <script> pour qu'ils s'exécutent (innerHTML ne les lance pas) */
+    ref.current.querySelectorAll("script").forEach((old) => {
+      const s = document.createElement("script");
+      [...old.attributes].forEach((a) => s.setAttribute(a.name, a.value));
+      s.textContent = old.textContent;
+      old.replaceWith(s);
+    });
+  }, []);
+  if (!IMMODVISOR_SNIPPET) return null;
+  return (
+    <section style={{ padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, maxWidth: 1280, margin: "0 auto" }}>
+      <Rv>
+        <h2 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: m.mob ? 24 : 40, textAlign: "center" }}>Avis clients</h2>
+      </Rv>
+      <Rv d={1}><div ref={ref} style={{ display: "flex", justifyContent: "center" }} /></Rv>
+    </section>
+  );
+}
+
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
+  /* Tri par date de mise en ligne (created_at) décroissante → vraies nouveautés en tête */
+  const byNewest = [...props].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   /* xs (1 col) → 3 cards, sm/md (2 col) → 4 cards, lg+ (3 col) → 3 cards */
-  const featured = props.slice(0, m.xs ? 3 : m.mob ? 4 : 3);
-  const listed = props.slice(0, 3);
+  const featured = byNewest.slice(0, m.xs ? 3 : m.mob ? 4 : 3);
+  const listed = byNewest.slice(0, 3);
 
   return (
     <main>
       {/* ═══ HERO ═══ */}
-      <section style={{ background: "#C9A882", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
+      <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", maxWidth: 1600, margin: "0 auto" }}>
           <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
-              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.bush, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere" }}>
-                Agence<br />immobilière<br />De la côte fleurie
+              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
+                Agence de la côte fleurie<br />et alentours
               </h1>
             </Rv>
-            <Rv d={2}><PillBtn variant="outline-bush" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
-          </div>
-          {/* Hero image with dome clip */}
-          <div style={{ flex: 1, display: "flex", justifyContent: m.mob ? "center" : "flex-end", alignItems: "flex-end", position: "relative", width: m.mob ? "100%" : "auto" }}>
-            <Rv d={3}>
-              <div style={{ position: "relative", width: m.xs ? "100%" : m.sm ? "85%" : m.md ? 320 : m.lg ? 400 : 480, maxWidth: 520 }}>
-                <div style={{ width: "100%", aspectRatio: "525/538", borderRadius: "50% 50% 0 0 / 48% 48% 0 0", overflow: "hidden" }}>
-                  <img src={HERO_IMG} alt="Maison" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                </div>
-                {!m.mob && (
-                  <div style={{ position: "absolute", bottom: 30, left: m.md ? -30 : -50, width: m.md ? 110 : m.lg ? 130 : 150, height: m.md ? 140 : m.lg ? 165 : 190, borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.25)" }}>
-                    <video src="/hero-video.webm" autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
-                )}
-              </div>
-            </Rv>
+            <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
           </div>
         </div>
       </section>
@@ -1011,7 +1065,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
               <span style={{ fontSize: m.xs ? 14 : m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12, color: C.abbey }}>Explorer tout</span>
               <h2 style={{ fontSize: "clamp(22px, 5vw, 44px)", fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>L'Évolution d'une Passion Immobilière</h2>
               <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, color: C.abbey, marginBottom: m.xs ? 24 : 32 }}>
-                Depuis 7 ans, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
+                Depuis 2017, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
               </p>
               {[
                 { t: "Votre partenaire immobilier dévoué", d: "Nous conseillons et guidons à chaque étape de votre démarche.", icon: "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" },
@@ -1046,6 +1100,9 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
         </Rv>
       </section>
 
+      {/* ═══ AVIS IMMODVISOR ═══ */}
+      <ImmodvisorReviews m={m} px={px} />
+
       {/* ═══ TÉMOIGNAGES ═══ */}
       <section style={{ background: "#F7F8F5", padding: `${m.xs ? 48 : m.mob ? 60 : 100}px ${px}`, marginTop: m.xs ? 40 : m.mob ? 60 : 120 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -1063,7 +1120,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
         </Rv>
         <Rv d={1}>
           <div>
-            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée sur 7 ans d'expérience. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée en 2017. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
             <FaqItem mob={m.mob} xs={m.xs} idx={2} q="Comment prendre rendez-vous ?" a="Contactez-nous au +33 7 60 95 36 18 ou par email à contact@eb-immo.fr. Nous répondrons rapidement pour fixer un rendez-vous." />
             <FaqItem mob={m.mob} xs={m.xs} idx={3} q="Quelle zone géographique couvrez-vous ?" a="La côte fleurie, le Calvados et la Normandie principalement. Nous avons aussi des biens en Corse et en région parisienne." />
           </div>
@@ -1097,6 +1154,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
 /* ═══════ ANNONCES ═══════ */
 function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
   const [page, setPage] = useState(1);
+  const [tab, setTab] = useState("all"); // "all" | "new" | "sold"
   const PER_PAGE = 12;
 
   /* Live filtering from shared search state */
@@ -1120,12 +1178,21 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
     return true;
   });
 
-  /* Reset page when search changes */
-  useEffect(() => { setPage(1); }, [sq, budgetRange, areaRange]);
+  /* Compteurs des onglets (sur le résultat filtré courant) */
+  const newCount = fl.filter(isNewProp).length;
+  const soldCount = fl.filter(isSoldProp).length;
+  const TABS = [["all", "Tous", fl.length], ["new", "Nouveautés", newCount], ["sold", "Vendus", soldCount]];
 
-  const totalPages = Math.max(1, Math.ceil(fl.length / PER_PAGE));
+  /* Liste affichée selon l'onglet actif */
+  let tabbed = tab === "new" ? fl.filter(isNewProp) : tab === "sold" ? fl.filter(isSoldProp) : fl;
+  if (tab === "new") tabbed = [...tabbed].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+
+  /* Reset page when search or tab changes */
+  useEffect(() => { setPage(1); }, [sq, budgetRange, areaRange, tab]);
+
+  const totalPages = Math.max(1, Math.ceil(tabbed.length / PER_PAGE));
   const currentPage = Math.min(page, totalPages);
-  const paginated = fl.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const paginated = tabbed.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
   const goPage = (p) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const pageNums = [];
@@ -1144,8 +1211,23 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           <div style={{ display: "flex", alignItems: "baseline", gap: m.xs ? 8 : 16, flexWrap: "wrap", marginBottom: m.xs ? 16 : 24 }}>
             <h1 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, margin: 0 }}>Nos propriétés</h1>
             <span style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, color: C.abbey }}>
-              {ld ? "Chargement..." : `${fl.length} bien${fl.length > 1 ? "s" : ""} trouvé${fl.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
+              {ld ? "Chargement..." : `${tabbed.length} bien${tabbed.length > 1 ? "s" : ""} trouvé${tabbed.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
             </span>
+          </div>
+        </Rv>
+        {/* Onglets Tous / Nouveautés / Vendus */}
+        <Rv>
+          <div style={{ display: "flex", gap: m.xs ? 6 : 10, flexWrap: "wrap", marginBottom: m.xs ? 16 : 24 }}>
+            {TABS.map(([key, label, count]) => {
+              const active = tab === key;
+              return (
+                <button key={key} onClick={() => setTab(key)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 8, height: m.xs ? 38 : 42, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 99, border: `1px solid ${active ? C.bush : C.cinder15}`, background: active ? C.bush : C.white, color: active ? C.white : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 16, fontWeight: active ? 600 : 500, cursor: "pointer", transition: "all .2s", whiteSpace: "nowrap" }}>
+                  {label}
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: active ? "rgba(255,255,255,.2)" : "#f0f0f0", color: active ? C.white : C.abbey }}>{count}</span>
+                </button>
+              );
+            })}
           </div>
         </Rv>
         <Rv style={{ position: "relative", zIndex: 10 }}>
@@ -1155,12 +1237,23 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
         </Rv>
 
         {/* Empty state */}
-        {!ld && fl.length === 0 && (
+        {!ld && tabbed.length === 0 && (
           <Rv>
             <div style={{ textAlign: "center", padding: "60px 0", color: C.abbey }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-              <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucun bien ne correspond à vos critères.</p>
-              <button onClick={() => { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); }} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Effacer les filtres</button>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>{tab === "sold" ? "🏷️" : tab === "new" ? "✨" : "🔍"}</div>
+              {tab === "sold" ? (
+                <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8, maxWidth: 520, margin: "0 auto 8px" }}>Aucun bien vendu à afficher pour le moment.</p>
+              ) : tab === "new" ? (
+                <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucune nouveauté sur cette période.</p>
+              ) : (
+                <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucun bien ne correspond à vos critères.</p>
+              )}
+              {tab === "all" && (
+                <button onClick={() => { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); }} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Effacer les filtres</button>
+              )}
+              {tab !== "all" && (
+                <button onClick={() => setTab("all")} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Voir tous les biens</button>
+              )}
             </div>
           </Rv>
         )}
@@ -1273,6 +1366,7 @@ function BienContactForm({ p, m }) {
 function Bien({ props, id, go, m, px }) {
   const p = props.find(x => x.id === id);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
 
   if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
   const area = p.area?.value || p.area?.total || 0;
@@ -1288,23 +1382,51 @@ function Bien({ props, id, go, m, px }) {
         </a>
 
         {/* Photo gallery */}
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : photos.length > 1 ? "2fr 1fr" : "1fr", gap: 6, marginBottom: m.xs ? 20 : 32, borderRadius: m.xs ? 12 : 16, overflow: "hidden", maxHeight: m.xs ? 240 : m.mob ? 320 : m.md ? 420 : 500 }}>
-          <div style={{ cursor: "pointer" }} onClick={() => {}}>
-            <img src={photos[photoIdx] || fb(0)} alt={title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          </div>
-          {!m.mob && photos.length > 1 && (
-            <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 6 }}>
-              {photos.slice(1, 3).map((ph, i) => (
-                <div key={i} style={{ overflow: "hidden", cursor: "pointer", position: "relative" }} onClick={() => setPhotoIdx(i + 1)}>
-                  <img src={ph} alt="" onError={(e) => handleImgErr(e, i + 1)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  {i === 1 && photos.length > 3 && (
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 500 }}>+{photos.length - 3} photos</div>
-                  )}
+        {(() => {
+          const galH = m.xs ? 240 : m.mob ? 320 : m.md ? 420 : 500;
+          const sidePhotos = photos.slice(1, 3);
+          const twoCol = !m.mob && sidePhotos.length > 0;
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: twoCol ? "2fr 1fr" : "1fr", gap: 6, marginBottom: m.xs ? 20 : 32, borderRadius: m.xs ? 12 : 16, overflow: "hidden", height: galH }}>
+              <div style={{ height: "100%", minHeight: 0, cursor: "pointer", overflow: "hidden" }} onClick={() => setLightbox(true)}>
+                <img src={photos[photoIdx] || fb(0)} alt={title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              </div>
+              {twoCol && (
+                <div style={{ display: "grid", gridTemplateRows: sidePhotos.length === 1 ? "1fr" : "1fr 1fr", gap: 6, minHeight: 0 }}>
+                  {sidePhotos.map((ph, i) => (
+                    <div key={i} style={{ overflow: "hidden", minHeight: 0, cursor: "pointer", position: "relative" }} onClick={() => setPhotoIdx(i + 1)}>
+                      <img src={ph} alt="" onError={(e) => handleImgErr(e, i + 1)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      {i === sidePhotos.length - 1 && photos.length > 3 && (
+                        <div onClick={(e) => { e.stopPropagation(); setLightbox(true); }} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 500, cursor: "pointer" }}>+{photos.length - 3} photos</div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
+
+        {/* Lightbox plein écran */}
+        {lightbox && (
+          <div onClick={() => setLightbox(false)} style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,.92)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <button onClick={() => setLightbox(false)} aria-label="Fermer" style={{ position: "absolute", top: 20, right: 20, width: 44, height: 44, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+            {photos.length > 1 && (
+              <button onClick={(e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + photos.length) % photos.length); }} aria-label="Précédent" style={{ position: "absolute", left: m.xs ? 10 : 24, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            )}
+            <img src={photos[photoIdx] || fb(0)} alt={title} onClick={(e) => e.stopPropagation()} onError={(e) => handleImgErr(e, 0)} style={{ maxWidth: "92vw", maxHeight: "86vh", objectFit: "contain", borderRadius: 8 }} />
+            {photos.length > 1 && (
+              <button onClick={(e) => { e.stopPropagation(); setPhotoIdx(i => (i + 1) % photos.length); }} aria-label="Suivant" style={{ position: "absolute", right: m.xs ? 10 : 24, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            )}
+            <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", color: "#fff", fontSize: 14, background: "rgba(0,0,0,.4)", padding: "6px 14px", borderRadius: 99 }}>{photoIdx + 1} / {photos.length}</div>
+          </div>
+        )}
         {photos.length > 1 && (
           <div className="no-scrollbar" style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: m.xs ? 20 : 32, paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
             {photos.map((ph, i) => (
@@ -1373,7 +1495,7 @@ function Bien({ props, id, go, m, px }) {
             {/* Informations section — like ebimmo.com */}
             <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
               <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Informations</h2>
-              <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
+              <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", columnGap: m.mob ? 0 : 48, rowGap: 0 }}>
                 {[
                   p.category && ["Catégorie", p.category],
                   p.type && ["Type", `${p.type}${p.subtype ? ` / ${p.subtype}` : ""}`],
@@ -1411,10 +1533,10 @@ function Bien({ props, id, go, m, px }) {
               </div>
             )}
 
-            {/* Location Details — Google Maps */}
-            {(p.latitude && p.longitude) && (
+            {/* Localisation — niveau commune (adresse exacte masquée) */}
+            {p.city && (
               <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
-                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Location Details</h2>
+                <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Localisation</h2>
                 <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 12, position: "relative" }}>
                   <iframe
                     title="Map"
@@ -1423,17 +1545,12 @@ function Bien({ props, id, go, m, px }) {
                     style={{ border: 0 }}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    src={`https://maps.google.com/maps?q=${p.latitude},${p.longitude}&z=15&output=embed`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${p.zipcode ? p.zipcode + " " : ""}${p.city}, France`)}&z=13&output=embed`}
                   />
-                  <a href={`https://www.google.com/maps?q=${p.latitude},${p.longitude}`} target="_blank" rel="noopener noreferrer"
-                    style={{ position: "absolute", top: 12, left: 12, background: "#fff", border: `1px solid ${C.cinder10}`, borderRadius: 8, padding: "6px 14px", fontSize: 14, color: C.cyan, fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-                    Open in Maps
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </a>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, color: C.abbey }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke={C.abbey} strokeWidth="1.5"/><circle cx="12" cy="10" r="3" stroke={C.abbey} strokeWidth="1.5"/></svg>
-                  FR, Calvados, {p.city}
+                  Secteur : {p.zipcode ? `${p.zipcode} ` : ""}{p.city}
                 </div>
               </div>
             )}
@@ -1442,7 +1559,7 @@ function Bien({ props, id, go, m, px }) {
             {p.regulations && Object.keys(p.regulations).length > 0 && (
               <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
                 <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>RÉGLEMENTATION :</h2>
-                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", gap: 0 }}>
+                <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", columnGap: m.mob ? 0 : 48, rowGap: 0 }}>
                   {Object.entries(p.regulations).map(([key, reg], i) => {
                     if (!reg || typeof reg !== "object") return null;
                     const REG_TYPES = { 1: "DPE – Consommation énergétique", 2: "GES – Émissions CO₂", 11: "Surface Carrez", 22: "Charges annuelles", 34: "Taxe foncière", 166: "Classe DPE", 167: "Classe GES" };
@@ -1486,7 +1603,7 @@ function Bien({ props, id, go, m, px }) {
               </div>
               <a href={`mailto:${p.agent?.email || "contact@eb-immo.fr"}`} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 8, padding: m.xs ? "8px 14px" : "10px 18px", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.cyan, textDecoration: "none", whiteSpace: "nowrap" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke={C.cyan} strokeWidth="1.5"/><polyline points="22,6 12,13 2,6" stroke={C.cyan} strokeWidth="1.5"/></svg>
-                Send Email
+                Envoyer un email
               </a>
             </div>
             {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: 15, color: C.cyan, textDecoration: "underline" }}>Voir sur ebimmo.com</a>}
@@ -1629,12 +1746,19 @@ function Contact({ go, m, px }) {
               <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, color: C.abbey, lineHeight: 1.65, marginBottom: m.xs ? 24 : 32 }}>
                 Notre équipe est disponible pour répondre à toutes vos questions et vous accompagner dans votre projet immobilier.
               </p>
-              {[["📞", "+33 7 60 95 36 18"], ["✉️", "contact@eb-immo.fr"], ["📍", "1 rue Jacques Pasquier, 14390 Petiville"]].map(([ic, v], i) => (
+              {[["📞", "+33 7 60 95 36 18"], ["✉️", "contact@eb-immo.fr"], ["📍", "3 place du Commerce, 14860 Bavent"]].map(([ic, v], i) => (
                 <div key={i} style={{ display: "flex", gap: m.xs ? 12 : 14, alignItems: "center", marginBottom: 20 }}>
                   <div style={{ width: m.xs ? 40 : 44, height: m.xs ? 40 : 44, borderRadius: 10, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: m.xs ? 16 : 18, flexShrink: 0 }}>{ic}</div>
                   <span className="wrap-word" style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 500, color: C.abbey }}>{v}</span>
                 </div>
               ))}
+              <div style={{ marginTop: m.xs ? 8 : 12, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.cinder15}` }}>
+                <iframe
+                  title="Localisation E&B Immo — 3 place du Commerce, 14860 Bavent"
+                  src="https://www.google.com/maps?q=3+place+du+Commerce,+14860+Bavent&output=embed"
+                  width="100%" height={m.xs ? 200 : 260} style={{ border: 0, display: "block" }}
+                  loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+              </div>
             </div>
           </Rv>
           <Rv d={2}>
@@ -1668,6 +1792,8 @@ function Apropos({ go, m, px }) {
     { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr", photo: "/team-aurelia.png" },
     { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr", photo: "/team-angelique.png" },
     { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr", photo: "/team-josselin.png" },
+    { name: "Arthur Guesdon", role: "Conseiller E&B Immo", phone: "06 81 45 56 22", email: "a.guesdon@eb-immo.fr", photo: "/team-arthur.jpg" },
+    { name: "Adeline Petric", role: "Conseillère E&B Immo", phone: "06 76 09 79 11", email: "a.petric@eb-immo.fr", photo: "/team-adeline.jpg" },
   ];
 
   const forces = [
@@ -1692,7 +1818,7 @@ function Apropos({ go, m, px }) {
           {team.map((t) => (
             <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ width: "100%", aspectRatio: "4/5", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
-                <img src={t.photo} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 10%" }} />
+                <img src={t.photo} alt={t.name} onError={(e) => handleAvatarErr(e, t.name)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 10%" }} />
               </div>
               <h3 style={{ fontSize: m.xs ? 17 : 19, fontWeight: 600, color: C.bush, margin: 0 }}>{t.name}</h3>
               <p style={{ fontSize: 14, color: C.abbey, margin: 0 }}>{t.role}</p>
@@ -1700,7 +1826,7 @@ function Apropos({ go, m, px }) {
               <a href={`mailto:${t.email}`} style={{ fontSize: 14, color: C.abbey, textDecoration: "none" }}>{t.email}</a>
               <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
                 <a href="https://www.facebook.com/people/Benjamin-Emeline-Home-Hunters/100091578297983/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Facebook</a>
-                <a href="https://www.instagram.com/benjamin_emeline_home_hunters" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Instagram</a>
+                <a href="https://www.instagram.com/ebimmobilier" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Instagram</a>
               </div>
             </div>
           ))}
@@ -1755,12 +1881,13 @@ function Footer({ go, m, px }) {
             {["Accueil", "Propriétés", "Estimation", "Contact"].map((l, i) => (
               <a key={i} onClick={() => go(["home", "annonces", "estimation", "contact"][i])} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
             ))}
+            <a href="/bareme-honoraires-2026.pdf" target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>Honoraires</a>
           </div>
           <div style={{ flex: 1, minWidth: m.xs ? 140 : 160 }}>
             <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Contact</h4>
             <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>+33 7 60 95 36 18</span>
             <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, marginBottom: 8, lineHeight: 1.6 }}>contact@eb-immo.fr</span>
-            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6 }}>1 rue Jacques Pasquier<br />14390 Petiville</span>
+            <span className="wrap-word" style={{ display: "block", fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6 }}>3 place du Commerce<br />14860 Bavent</span>
           </div>
         </div>
       </div>

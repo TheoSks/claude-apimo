@@ -49,7 +49,7 @@ export const metadata = {
       "Achat, vente, location et estimation gratuite sur Deauville, Trouville, Honfleur, Cabourg et la Côte Fleurie.",
     images: [
       {
-        url: "/home-hero.avif",
+        url: "/hero-drone.jpg",
         width: 1200,
         height: 630,
         alt: "E&B Immo — Côte Fleurie",
@@ -61,7 +61,7 @@ export const metadata = {
     title: "E&B Immo — Agence immobilière de la Côte Fleurie",
     description:
       "Achat, vente, location et estimation gratuite sur la Côte Fleurie en Normandie.",
-    images: ["/home-hero.avif"],
+    images: ["/hero-drone.jpg"],
   },
   icons: { icon: "/favicon.ico" },
   formatDetection: { telephone: true, email: true, address: true },
@@ -79,7 +79,7 @@ const jsonLd = {
   name: "E&B Immo",
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.ico`,
-  image: `${SITE_URL}/home-hero.avif`,
+  image: `${SITE_URL}/hero-drone.jpg`,
   description:
     "Agence immobilière sur la Côte Fleurie : achat, vente, location et estimation à Deauville, Trouville, Honfleur, Cabourg et alentours.",
   email: "contact@eb-immo.fr",
