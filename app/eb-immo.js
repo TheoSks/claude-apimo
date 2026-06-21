@@ -99,6 +99,9 @@ function normalizeApimo(p) {
     virtualTour,
     agent,
     condition: p.condition?.name || resolveApimoField(p.condition) || "",
+    createdAt: p.created_at || "",
+    step: p.step,
+    status: p.status,
     availability: p.available_at || p.availability || "",
     heating: p.heating ? (p.heating.device?.name || resolveApimoField(p.heating?.device) || "") : "",
     _raw: p,
@@ -942,14 +945,16 @@ function TestimonialsCarousel({ mob, xs }) {
 
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
+  /* Tri par date de mise en ligne (created_at) décroissante → vraies nouveautés en tête */
+  const byNewest = [...props].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   /* xs (1 col) → 3 cards, sm/md (2 col) → 4 cards, lg+ (3 col) → 3 cards */
-  const featured = props.slice(0, m.xs ? 3 : m.mob ? 4 : 3);
-  const listed = props.slice(0, 3);
+  const featured = byNewest.slice(0, m.xs ? 3 : m.mob ? 4 : 3);
+  const listed = byNewest.slice(0, 3);
 
   return (
     <main>
       {/* ═══ HERO ═══ */}
-      <section style={{ background: "#C9A882", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
+      <section style={{ background: "linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.35)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", maxWidth: 1600, margin: "0 auto" }}>
           <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
@@ -1710,7 +1715,7 @@ function Apropos({ go, m, px }) {
               <a href={`mailto:${t.email}`} style={{ fontSize: 14, color: C.abbey, textDecoration: "none" }}>{t.email}</a>
               <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
                 <a href="https://www.facebook.com/people/Benjamin-Emeline-Home-Hunters/100091578297983/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Facebook</a>
-                <a href="https://www.instagram.com/benjamin_emeline_home_hunters" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Instagram</a>
+                <a href="https://www.instagram.com/ebimmobilier" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: C.cyan, textDecoration: "underline" }}>Instagram</a>
               </div>
             </div>
           ))}
