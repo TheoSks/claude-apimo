@@ -1012,15 +1012,15 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
   return (
     <main>
       {/* ═══ HERO ═══ */}
-      <section style={{ background: "linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.35)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
+      <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", maxWidth: 1600, margin: "0 auto" }}>
           <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <Rv>
-              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.bush, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere" }}>
+              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
                 Agence de la côte fleurie<br />et alentours
               </h1>
             </Rv>
-            <Rv d={2}><PillBtn variant="outline-bush" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
+            <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
           </div>
           {/* Hero image with dome clip */}
           <div style={{ flex: 1, display: "flex", justifyContent: m.mob ? "center" : "flex-end", alignItems: "flex-end", position: "relative", width: m.mob ? "100%" : "auto" }}>
