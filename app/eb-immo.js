@@ -185,10 +185,10 @@ function useMedia() {
 
 /* ═══ Images (inline SVG data URIs) ═══ */
 const mkSvg = (w, h, body) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${body}</svg>`)}`;
-const HERO_IMG = "/home-hero.avif";
+const HERO_IMG = "/chateau-beuzeval.jpg";
 const HERO_FLOAT_UNUSED = mkSvg(400,500,`<rect width='400' height='500' fill='#FFF8E1'/><rect x='40' y='50' width='320' height='300' rx='12' fill='#E8F5E9'/><circle cx='130' cy='300' r='35' fill='#FFB74D'/><rect x='105' y='335' width='50' height='70' rx='8' fill='#42A5F5'/><circle cx='200' cy='290' r='40' fill='#A1887F'/><rect x='172' y='330' width='56' height='80' rx='8' fill='#5C6BC0'/><circle cx='270' cy='310' r='30' fill='#FFB74D'/><rect x='60' y='400' width='280' height='60' rx='8' fill='#FFF' opacity='.8'/><rect x='80' y='415' width='160' height='12' rx='6' fill='#C9A882'/>`);
 const ABOUT_IMG = "/about-image.svg";
-const ABOUT_FLOAT = "/about-float.svg";
+const ABOUT_FLOAT = "/explorer-tout.jpg";
 const TESTI_IMG = mkSvg(600,630,`<rect width='600' height='630' rx='12' fill='#F5EFE6'/><circle cx='300' cy='220' r='100' fill='#FFCC80'/><rect x='220' y='320' width='160' height='200' rx='24' fill='#C9A882'/>`);
 const CTA_IMG = "/cta-image.svg";
 const LOGO = "https://ebimmo.com/wp-content/uploads/2024/05/e_b_logo-removebg-preview-1.png";
@@ -987,7 +987,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
             <Rv d={3}>
               <div style={{ position: "relative", width: m.xs ? "100%" : m.sm ? "85%" : m.md ? 320 : m.lg ? 400 : 480, maxWidth: 520 }}>
                 <div style={{ width: "100%", aspectRatio: "525/538", borderRadius: "50% 50% 0 0 / 48% 48% 0 0", overflow: "hidden" }}>
-                  <img src={HERO_IMG} alt="Maison" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={HERO_IMG} alt="Château de Beuzeval" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 {!m.mob && (
                   <div style={{ position: "absolute", bottom: 30, left: m.md ? -30 : -50, width: m.md ? 110 : m.lg ? 130 : 150, height: m.md ? 140 : m.lg ? 165 : 190, borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.25)" }}>
