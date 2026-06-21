@@ -382,7 +382,7 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
 
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
-      <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
+      <div style={{ width: "100%", position: "relative", paddingTop: "75%", borderRadius: 12, overflow: "hidden", background: "#eee" }}>
         {badge && (
           <span style={{ position: "absolute", top: 10, left: 10, zIndex: 3, background: badge.bg, color: "#fff", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99, letterSpacing: .3, boxShadow: "0 2px 8px rgba(0,0,0,.2)" }}>{badge.label}</span>
         )}
@@ -391,7 +391,7 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
           src={photos[photoIdx] || fb(idx)}
           alt={title}
           onError={(e) => handleImgErr(e, idx)}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform .5s, opacity .3s", transform: h ? "scale(1.04)" : "", animation: "fadeIn .3s ease" }}
         />
         {total > 1 && arrowBtn("left", prev)}
         {total > 1 && arrowBtn("right", next)}
@@ -1366,6 +1366,7 @@ function BienContactForm({ p, m }) {
 function Bien({ props, id, go, m, px }) {
   const p = props.find(x => x.id === id);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
 
   if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
   const area = p.area?.value || p.area?.total || 0;
@@ -1381,23 +1382,51 @@ function Bien({ props, id, go, m, px }) {
         </a>
 
         {/* Photo gallery */}
-        <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : photos.length > 1 ? "2fr 1fr" : "1fr", gap: 6, marginBottom: m.xs ? 20 : 32, borderRadius: m.xs ? 12 : 16, overflow: "hidden", maxHeight: m.xs ? 240 : m.mob ? 320 : m.md ? 420 : 500 }}>
-          <div style={{ cursor: "pointer" }} onClick={() => {}}>
-            <img src={photos[photoIdx] || fb(0)} alt={title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          </div>
-          {!m.mob && photos.length > 1 && (
-            <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 6 }}>
-              {photos.slice(1, 3).map((ph, i) => (
-                <div key={i} style={{ overflow: "hidden", cursor: "pointer", position: "relative" }} onClick={() => setPhotoIdx(i + 1)}>
-                  <img src={ph} alt="" onError={(e) => handleImgErr(e, i + 1)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  {i === 1 && photos.length > 3 && (
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 500 }}>+{photos.length - 3} photos</div>
-                  )}
+        {(() => {
+          const galH = m.xs ? 240 : m.mob ? 320 : m.md ? 420 : 500;
+          const sidePhotos = photos.slice(1, 3);
+          const twoCol = !m.mob && sidePhotos.length > 0;
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: twoCol ? "2fr 1fr" : "1fr", gap: 6, marginBottom: m.xs ? 20 : 32, borderRadius: m.xs ? 12 : 16, overflow: "hidden", height: galH }}>
+              <div style={{ height: "100%", minHeight: 0, cursor: "pointer", overflow: "hidden" }} onClick={() => setLightbox(true)}>
+                <img src={photos[photoIdx] || fb(0)} alt={title} onError={(e) => handleImgErr(e, 0)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              </div>
+              {twoCol && (
+                <div style={{ display: "grid", gridTemplateRows: sidePhotos.length === 1 ? "1fr" : "1fr 1fr", gap: 6, minHeight: 0 }}>
+                  {sidePhotos.map((ph, i) => (
+                    <div key={i} style={{ overflow: "hidden", minHeight: 0, cursor: "pointer", position: "relative" }} onClick={() => setPhotoIdx(i + 1)}>
+                      <img src={ph} alt="" onError={(e) => handleImgErr(e, i + 1)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      {i === sidePhotos.length - 1 && photos.length > 3 && (
+                        <div onClick={(e) => { e.stopPropagation(); setLightbox(true); }} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 500, cursor: "pointer" }}>+{photos.length - 3} photos</div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
+
+        {/* Lightbox plein écran */}
+        {lightbox && (
+          <div onClick={() => setLightbox(false)} style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,.92)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <button onClick={() => setLightbox(false)} aria-label="Fermer" style={{ position: "absolute", top: 20, right: 20, width: 44, height: 44, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+            {photos.length > 1 && (
+              <button onClick={(e) => { e.stopPropagation(); setPhotoIdx(i => (i - 1 + photos.length) % photos.length); }} aria-label="Précédent" style={{ position: "absolute", left: m.xs ? 10 : 24, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            )}
+            <img src={photos[photoIdx] || fb(0)} alt={title} onClick={(e) => e.stopPropagation()} onError={(e) => handleImgErr(e, 0)} style={{ maxWidth: "92vw", maxHeight: "86vh", objectFit: "contain", borderRadius: 8 }} />
+            {photos.length > 1 && (
+              <button onClick={(e) => { e.stopPropagation(); setPhotoIdx(i => (i + 1) % photos.length); }} aria-label="Suivant" style={{ position: "absolute", right: m.xs ? 10 : 24, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.15)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            )}
+            <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", color: "#fff", fontSize: 14, background: "rgba(0,0,0,.4)", padding: "6px 14px", borderRadius: 99 }}>{photoIdx + 1} / {photos.length}</div>
+          </div>
+        )}
         {photos.length > 1 && (
           <div className="no-scrollbar" style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: m.xs ? 20 : 32, paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
             {photos.map((ph, i) => (
