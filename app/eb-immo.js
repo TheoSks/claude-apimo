@@ -185,6 +185,12 @@ const FALLBACKS = [
 ];
 const fb = (i) => FALLBACKS[i % FALLBACKS.length];
 const handleImgErr = (e, i) => { e.target.onerror = null; e.target.src = fb(i || 0); };
+/* Avatar de repli (initiales) tant que la vraie photo n'est pas fournie */
+const avatarSvg = (name) => {
+  const initials = (name || "").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+  return mkSvg(400, 500, `<rect width='400' height='500' fill='#24AFC5'/><text x='50%' y='50%' dy='.35em' text-anchor='middle' font-family='Urbanist, Arial, sans-serif' font-size='150' font-weight='600' fill='#ffffff'>${initials}</text>`);
+};
+const handleAvatarErr = (e, name) => { e.target.onerror = null; e.target.src = avatarSvg(name); };
 
 /* ═══ Colors ═══ */
 const C = { bush: "#0D0E13", cyan: "#24AFC5", white: "#FFFFFF", abbey: "#56595A", mine: "#222222", cinder10: "rgba(13,14,19,0.1)", cinder15: "rgba(13,14,19,0.15)", cinder50: "rgba(13,14,19,0.5)", bush15: "rgba(13,14,19,0.15)" };
@@ -1411,8 +1417,8 @@ function Bien({ props, id, go, m, px }) {
               </div>
             )}
 
-            {/* Location Details — Google Maps */}
-            {(p.latitude && p.longitude) && (
+            {/* Localisation — niveau commune (adresse exacte masquée) */}
+            {p.city && (
               <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28, marginTop: 8 }}>
                 <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: m.xs ? 14 : 20 }}>Localisation</h2>
                 <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 12, position: "relative" }}>
@@ -1423,17 +1429,12 @@ function Bien({ props, id, go, m, px }) {
                     style={{ border: 0 }}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    src={`https://maps.google.com/maps?q=${p.latitude},${p.longitude}&z=15&output=embed`}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${p.zipcode ? p.zipcode + " " : ""}${p.city}, France`)}&z=13&output=embed`}
                   />
-                  <a href={`https://www.google.com/maps?q=${p.latitude},${p.longitude}`} target="_blank" rel="noopener noreferrer"
-                    style={{ position: "absolute", top: 12, left: 12, background: "#fff", border: `1px solid ${C.cinder10}`, borderRadius: 8, padding: "6px 14px", fontSize: 14, color: C.cyan, fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-                    Ouvrir dans Maps
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke={C.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </a>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, color: C.abbey }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke={C.abbey} strokeWidth="1.5"/><circle cx="12" cy="10" r="3" stroke={C.abbey} strokeWidth="1.5"/></svg>
-                  FR, Calvados, {p.city}
+                  Secteur : {p.zipcode ? `${p.zipcode} ` : ""}{p.city}
                 </div>
               </div>
             )}
@@ -1675,6 +1676,8 @@ function Apropos({ go, m, px }) {
     { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr", photo: "/team-aurelia.png" },
     { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr", photo: "/team-angelique.png" },
     { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr", photo: "/team-josselin.png" },
+    { name: "Arthur Guesdon", role: "Conseiller E&B Immo", phone: "06 81 45 56 22", email: "a.guesdon@eb-immo.fr", photo: "/team-arthur.jpg" },
+    { name: "Adeline Petric", role: "Conseillère E&B Immo", phone: "06 76 09 79 11", email: "a.petric@eb-immo.fr", photo: "/team-adeline.jpg" },
   ];
 
   const forces = [
@@ -1699,7 +1702,7 @@ function Apropos({ go, m, px }) {
           {team.map((t) => (
             <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ width: "100%", aspectRatio: "4/5", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
-                <img src={t.photo} alt={t.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 10%" }} />
+                <img src={t.photo} alt={t.name} onError={(e) => handleAvatarErr(e, t.name)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 10%" }} />
               </div>
               <h3 style={{ fontSize: m.xs ? 17 : 19, fontWeight: 600, color: C.bush, margin: 0 }}>{t.name}</h3>
               <p style={{ fontSize: 14, color: C.abbey, margin: 0 }}>{t.role}</p>
