@@ -1040,7 +1040,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
             <PillBtn variant="outline-cyan" onClick={() => go("annonces")} style={{ fontSize: 15 }}>Tout découvrir</PillBtn>
           </div>
         </Rv>
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "1fr 1fr" : m.lg ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "repeat(2, minmax(0,1fr))" : m.md ? "repeat(2, minmax(0,1fr))" : m.lg ? "repeat(3, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
           {!ld && featured.map((p, i) => (
             <Rv key={p.id} d={i + 1}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
@@ -1258,7 +1258,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           </Rv>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "repeat(2, 1fr)" : m.lg ? "repeat(3, 1fr)" : m.xl ? "repeat(3, 1fr)" : "repeat(4, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "repeat(2, minmax(0,1fr))" : m.md ? "repeat(2, minmax(0,1fr))" : m.lg ? "repeat(3, minmax(0,1fr))" : m.xl ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
           {!ld && paginated.map((p, i) => (
             <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
@@ -1814,7 +1814,7 @@ function Apropos({ go, m, px }) {
       <section style={{ padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, maxWidth: 1440, margin: "0 auto" }}>
         <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>Notre équipe</p>
         <h2 style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 500, color: C.bush, marginBottom: m.xs ? 40 : 56 }}>Une équipe à votre écoute</h2>
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "1fr 1fr" : m.tab ? "repeat(3,1fr)" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "repeat(2, minmax(0,1fr))" : m.tab ? "repeat(3, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))", gap: m.xs ? 24 : 32 }}>
           {team.map((t) => (
             <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ width: "100%", aspectRatio: "4/5", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
