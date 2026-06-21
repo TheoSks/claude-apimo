@@ -139,6 +139,19 @@ async function fetchProperties() {
 
 const fmtP = (n) => Number(n).toLocaleString("fr-FR") + " €";
 
+/* ═══ Onglets annonces : Nouveautés / Vendus ═══ */
+const NEW_DAYS = 60; /* un bien est "nouveauté" s'il a été mis en ligne il y a moins de 60 jours */
+function isNewProp(p) {
+  if (!p.createdAt) return false;
+  const t = new Date(String(p.createdAt).replace(" ", "T")).getTime();
+  if (Number.isNaN(t)) return false;
+  return (Date.now() - t) / 86400000 <= NEW_DAYS;
+}
+/* Apimo: step=1 => disponible. Tout autre step (sous-compromis, vendu…) => considéré "vendu/sous offre". */
+function isSoldProp(p) {
+  return p.step != null && Number(p.step) !== 1;
+}
+
 /* ═══ Responsive hook (mobile-first granular breakpoints) ═══
    xs  < 480   small mobile (320–479)
    sm  480–767 mobile / phablet
@@ -350,9 +363,14 @@ function PropCard({ p, onClick, idx = 0, mob, xs }) {
     </button>
   );
 
+  const badge = isSoldProp(p) ? { label: "Vendu", bg: "#0D0E13" } : isNewProp(p) ? { label: "Nouveauté", bg: C.cyan } : null;
+
   return (
     <div onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{ cursor: "pointer", transition: "transform .4s cubic-bezier(.22,1,.36,1)", transform: h ? "translateY(-4px)" : "" }}>
       <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#eee", position: "relative" }}>
+        {badge && (
+          <span style={{ position: "absolute", top: 10, left: 10, zIndex: 3, background: badge.bg, color: "#fff", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99, letterSpacing: .3, boxShadow: "0 2px 8px rgba(0,0,0,.2)" }}>{badge.label}</span>
+        )}
         <img
           key={photoIdx}
           src={photos[photoIdx] || fb(idx)}
@@ -1108,6 +1126,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
 /* ═══════ ANNONCES ═══════ */
 function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
   const [page, setPage] = useState(1);
+  const [tab, setTab] = useState("all"); // "all" | "new" | "sold"
   const PER_PAGE = 12;
 
   /* Live filtering from shared search state */
@@ -1131,12 +1150,21 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
     return true;
   });
 
-  /* Reset page when search changes */
-  useEffect(() => { setPage(1); }, [sq, budgetRange, areaRange]);
+  /* Compteurs des onglets (sur le résultat filtré courant) */
+  const newCount = fl.filter(isNewProp).length;
+  const soldCount = fl.filter(isSoldProp).length;
+  const TABS = [["all", "Tous", fl.length], ["new", "Nouveautés", newCount], ["sold", "Vendus", soldCount]];
 
-  const totalPages = Math.max(1, Math.ceil(fl.length / PER_PAGE));
+  /* Liste affichée selon l'onglet actif */
+  let tabbed = tab === "new" ? fl.filter(isNewProp) : tab === "sold" ? fl.filter(isSoldProp) : fl;
+  if (tab === "new") tabbed = [...tabbed].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+
+  /* Reset page when search or tab changes */
+  useEffect(() => { setPage(1); }, [sq, budgetRange, areaRange, tab]);
+
+  const totalPages = Math.max(1, Math.ceil(tabbed.length / PER_PAGE));
   const currentPage = Math.min(page, totalPages);
-  const paginated = fl.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const paginated = tabbed.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
   const goPage = (p) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const pageNums = [];
@@ -1155,8 +1183,23 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           <div style={{ display: "flex", alignItems: "baseline", gap: m.xs ? 8 : 16, flexWrap: "wrap", marginBottom: m.xs ? 16 : 24 }}>
             <h1 style={{ fontSize: "clamp(24px, 6vw, 60px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, margin: 0 }}>Nos propriétés</h1>
             <span style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, color: C.abbey }}>
-              {ld ? "Chargement..." : `${fl.length} bien${fl.length > 1 ? "s" : ""} trouvé${fl.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
+              {ld ? "Chargement..." : `${tabbed.length} bien${tabbed.length > 1 ? "s" : ""} trouvé${tabbed.length > 1 ? "s" : ""}${hasFilters ? " (filtré)" : ""}`}
             </span>
+          </div>
+        </Rv>
+        {/* Onglets Tous / Nouveautés / Vendus */}
+        <Rv>
+          <div style={{ display: "flex", gap: m.xs ? 6 : 10, flexWrap: "wrap", marginBottom: m.xs ? 16 : 24 }}>
+            {TABS.map(([key, label, count]) => {
+              const active = tab === key;
+              return (
+                <button key={key} onClick={() => setTab(key)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 8, height: m.xs ? 38 : 42, padding: m.xs ? "0 14px" : "0 20px", borderRadius: 99, border: `1px solid ${active ? C.bush : C.cinder15}`, background: active ? C.bush : C.white, color: active ? C.white : C.abbey, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 16, fontWeight: active ? 600 : 500, cursor: "pointer", transition: "all .2s", whiteSpace: "nowrap" }}>
+                  {label}
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: active ? "rgba(255,255,255,.2)" : "#f0f0f0", color: active ? C.white : C.abbey }}>{count}</span>
+                </button>
+              );
+            })}
           </div>
         </Rv>
         <Rv style={{ position: "relative", zIndex: 10 }}>
@@ -1166,12 +1209,23 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
         </Rv>
 
         {/* Empty state */}
-        {!ld && fl.length === 0 && (
+        {!ld && tabbed.length === 0 && (
           <Rv>
             <div style={{ textAlign: "center", padding: "60px 0", color: C.abbey }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-              <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucun bien ne correspond à vos critères.</p>
-              <button onClick={() => { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); }} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Effacer les filtres</button>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>{tab === "sold" ? "🏷️" : tab === "new" ? "✨" : "🔍"}</div>
+              {tab === "sold" ? (
+                <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8, maxWidth: 520, margin: "0 auto 8px" }}>Aucun bien vendu à afficher pour le moment.</p>
+              ) : tab === "new" ? (
+                <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucune nouveauté sur cette période.</p>
+              ) : (
+                <p style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Aucun bien ne correspond à vos critères.</p>
+              )}
+              {tab === "all" && (
+                <button onClick={() => { setSq(DEFAULT_SEARCHQ); setBudgetRange([0, 1500000]); setAreaRange([0, 500]); }} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Effacer les filtres</button>
+              )}
+              {tab !== "all" && (
+                <button onClick={() => setTab("all")} style={{ marginTop: 12, height: 44, padding: "0 24px", borderRadius: 10, border: "none", background: C.cyan, color: "#fff", fontFamily: "Urbanist, sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Voir tous les biens</button>
+              )}
             </div>
           </Rv>
         )}
