@@ -1022,21 +1022,6 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
             </Rv>
             <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
           </div>
-          {/* Hero image with dome clip */}
-          <div style={{ flex: 1, display: "flex", justifyContent: m.mob ? "center" : "flex-end", alignItems: "flex-end", position: "relative", width: m.mob ? "100%" : "auto" }}>
-            <Rv d={3}>
-              <div style={{ position: "relative", width: m.xs ? "100%" : m.sm ? "85%" : m.md ? 320 : m.lg ? 400 : 480, maxWidth: 520 }}>
-                <div style={{ width: "100%", aspectRatio: "525/538", borderRadius: "50% 50% 0 0 / 48% 48% 0 0", overflow: "hidden" }}>
-                  <img src={HERO_IMG} alt="Château de Beuzeval" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                </div>
-                {!m.mob && (
-                  <div style={{ position: "absolute", bottom: 30, left: m.md ? -30 : -50, width: m.md ? 110 : m.lg ? 130 : 150, height: m.md ? 140 : m.lg ? 165 : 190, borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.25)" }}>
-                    <video src="/hero-video.webm" autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
-                )}
-              </div>
-            </Rv>
-          </div>
         </div>
       </section>
 
