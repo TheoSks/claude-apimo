@@ -498,7 +498,7 @@ function FaqItem({ q, a, idx, mob, xs }) {
 }
 
 /* ═══════════════ MAIN APP ═══════════════ */
-export default function App({ initialPage } = {}) {
+export default function App({ initialPage, initialRef } = {}) {
   const [props, setProps] = useState([]);
   const [ld, setLd] = useState(true);
   const [pg, setPg] = useState(initialPage || "home");
@@ -521,8 +521,8 @@ export default function App({ initialPage } = {}) {
     if (parsedRef.current || !props.length) return;
     parsedRef.current = true;
     const path = window.location.pathname;
-    if (path.startsWith("/biens/")) {
-      const ref = path.replace("/biens/", "").split("-")[0];
+    const ref = initialRef || (path.startsWith("/biens/") ? path.replace("/biens/", "").split("-")[0] : "");
+    if (ref) {
       const found = props.find(x => String(x.reference) === ref || String(x.id) === ref);
       if (found) { setPg("bien"); setSid(found.id); }
     }
@@ -563,7 +563,7 @@ export default function App({ initialPage } = {}) {
 
       {pg === "home" && <Home props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
-      {pg === "bien" && <Bien props={props} id={sid} go={go} m={m} px={px} />}
+      {pg === "bien" && <Bien props={props} id={sid} ld={ld} go={go} m={m} px={px} />}
       {pg === "apropos" && <Apropos go={go} m={m} px={px} />}
       {pg === "estimation" && <Estimation go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
@@ -1363,12 +1363,12 @@ function BienContactForm({ p, m }) {
 }
 
 /* ═══════ BIEN DETAIL ═══════ */
-function Bien({ props, id, go, m, px }) {
+function Bien({ props, id, ld, go, m, px }) {
   const p = props.find(x => x.id === id);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
-  if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
+  if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 18, color: C.abbey }}>{ld ? "Chargement du bien…" : "Bien non trouvé"}</div>;
   const area = p.area?.value || p.area?.total || 0;
   const photos = p.photos?.length ? p.photos : [p.thumbnail || fb(0)];
   const title = p.displayTitle || p.title;
