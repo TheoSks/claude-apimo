@@ -150,7 +150,7 @@ async function fetchProperties() {
 const fmtP = (n) => Number(n).toLocaleString("fr-FR") + " €";
 
 /* ═══ Onglets annonces : Nouveautés / Vendus ═══ */
-const NEW_DAYS = 60; /* un bien est "nouveauté" s'il a été mis en ligne il y a moins de 60 jours */
+const NEW_DAYS = 15; /* un bien est "nouveauté" s'il a été mis en ligne il y a moins de 15 jours */
 function isNewProp(p) {
   if (!p.createdAt) return false;
   const t = new Date(String(p.createdAt).replace(" ", "T")).getTime();
