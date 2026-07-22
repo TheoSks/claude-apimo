@@ -1214,7 +1214,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
     if (areaRange[0] > 0 && area < areaRange[0]) return false;
     if (areaRange[1] < 500 && area > areaRange[1]) return false;
     return true;
-  });
+  }).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
   /* Compteurs des onglets (sur le résultat filtré courant) */
   const newCount = fl.filter(isNewProp).length;

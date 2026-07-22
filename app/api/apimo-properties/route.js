@@ -6,13 +6,13 @@ export async function GET() {
   const auth = Buffer.from(`${PROVIDER}:${TOKEN}`).toString("base64");
 
   try {
-    const url = `https://api.apimo.pro/agencies/${AGENCY}/properties?limit=200`;
+    const url = `https://api.apimo.pro/agencies/${AGENCY}/properties?limit=300`;
     const response = await fetch(url, {
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
       },
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
