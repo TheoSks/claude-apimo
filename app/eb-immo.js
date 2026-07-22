@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { gsap } from "gsap";
 import Estimation from "./estimation";
 
 /* ═══ APIMO API CONFIG ═══ */
@@ -149,7 +150,7 @@ async function fetchProperties() {
 const fmtP = (n) => Number(n).toLocaleString("fr-FR") + " €";
 
 /* ═══ Onglets annonces : Nouveautés / Vendus ═══ */
-const NEW_DAYS = 60; /* un bien est "nouveauté" s'il a été mis en ligne il y a moins de 60 jours */
+const NEW_DAYS = 15; /* un bien est "nouveauté" s'il a été mis en ligne il y a moins de 15 jours */
 function isNewProp(p) {
   if (!p.createdAt) return false;
   const t = new Date(String(p.createdAt).replace(" ", "T")).getTime();
@@ -497,8 +498,31 @@ function FaqItem({ q, a, idx, mob, xs }) {
   );
 }
 
+/* ═══════ INTRO (animation d'ouverture GSAP) ═══════ */
+function Intro() {
+  const [done, setDone] = useState(false);
+  const overlayRef = useRef(null);
+  const logoRef = useRef(null);
+  const lineRef = useRef(null);
+  useEffect(() => {
+    const tl = gsap.timeline({ onComplete: () => setDone(true) });
+    tl.fromTo(logoRef.current, { opacity: 0, scale: 0.8, y: 14 }, { opacity: 1, scale: 1, y: 0, duration: 0.75, ease: "power3.out" })
+      .fromTo(lineRef.current, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out" }, "-=0.35")
+      .to([logoRef.current, lineRef.current], { opacity: 0, y: -10, duration: 0.45, ease: "power2.in" }, "+=0.35")
+      .to(overlayRef.current, { yPercent: -100, duration: 0.95, ease: "power4.inOut" }, "-=0.15");
+    return () => tl.kill();
+  }, []);
+  if (done) return null;
+  return (
+    <div ref={overlayRef} style={{ position: "fixed", inset: 0, zIndex: 6000, background: "#FFFFFF", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22 }}>
+      <img ref={logoRef} src={LOGO} alt="E&B Immo" style={{ width: 132, height: "auto", opacity: 0 }} />
+      <div ref={lineRef} style={{ width: 120, height: 2, background: C.cyan, transformOrigin: "left center", transform: "scaleX(0)" }} />
+    </div>
+  );
+}
+
 /* ═══════════════ MAIN APP ═══════════════ */
-export default function App({ initialPage } = {}) {
+export default function App({ initialPage, initialRef } = {}) {
   const [props, setProps] = useState([]);
   const [ld, setLd] = useState(true);
   const [pg, setPg] = useState(initialPage || "home");
@@ -521,8 +545,8 @@ export default function App({ initialPage } = {}) {
     if (parsedRef.current || !props.length) return;
     parsedRef.current = true;
     const path = window.location.pathname;
-    if (path.startsWith("/biens/")) {
-      const ref = path.replace("/biens/", "").split("-")[0];
+    const ref = initialRef || (path.startsWith("/biens/") ? path.replace("/biens/", "").split("-")[0] : "");
+    if (ref) {
       const found = props.find(x => String(x.reference) === ref || String(x.id) === ref);
       if (found) { setPg("bien"); setSid(found.id); }
     }
@@ -558,12 +582,13 @@ export default function App({ initialPage } = {}) {
 
   return (
     <div style={{ fontFamily: "Urbanist, sans-serif", color: C.bush, background: C.white, minHeight: "100vh", overflowX: "hidden" }}>
+      {(!initialPage || initialPage === "home") && <Intro />}
       {/* ═══ NAV (responsive: hamburger on mobile) ═══ */}
       <Nav pg={pg} go={go} m={m} px={px} />
 
       {pg === "home" && <Home props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
-      {pg === "bien" && <Bien props={props} id={sid} go={go} m={m} px={px} />}
+      {pg === "bien" && <Bien props={props} id={sid} ld={ld} go={go} m={m} px={px} />}
       {pg === "apropos" && <Apropos go={go} m={m} px={px} />}
       {pg === "estimation" && <Estimation go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
@@ -1001,8 +1026,22 @@ function ImmodvisorReviews({ m, px }) {
   );
 }
 
+/* Le long délai d'entrée (synchro avec l'intro) ne s'applique qu'au tout premier affichage */
+let heroIntroPlayed = false;
+
 /* ═══════ HOME ═══════ */
 function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange }) {
+  const heroRef = useRef(null);
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const delay = heroIntroPlayed ? 0.2 : 1.45;
+    heroIntroPlayed = true;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(".hl", { yPercent: 115 }, { yPercent: 0, duration: 1.05, ease: "power4.out", stagger: 0.12, delay });
+      gsap.fromTo(".hero-cta", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: delay + 0.5 });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
   /* Tri par date de mise en ligne (created_at) décroissante → vraies nouveautés en tête */
   const byNewest = [...props].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   /* xs (1 col) → 3 cards, sm/md (2 col) → 4 cards, lg+ (3 col) → 3 cards */
@@ -1012,21 +1051,20 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
   return (
     <main>
       {/* ═══ HERO ═══ */}
-      <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `88px ${px} 32px` : m.sm ? `100px ${px} 40px` : m.md ? `120px ${px} 48px` : `148px ${px} 60px`, overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", maxWidth: 1600, margin: "0 auto" }}>
-          <div style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
-            <Rv>
-              <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
-                Agence de la côte fleurie<br />et alentours
-              </h1>
-            </Rv>
-            <Rv d={2}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></Rv>
+      <section style={{ background: "linear-gradient(to top right, rgba(0,0,0,0.45), rgba(0,0,0,0.10)), #C9A882 url('/hero-drone.jpg') center/cover no-repeat", padding: m.xs ? `100px ${px} 48px` : m.sm ? `112px ${px} 56px` : m.md ? `132px ${px} 72px` : `160px ${px} 96px`, minHeight: m.xs ? 440 : m.sm ? 500 : m.mob ? 540 : "74vh", display: "flex", overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", justifyContent: m.mob ? "flex-end" : "flex-start", width: "100%", maxWidth: 1600, margin: "0 auto" }}>
+          <div ref={heroRef} style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
+            <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
+              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block", transform: "translateY(115%)" }}>Agence de la côte fleurie</span></span>
+              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block", transform: "translateY(115%)" }}>et alentours</span></span>
+            </h1>
+            <div className="hero-cta" style={{ opacity: 0 }}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></div>
           </div>
         </div>
       </section>
 
       {/* ═══ SEARCH BAR ═══ */}
-      <section style={{ background: `linear-gradient(to bottom, #C9A882 50%, ${C.white} 50%)`, padding: `0 ${px}` }}>
+      <section style={{ background: C.white, padding: `0 ${px}` }}>
         <Rv>
           <SearchBar sq={sq} setSq={setSq} budgetRange={budgetRange} setBudgetRange={setBudgetRange} areaRange={areaRange} setAreaRange={setAreaRange} allProps={props} onSearch={() => go("annonces")} m={m} />
         </Rv>
@@ -1040,7 +1078,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
             <PillBtn variant="outline-cyan" onClick={() => go("annonces")} style={{ fontSize: 15 }}>Tout découvrir</PillBtn>
           </div>
         </Rv>
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "1fr 1fr" : m.lg ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "repeat(2, minmax(0,1fr))" : m.md ? "repeat(2, minmax(0,1fr))" : m.lg ? "repeat(3, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
           {!ld && featured.map((p, i) => (
             <Rv key={p.id} d={i + 1}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
@@ -1176,7 +1214,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
     if (areaRange[0] > 0 && area < areaRange[0]) return false;
     if (areaRange[1] < 500 && area > areaRange[1]) return false;
     return true;
-  });
+  }).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
   /* Compteurs des onglets (sur le résultat filtré courant) */
   const newCount = fl.filter(isNewProp).length;
@@ -1258,7 +1296,7 @@ function Annonces({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange
           </Rv>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "1fr 1fr" : m.md ? "repeat(2, 1fr)" : m.lg ? "repeat(3, 1fr)" : m.xl ? "repeat(3, 1fr)" : "repeat(4, 1fr)", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.sm ? "repeat(2, minmax(0,1fr))" : m.md ? "repeat(2, minmax(0,1fr))" : m.lg ? "repeat(3, minmax(0,1fr))" : m.xl ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap: m.xs ? 20 : m.mob ? 16 : 28 }}>
           {!ld && paginated.map((p, i) => (
             <Rv key={p.id} d={Math.min(i % 3 + 1, 3)}><PropCard p={p} idx={i} mob={m.mob} xs={m.xs} onClick={() => go("bien", p.id)} /></Rv>
           ))}
@@ -1363,12 +1401,12 @@ function BienContactForm({ p, m }) {
 }
 
 /* ═══════ BIEN DETAIL ═══════ */
-function Bien({ props, id, go, m, px }) {
+function Bien({ props, id, ld, go, m, px }) {
   const p = props.find(x => x.id === id);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
-  if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 20 }}>Bien non trouvé</div>;
+  if (!p) return <div style={{ padding: 200, textAlign: "center", fontSize: 18, color: C.abbey }}>{ld ? "Chargement du bien…" : "Bien non trouvé"}</div>;
   const area = p.area?.value || p.area?.total || 0;
   const photos = p.photos?.length ? p.photos : [p.thumbnail || fb(0)];
   const title = p.displayTitle || p.title;
@@ -1814,7 +1852,7 @@ function Apropos({ go, m, px }) {
       <section style={{ padding: `${m.xs ? 56 : m.mob ? 72 : 100}px ${px}`, maxWidth: 1440, margin: "0 auto" }}>
         <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>Notre équipe</p>
         <h2 style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 500, color: C.bush, marginBottom: m.xs ? 40 : 56 }}>Une équipe à votre écoute</h2>
-        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "1fr 1fr" : m.tab ? "repeat(3,1fr)" : "repeat(3,1fr)", gap: m.xs ? 24 : 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: m.xs ? "1fr" : m.mob ? "repeat(2, minmax(0,1fr))" : m.tab ? "repeat(3, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))", gap: m.xs ? 24 : 32 }}>
           {team.map((t) => (
             <div key={t.name} style={{ background: "#F7F8F5", borderRadius: 16, padding: m.xs ? 24 : 32, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ width: "100%", aspectRatio: "4/5", borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
