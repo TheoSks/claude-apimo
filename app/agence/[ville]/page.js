@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CITIES, findCity } from "../../_lib/cities";
+import { CITIES, findCity, priceRange } from "../../_lib/cities";
+import { BUCKETS } from "../../_lib/buckets";
 import {
   getPropertiesByCitySlug,
   propertyPath,
@@ -72,11 +73,44 @@ export default async function VillePage({ params }) {
     })),
   };
 
+  const aptRange = priceRange(city.priceApt);
+  const houseRange = priceRange(city.priceHouse);
+
+  const faqs = [
+    {
+      q: `Quel est le prix de l'immobilier à ${city.name} ?`,
+      a: `À ${city.name} (${city.zipcode}), les prix se situent à titre indicatif autour de ${aptRange} pour un appartement et ${houseRange} pour une maison. Ces fourchettes varient fortement selon l'emplacement, la vue mer et l'état du bien. E&B Immo réalise une estimation gratuite et précise sur demande.`,
+    },
+    {
+      q: `E&B Immo propose-t-elle une estimation gratuite à ${city.name} ?`,
+      a: `Oui. E&B Immo réalise gratuitement et sans engagement l'estimation de votre bien à ${city.name}, en ligne en 2 minutes puis affinée par un agent local.`,
+    },
+    {
+      q: `Quels types de biens E&B Immo gère-t-elle à ${city.name} ?`,
+      a: `E&B Immo accompagne à ${city.name} la vente et la location de maisons, appartements et villas, ainsi que les terrains, immeubles, locaux commerciaux, le viager et la location saisonnière.`,
+    },
+    {
+      q: `Comment contacter l'agence E&B Immo pour ${city.name} ?`,
+      a: `Vous pouvez joindre E&B Immo au 07 60 95 36 18 ou par email à contact@eb-immo.fr. L'agence est basée 3 place du Commerce, 14860 Bavent, et couvre toute la Côte Fleurie.`,
+    },
+  ];
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
       <SeoHeader />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px", color: C.bush }}>
         <nav style={{ fontSize: 13, marginBottom: 16, color: `${C.bush}99` }}>
@@ -194,6 +228,80 @@ export default async function VillePage({ params }) {
         </section>
 
         <section style={{ marginTop: 56 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>
+            Prix de l'immobilier à {city.name}
+          </h2>
+          <p style={{ fontSize: 15, lineHeight: 1.7, maxWidth: 800, marginBottom: 16 }}>
+            À {city.name} ({city.zipcode}), le prix de l'immobilier se situe, à titre indicatif,
+            autour de <strong>{aptRange}</strong> pour un appartement et{" "}
+            <strong>{houseRange}</strong> pour une maison. Ces fourchettes sont données à titre
+            informatif : le prix réel dépend fortement de l'emplacement, de la vue mer, de l'état et
+            des prestations du bien.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 16,
+              marginBottom: 16,
+            }}
+          >
+            <div style={{ border: `1px solid ${C.bush}1a`, borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: 13, color: `${C.bush}88`, marginBottom: 4 }}>Appartement</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.cyan }}>{aptRange}</div>
+            </div>
+            <div style={{ border: `1px solid ${C.bush}1a`, borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: 13, color: `${C.bush}88`, marginBottom: 4 }}>Maison</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.cyan }}>{houseRange}</div>
+            </div>
+          </div>
+          <p style={{ fontSize: 14, lineHeight: 1.6 }}>
+            Pour connaître la valeur exacte de votre bien à {city.name},{" "}
+            <Link href="/estimation" style={{ color: C.cyan, fontWeight: 600 }}>
+              demandez une estimation gratuite
+            </Link>
+            .
+          </p>
+        </section>
+
+        <section style={{ marginTop: 56 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>
+            Questions fréquentes — immobilier à {city.name}
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {faqs.map((f, i) => (
+              <div key={i}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>{f.q}</h3>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: `${C.bush}cc`, maxWidth: 820 }}>
+                  {f.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section style={{ marginTop: 56 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
+            Rechercher par type de bien à {city.name}
+          </h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 40 }}>
+            {BUCKETS.map((b) => (
+              <Link
+                key={b.slug}
+                href={`/immobilier/${b.slug}/${city.slug}`}
+                style={{
+                  padding: "8px 14px",
+                  border: `1px solid ${C.bush}33`,
+                  borderRadius: 999,
+                  textDecoration: "none",
+                  color: C.bush,
+                  fontSize: 13,
+                }}
+              >
+                {b.h1(city.name)}
+              </Link>
+            ))}
+          </div>
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
             Autres communes de la Côte Fleurie
           </h2>

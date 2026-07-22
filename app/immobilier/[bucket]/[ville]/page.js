@@ -71,10 +71,43 @@ export default async function MatrixPage({ params }) {
     ],
   };
 
+  const label = b.h1(city.name);
+  const labelLc = label.toLowerCase();
+  const faqs = [
+    {
+      q: `${label} : combien d'annonces sont disponibles chez E&B Immo ?`,
+      a:
+        properties.length > 0
+          ? `E&B Immo propose actuellement ${properties.length} annonce${
+              properties.length > 1 ? "s" : ""
+            } correspondant à « ${labelLc} ». Cette sélection est mise à jour en continu depuis notre catalogue.`
+          : `Aucune annonce ne correspond actuellement à « ${labelLc} ». Contactez E&B Immo au 07 60 95 36 18 pour être alerté dès qu'un bien correspondant est publié.`,
+    },
+    {
+      q: `Pourquoi passer par E&B Immo pour « ${labelLc} » ?`,
+      a: `Agence indépendante de la Côte Fleurie fondée en 2017, E&B Immo conjugue une connaissance fine du marché de ${city.name} et un accompagnement personnalisé, de la recherche à la signature.`,
+    },
+    {
+      q: `Comment être informé des nouveaux biens « ${labelLc} » ?`,
+      a: `Appelez E&B Immo au 07 60 95 36 18 ou écrivez à contact@eb-immo.fr pour créer une alerte personnalisée. Vous pouvez aussi demander une estimation gratuite si vous souhaitez vendre à ${city.name}.`,
+    },
+  ];
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
       <SeoHeader />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px", color: C.bush }}>
         <nav style={{ fontSize: 13, marginBottom: 16, color: `${C.bush}99` }}>
@@ -153,6 +186,22 @@ export default async function MatrixPage({ params }) {
             })}
           </div>
         )}
+
+        <section style={{ marginTop: 56 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>
+            Questions fréquentes
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {faqs.map((f, i) => (
+              <div key={i}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>{f.q}</h3>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: `${C.bush}cc`, maxWidth: 820 }}>
+                  {f.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section style={{ marginTop: 56 }}>
           <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Recherches associées</h2>
