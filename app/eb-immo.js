@@ -689,7 +689,7 @@ export default function App({ initialPage, initialRef } = {}) {
       {pg === "annonces" && <Annonces props={props} ld={ld} go={go} m={m} px={px} {...searchProps} />}
       {pg === "bien" && <Bien props={props} id={sid} ld={ld} go={go} m={m} px={px} />}
       {pg === "apropos" && <Apropos go={go} m={m} px={px} />}
-      {pg === "estimation" && <Estimation go={go} m={m} px={px} />}
+      {pg === "estimation" && <><Estimation go={go} m={m} px={px} /><Footer go={go} m={m} px={px} /></>}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
       {pg === "confidentialite" && <Confidentialite go={go} m={m} px={px} />}
       {pg === "protocole-rgpd" && <ProtocoleRGPD go={go} m={m} px={px} />}
@@ -1139,7 +1139,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
     const delay = heroIntroPlayed ? 0.2 : 1.45;
     heroIntroPlayed = true;
     const ctx = gsap.context(() => {
-      gsap.fromTo(".hl", { yPercent: 115 }, { yPercent: 0, duration: 1.05, ease: "power4.out", stagger: 0.12, delay });
+      gsap.set(".hl", { yPercent: 115 });
+      gsap.to(".hl", { yPercent: 0, duration: 1.05, ease: "power4.out", stagger: 0.12, delay, clearProps: "transform" });
       gsap.fromTo(".hero-cta", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: delay + 0.5 });
     }, heroRef);
     return () => ctx.revert();
@@ -1157,8 +1158,8 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
         <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.xs ? 32 : 40, alignItems: m.mob ? "flex-start" : "stretch", justifyContent: m.mob ? "flex-end" : "flex-start", width: "100%", maxWidth: 1600, margin: "0 auto" }}>
           <div ref={heroRef} style={{ flex: m.mob ? "none" : "0 0 auto", width: m.mob ? "100%" : "auto", minWidth: m.mob ? "auto" : m.md ? 360 : m.lg ? 460 : 620, display: "flex", flexDirection: "column", gap: m.xs ? 24 : m.mob ? 32 : 50, justifyContent: "flex-end" }}>
             <h1 style={{ fontSize: "clamp(28px, 8vw, 80px)", fontWeight: 500, color: C.white, lineHeight: 1.08, margin: 0, overflowWrap: "anywhere", textShadow: "0 2px 16px rgba(0,0,0,0.45)" }}>
-              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block", transform: "translateY(115%)" }}>Agence de la côte fleurie</span></span>
-              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block", transform: "translateY(115%)" }}>et alentours</span></span>
+              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block" }}>Agence de la côte fleurie</span></span>
+              <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block" }}>et alentours</span></span>
             </h1>
             <div className="hero-cta" style={{ opacity: 0 }}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></div>
           </div>
