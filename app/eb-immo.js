@@ -692,6 +692,7 @@ export default function App({ initialPage, initialRef } = {}) {
       {pg === "estimation" && <Estimation go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
       {pg === "confidentialite" && <Confidentialite go={go} m={m} px={px} />}
+      {pg === "protocole-rgpd" && <ProtocoleRGPD go={go} m={m} px={px} />}
       <CookieConsent />
     </div>
   );
@@ -2046,6 +2047,48 @@ function Confidentialite({ go, m, px }) {
   );
 }
 
+/* ═══════ PROTOCOLE RGPD (politique interne) ═══════ */
+function ProtocoleRGPD({ go, m, px }) {
+  const items = [
+    "Registre des traitements (dernière mise à jour 22/07/2026).",
+    "Insertion d'une clause RGPD dans les informations précontractuelles, les mandats et tout autre document de récolte.",
+    "Politique RGPD interne de protection de la vie privée et politique en matière de cookies, disponibles de manière illimitée et téléchargeables sur le site, rubrique Mentions.",
+    "Réponse en 48 h maximum, par mail, aux demandes d'accès, de rectification et de suppression des données, avec tenue d'un registre des demandes de rectification ou de suppression.",
+    "Archivage puis suppression des données personnelles une fois passé le délai de conservation de 3 ans sans aucune activité.",
+    "Sécurisation du stockage des données personnelles par la mise en place de mots de passe uniques par collaborateur, avec modification obligatoire tous les deux mois — l'accès total à la modification de ces mots de passe revenant à la directrice d'agence, sur le logiciel APIMO. Les mails issus des plateformes et du site de l'agence sont centralisés sur une boîte mail sécurisée dont seule la directrice d'agence a l'accès.",
+    "Responsable du traitement : Mme Emeline BUREL, en sa qualité de gérante.",
+  ];
+  return (
+    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120 }}>
+      <section style={{ padding: `${m.xs ? 28 : 48}px ${px} ${m.xs ? 48 : 80}px`, maxWidth: 900, margin: "0 auto" }}>
+        <p style={{ fontSize: m.xs ? 12 : 13, fontWeight: 600, letterSpacing: 3, color: C.cyan, textTransform: "uppercase", marginBottom: 12 }}>Protocole RGPD</p>
+        <h1 style={{ fontSize: "clamp(24px, 5.5vw, 46px)", fontWeight: 500, color: C.bush, lineHeight: 1.2, marginBottom: 10 }}>Politique interne de protection des données personnelles</h1>
+        <p style={{ fontSize: 14, color: C.abbey, marginBottom: 28 }}>Dernière mise à jour : 22/07/2026</p>
+
+        <ol style={{ listStyle: "none", counterReset: "rgpd", padding: 0, margin: 0 }}>
+          {items.map((t, i) => (
+            <li key={i} style={{ counterIncrement: "rgpd", position: "relative", display: "flex", gap: 16, alignItems: "flex-start", padding: m.xs ? "16px 0" : "20px 0", borderBottom: i < items.length - 1 ? `1px solid ${C.cinder10}` : "none" }}>
+              <span style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", background: "rgba(36,175,197,.12)", color: C.cyan, fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+              <p style={{ fontSize: m.xs ? 14 : 16, color: C.abbey, lineHeight: 1.7, margin: 0 }}>{t}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div style={{ marginTop: 36, padding: m.xs ? 18 : 24, background: "#F7F8F5", borderRadius: 12 }}>
+          <p style={{ fontSize: m.xs ? 13 : 15, color: C.abbey, lineHeight: 1.65, margin: 0 }}>
+            Pour exercer vos droits (accès, rectification, suppression…), contactez-nous à <a href="mailto:contact@eb-immo.fr" style={{ color: C.cyan }}>contact@eb-immo.fr</a>. Consultez aussi notre <a onClick={() => go("confidentialite")} style={{ color: C.cyan, cursor: "pointer" }}>politique de confidentialité & cookies</a>.
+          </p>
+        </div>
+
+        <div style={{ marginTop: 32 }}>
+          <PillBtn variant="outline-cyan" onClick={() => go("home")} hideArrow>Retour à l'accueil</PillBtn>
+        </div>
+      </section>
+      <Footer go={go} m={m} px={px} />
+    </main>
+  );
+}
+
 /* ═══════ FOOTER ═══════ */
 function Footer({ go, m, px }) {
   return (
@@ -2078,6 +2121,7 @@ function Footer({ go, m, px }) {
         <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>© 2025 E&B Immo. Tous droits réservés.</span>
         <div style={{ display: "flex", gap: m.xs ? 14 : 20, flexWrap: "wrap", alignItems: "center" }}>
           <a onClick={() => go("confidentialite")} style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, cursor: "pointer", textDecoration: "none" }}>Politique de confidentialité</a>
+          <a onClick={() => go("protocole-rgpd")} style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, cursor: "pointer", textDecoration: "none" }}>Protocole RGPD</a>
           <a onClick={() => window.dispatchEvent(new Event("open-cookie-prefs"))} style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, cursor: "pointer", textDecoration: "none" }}>Gestion des cookies</a>
           <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>Propulsé par <a href="https://www.linkedin.com/in/theo-gaggio/" target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, textDecoration: "none", fontWeight: 500 }}>Théo G.</a></span>
         </div>
