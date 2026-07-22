@@ -521,6 +521,98 @@ function Intro() {
   );
 }
 
+/* ═══════ CONSENTEMENT COOKIES (RGPD) ═══════ */
+const COOKIE_KEY = "eb_cookie_consent_v1";
+function readConsent() { try { return JSON.parse(localStorage.getItem(COOKIE_KEY)); } catch { return null; } }
+/* À utiliser plus tard pour conditionner un script de mesure d'audience : hasConsent("analytics") */
+function hasConsent(cat) { const c = readConsent(); return !!(c && c[cat]); }
+
+function CookieConsent() {
+  const m = useMedia();
+  const [consent, setConsent] = useState(undefined); // undefined = en cours de lecture, null = aucun choix
+  const [showPrefs, setShowPrefs] = useState(false);
+  const [analytics, setAnalytics] = useState(false);
+
+  useEffect(() => {
+    const c = readConsent();
+    setConsent(c);
+    if (c) setAnalytics(!!c.analytics);
+    const openPrefs = () => { const cur = readConsent(); setAnalytics(!!(cur && cur.analytics)); setShowPrefs(true); };
+    window.addEventListener("open-cookie-prefs", openPrefs);
+    return () => window.removeEventListener("open-cookie-prefs", openPrefs);
+  }, []);
+
+  const save = (a) => {
+    const c = { necessary: true, analytics: a, date: new Date().toISOString(), version: 1 };
+    try { localStorage.setItem(COOKIE_KEY, JSON.stringify(c)); } catch (e) { /* stockage indisponible */ }
+    setConsent(c); setAnalytics(a); setShowPrefs(false);
+    window.dispatchEvent(new CustomEvent("cookie-consent-updated", { detail: c }));
+  };
+
+  if (consent === undefined) return null;
+  const bannerVisible = consent === null && !showPrefs;
+  if (!bannerVisible && !showPrefs) return null;
+
+  const btn = (bg, color, border) => ({ padding: m.xs ? "10px 16px" : "11px 22px", borderRadius: 99, border: border || "none", background: bg, color, fontFamily: "Urbanist, sans-serif", fontSize: m.xs ? 14 : 15, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" });
+
+  return (
+    <>
+      {/* Bandeau */}
+      {bannerVisible && (
+        <div style={{ position: "fixed", left: m.xs ? 12 : 24, right: m.xs ? 12 : 24, bottom: m.xs ? 12 : 24, zIndex: 5500, background: "#fff", border: `1px solid ${C.cinder15}`, borderRadius: 16, boxShadow: "0 12px 48px rgba(0,0,0,.18)", padding: m.xs ? 18 : 24, maxWidth: 920, margin: "0 auto" }}>
+          <div style={{ display: "flex", flexDirection: m.mob ? "column" : "row", gap: m.mob ? 16 : 24, alignItems: m.mob ? "stretch" : "center" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: m.xs ? 15 : 17, fontWeight: 700, color: C.bush, marginBottom: 6 }}>🍪 Respect de votre vie privée</div>
+              <p style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, lineHeight: 1.6, margin: 0 }}>
+                Nous utilisons des cookies strictement nécessaires au fonctionnement du site et, avec votre accord, des cookies de mesure d'audience. Vous pouvez accepter, refuser ou personnaliser vos choix à tout moment.{" "}
+                <a onClick={() => { window.dispatchEvent(new Event("goto-confidentialite")); }} style={{ color: C.cyan, cursor: "pointer", textDecoration: "underline" }}>En savoir plus</a>
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: m.xs ? "column" : "row", gap: 10, flexShrink: 0, flexWrap: "wrap" }}>
+              <button onClick={() => setShowPrefs(true)} style={btn("transparent", C.bush, `1px solid ${C.bush}`)}>Personnaliser</button>
+              <button onClick={() => save(false)} style={btn("transparent", C.abbey, `1px solid ${C.cinder15}`)}>Tout refuser</button>
+              <button onClick={() => save(true)} style={btn(C.cyan, "#fff")}>Tout accepter</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Panneau de personnalisation */}
+      {showPrefs && (
+        <div onClick={() => setShowPrefs(false)} style={{ position: "fixed", inset: 0, zIndex: 5600, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: m.xs ? 12 : 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: m.xs ? 20 : 32, width: "100%", maxWidth: 560, maxHeight: "88vh", overflowY: "auto" }}>
+            <h2 style={{ fontSize: m.xs ? 20 : 24, fontWeight: 700, color: C.bush, marginBottom: 8 }}>Préférences de cookies</h2>
+            <p style={{ fontSize: 14, color: C.abbey, lineHeight: 1.6, marginBottom: 20 }}>Choisissez les cookies que vous autorisez. Les cookies nécessaires ne peuvent pas être désactivés.</p>
+
+            <div style={{ border: `1px solid ${C.cinder15}`, borderRadius: 12, padding: 16, marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: C.bush }}>Cookies nécessaires</div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.abbey, background: "#f0f0f0", padding: "4px 12px", borderRadius: 99 }}>Toujours actifs</span>
+              </div>
+              <p style={{ fontSize: 13, color: C.abbey, lineHeight: 1.55, margin: "8px 0 0" }}>Indispensables au bon fonctionnement du site (navigation, sécurité, mémorisation de votre choix de cookies). Ils ne déposent aucune donnée à des fins publicitaires.</p>
+            </div>
+
+            <div style={{ border: `1px solid ${C.cinder15}`, borderRadius: 12, padding: 16, marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: C.bush }}>Mesure d'audience</div>
+                <button onClick={() => setAnalytics(v => !v)} aria-label="Activer/désactiver" style={{ width: 46, height: 26, borderRadius: 99, border: "none", background: analytics ? C.cyan : "#ccc", cursor: "pointer", position: "relative", flexShrink: 0, transition: "background .2s" }}>
+                  <span style={{ position: "absolute", top: 3, left: analytics ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left .2s" }} />
+                </button>
+              </div>
+              <p style={{ fontSize: 13, color: C.abbey, lineHeight: 1.55, margin: "8px 0 0" }}>Statistiques anonymes de fréquentation pour améliorer le site. Déposés uniquement avec votre accord.</p>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <button onClick={() => save(false)} style={btn("transparent", C.abbey, `1px solid ${C.cinder15}`)}>Tout refuser</button>
+              <button onClick={() => save(analytics)} style={btn(C.cyan, "#fff")}>Enregistrer mes choix</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 /* ═══════════════ MAIN APP ═══════════════ */
 export default function App({ initialPage, initialRef } = {}) {
   const [props, setProps] = useState([]);
@@ -576,6 +668,13 @@ export default function App({ initialPage, initialRef } = {}) {
     }
   }, []);
 
+  /* Lien "En savoir plus" du bandeau cookies → page confidentialité */
+  useEffect(() => {
+    const h = () => go("confidentialite");
+    window.addEventListener("goto-confidentialite", h);
+    return () => window.removeEventListener("goto-confidentialite", h);
+  }, [go]);
+
   /* Fluid horizontal padding: 16px on tiny phones → 80px on desktop */
   const px = m.xs ? "16px" : m.sm ? "20px" : m.md ? "32px" : m.lg ? "48px" : "80px";
   const searchProps = { sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaRange };
@@ -592,6 +691,8 @@ export default function App({ initialPage, initialRef } = {}) {
       {pg === "apropos" && <Apropos go={go} m={m} px={px} />}
       {pg === "estimation" && <Estimation go={go} m={m} px={px} />}
       {pg === "contact" && <Contact go={go} m={m} px={px} />}
+      {pg === "confidentialite" && <Confidentialite go={go} m={m} px={px} />}
+      <CookieConsent />
     </div>
   );
 }
@@ -1901,6 +2002,50 @@ function Apropos({ go, m, px }) {
   );
 }
 
+/* ═══════ POLITIQUE DE CONFIDENTIALITÉ & COOKIES ═══════ */
+function Confidentialite({ go, m, px }) {
+  const H2 = ({ children }) => <h2 style={{ fontSize: m.xs ? 19 : 24, fontWeight: 600, color: C.bush, margin: "32px 0 12px" }}>{children}</h2>;
+  const P = ({ children }) => <p style={{ fontSize: m.xs ? 14 : 16, color: C.abbey, lineHeight: 1.7, margin: "0 0 12px" }}>{children}</p>;
+  return (
+    <main style={{ paddingTop: m.xs ? 72 : m.mob ? 80 : 120 }}>
+      <section style={{ padding: `${m.xs ? 28 : 48}px ${px} ${m.xs ? 48 : 80}px`, maxWidth: 900, margin: "0 auto" }}>
+        <h1 style={{ fontSize: "clamp(26px, 6vw, 52px)", fontWeight: 500, color: C.bush, lineHeight: 1.15, marginBottom: 12 }}>Politique de confidentialité & cookies</h1>
+        <p style={{ fontSize: 14, color: C.abbey, marginBottom: 8 }}>Dernière mise à jour : {new Date().toLocaleDateString("fr-FR")}</p>
+
+        <H2>1. Responsable du traitement</H2>
+        <P>Le présent site est édité par <strong>E&B Immo</strong>, agence immobilière située 3 place du Commerce, 14860 Bavent. Pour toute question relative à vos données personnelles : <a href="mailto:contact@eb-immo.fr" style={{ color: C.cyan }}>contact@eb-immo.fr</a> — 07 60 95 36 18.</P>
+
+        <H2>2. Données que nous collectons</H2>
+        <P>Nous collectons uniquement les données que vous nous transmettez volontairement via nos formulaires (contact, estimation) : nom, prénom, e-mail, téléphone, informations sur votre projet immobilier. Ces données servent exclusivement à traiter votre demande et ne sont jamais revendues.</P>
+
+        <H2>3. Cookies</H2>
+        <P>Un cookie est un petit fichier déposé sur votre appareil lors de la visite d'un site. Nous utilisons deux catégories de cookies :</P>
+        <P><strong>• Cookies strictement nécessaires</strong> — indispensables au fonctionnement du site (navigation, sécurité, mémorisation de votre choix de consentement). Ils ne requièrent pas votre accord et ne servent à aucune finalité publicitaire.</P>
+        <P><strong>• Cookies de mesure d'audience</strong> — statistiques anonymes de fréquentation destinées à améliorer le site. Ils ne sont déposés qu'<strong>après votre consentement</strong> explicite.</P>
+        <P>Aucun cookie publicitaire ou de suivi tiers n'est utilisé sans votre accord.</P>
+
+        <H2>4. Votre consentement</H2>
+        <P>Lors de votre première visite, un bandeau vous permet d'accepter, de refuser ou de personnaliser les cookies non essentiels. Votre choix est conservé et vous pouvez le modifier à tout moment :</P>
+        <p style={{ margin: "0 0 12px" }}>
+          <button onClick={() => window.dispatchEvent(new Event("open-cookie-prefs"))} style={{ padding: "10px 22px", borderRadius: 99, border: `1px solid ${C.cyan}`, background: "transparent", color: C.cyan, fontFamily: "Urbanist, sans-serif", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Gérer mes préférences de cookies</button>
+        </p>
+
+        <H2>5. Durée de conservation</H2>
+        <P>Les données issues des formulaires sont conservées le temps nécessaire au traitement de votre demande, puis archivées ou supprimées conformément aux durées légales. Le cookie de consentement est conservé 6 mois maximum, après quoi votre choix vous est à nouveau demandé.</P>
+
+        <H2>6. Vos droits</H2>
+        <P>Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité de vos données. Pour les exercer, écrivez-nous à <a href="mailto:contact@eb-immo.fr" style={{ color: C.cyan }}>contact@eb-immo.fr</a>.</P>
+        <P>Vous pouvez également introduire une réclamation auprès de la CNIL (<a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" style={{ color: C.cyan }}>www.cnil.fr</a>).</P>
+
+        <div style={{ marginTop: 40 }}>
+          <PillBtn variant="outline-cyan" onClick={() => go("home")} hideArrow>Retour à l'accueil</PillBtn>
+        </div>
+      </section>
+      <Footer go={go} m={m} px={px} />
+    </main>
+  );
+}
+
 /* ═══════ FOOTER ═══════ */
 function Footer({ go, m, px }) {
   return (
@@ -1929,9 +2074,13 @@ function Footer({ go, m, px }) {
           </div>
         </div>
       </div>
-      <div style={{ borderTop: `1px solid rgba(86,89,90,.3)`, paddingTop: 20, display: "flex", flexDirection: m.mob ? "column" : "row", justifyContent: "space-between", gap: 8 }}>
+      <div style={{ borderTop: `1px solid rgba(86,89,90,.3)`, paddingTop: 20, display: "flex", flexDirection: m.mob ? "column" : "row", justifyContent: "space-between", alignItems: m.mob ? "flex-start" : "center", gap: m.mob ? 12 : 8, flexWrap: "wrap" }}>
         <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>© 2025 E&B Immo. Tous droits réservés.</span>
-        <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>Propulsé par <a href="https://www.linkedin.com/in/theo-gaggio/" target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, textDecoration: "none", fontWeight: 500 }}>Théo G.</a></span>
+        <div style={{ display: "flex", gap: m.xs ? 14 : 20, flexWrap: "wrap", alignItems: "center" }}>
+          <a onClick={() => go("confidentialite")} style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, cursor: "pointer", textDecoration: "none" }}>Politique de confidentialité</a>
+          <a onClick={() => window.dispatchEvent(new Event("open-cookie-prefs"))} style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, cursor: "pointer", textDecoration: "none" }}>Gestion des cookies</a>
+          <span style={{ fontSize: m.xs ? 13 : 14, color: C.abbey }}>Propulsé par <a href="https://www.linkedin.com/in/theo-gaggio/" target="_blank" rel="noopener noreferrer" style={{ color: C.cyan, textDecoration: "none", fontWeight: 500 }}>Théo G.</a></span>
+        </div>
       </div>
     </footer>
   );
