@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const TO_EMAIL = "gaggio880@gmail.com";
+const TO_EMAIL = process.env.CONTACT_EMAIL || "contact@eb-immo.fr";
 
 export async function POST(request) {
   const resend = new Resend(process.env.RESEND_API_KEY);

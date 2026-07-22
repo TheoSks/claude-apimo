@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const TO_EMAIL = "gaggio880@gmail.com";
+const TO_EMAIL = process.env.CONTACT_EMAIL || "contact@eb-immo.fr";
 
 const LABELS = {
   typeBien: { maison: "Maison", appartement: "Appartement" },
