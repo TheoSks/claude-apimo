@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 
-const TO_EMAIL = process.env.CONTACT_EMAIL || "contact@eb-immo.fr";
+const TO_EMAIL = process.env.CONTACT_EMAIL
+  ? process.env.CONTACT_EMAIL.split(",").map((s) => s.trim()).filter(Boolean)
+  : ["gaggio880@gmail.com", "contact@eb-immo.fr"];
 
 export async function POST(request) {
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -19,7 +21,7 @@ export async function POST(request) {
 
     const { error } = await resend.emails.send({
       from: "EB Immo <onboarding@resend.dev>",
-      to: [TO_EMAIL],
+      to: TO_EMAIL,
       replyTo: email,
       subject: `Nouveau contact EB Immo — ${prenom} ${nom}${reference ? ` (réf. ${reference})` : ""}`,
       html: `
