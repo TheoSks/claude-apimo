@@ -65,7 +65,7 @@ export default async function MatrixPage({ params }) {
       {
         "@type": "ListItem",
         position: 3,
-        name: `${b.typeLabel} ${b.transaction.toLowerCase()} ${city.name}`,
+        name: b.h1(city.name),
         item: `${SITE_URL}/immobilier/${b.slug}/${city.slug}`,
       },
     ],
@@ -96,8 +96,8 @@ export default async function MatrixPage({ params }) {
 
         {properties.length === 0 ? (
           <p style={{ fontSize: 15, lineHeight: 1.7, maxWidth: 800 }}>
-            Aucun(e) {b.typeLabel.toLowerCase()} à {b.transaction.toLowerCase()} actuellement
-            disponible à {city.name}. Contactez E&amp;B Immo au{" "}
+            Aucune annonce ne correspond actuellement à « {b.h1(city.name)} ».
+            Contactez E&amp;B Immo au{" "}
             <a href="tel:+33760953618" style={{ color: C.cyan, fontWeight: 600 }}>07 60 95 36 18</a>{" "}
             pour être alerté dès qu'un nouveau bien correspondant à votre recherche est publié, ou
             consultez{" "}
@@ -170,10 +170,10 @@ export default async function MatrixPage({ params }) {
                   fontSize: 13,
                 }}
               >
-                {x.typeLabel} {x.transaction.toLowerCase()} {city.name}
+                {x.h1(city.name)}
               </Link>
             ))}
-            {CITIES.filter((x) => x.slug !== city.slug).slice(0, 6).map((x) => (
+            {CITIES.filter((x) => x.slug !== city.slug).map((x) => (
               <Link
                 key={x.slug}
                 href={`/immobilier/${b.slug}/${x.slug}`}
@@ -186,7 +186,7 @@ export default async function MatrixPage({ params }) {
                   fontSize: 13,
                 }}
               >
-                {b.typeLabel} {b.transaction.toLowerCase()} {x.name}
+                {b.h1(x.name)}
               </Link>
             ))}
           </div>
