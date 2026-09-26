@@ -1,6 +1,6 @@
 import EBImmo from "./eb-immo";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 const websiteLd = {
   "@context": "https://schema.org",

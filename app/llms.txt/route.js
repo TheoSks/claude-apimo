@@ -2,7 +2,7 @@ import { CITIES } from "../_lib/cities";
 import { BUCKETS } from "../_lib/buckets";
 import { GUIDES } from "../_lib/guides";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 export const revalidate = 3600;
 

@@ -1,4 +1,4 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 // Crawlers des moteurs de réponse IA (GEO) : explicitement autorisés pour
 // que le contenu d'E&B Immo puisse être cité dans leurs réponses.
