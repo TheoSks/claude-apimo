@@ -1,4 +1,5 @@
-/* IDs du catalogue Apimo : type 1 Appartement, 2 Maison, 3 Terrain, 4 Commerce,
+/* IDs du catalogue Apimo — catégories : 1 Vente, 2 Location, 3 Saisonnier, 5 Viager.
+   Types : type 1 Appartement, 2 Maison, 3 Terrain, 4 Commerce,
    6 Immeuble, 7 Bureau, 9 Locaux d'activité. Sous-types "prestige" : Château (7),
    Manoir (10), Villa (14), Propriété (19), Hôtel particulier (37), Haras (45). */
 const PRESTIGE_SUBTYPES = [7, 10, 14, 19, 37, 45];
@@ -110,7 +111,7 @@ export const BUCKETS = [
       `Biens en viager à ${city} sur la Côte Fleurie : viager occupé et viager libre. Accompagnement E&B Immo pour vendeurs et acquéreurs.`,
     intro: (city) =>
       `Vous vous intéressez au viager à ${city} ? E&B Immo vous accompagne dans la vente et l'achat en viager occupé ou libre à ${city} et sur la Côte Fleurie.`,
-    match: (p) => p.category === 3,
+    match: (p) => p.category === 5,
   },
   {
     slug: "location-saisonniere",
@@ -122,7 +123,7 @@ export const BUCKETS = [
       `Locations saisonnières à ${city} sur la Côte Fleurie : appartements et maisons de vacances au bord de mer. Réservez votre séjour avec E&B Immo.`,
     intro: (city) =>
       `Profitez de la Côte Fleurie avec nos locations saisonnières à ${city}. E&B Immo sélectionne appartements et maisons de vacances pour vos séjours en bord de mer.`,
-    match: (p) => p.category === 4,
+    match: (p) => p.category === 3,
   },
 ];
 

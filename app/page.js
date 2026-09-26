@@ -20,7 +20,7 @@ const faqLd = {
       name: "Qui sommes-nous ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée en 2017. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie.",
+        text: "E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée en 2017. Nous accompagnons nos clients dans leurs projets d'achat, vente et location depuis notre agence de Bavent, à deux pas de Cabourg, Troarn, Merville-Franceville et Petiville.",
       },
     },
     {
@@ -36,7 +36,7 @@ const faqLd = {
       name: "Quelle zone géographique couvrez-vous ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "La côte fleurie, le Calvados et la Normandie principalement. Nous avons aussi des biens en Corse et en région parisienne.",
+        text: "Depuis notre agence de Bavent, nous intervenons principalement à Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et dans les communes voisines de la Côte Fleurie et du Calvados. Nous avons aussi des biens en Corse et en région parisienne.",
       },
     },
   ],

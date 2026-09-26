@@ -2,11 +2,14 @@ const PROVIDER = process.env.APIMO_PROVIDER || "4019";
 const TOKEN = process.env.APIMO_TOKEN || "5ccdef5377bd6f2f41681f17233c7818a3484333";
 const AGENCY = process.env.APIMO_AGENCY || "23650";
 
+/* Catalogue officiel Apimo "property_category" */
 export const APIMO_CATEGORIES = {
   1: "Vente",
   2: "Location",
-  3: "Viager",
-  4: "Saisonnier",
+  3: "Location saisonnière",
+  4: "Programme",
+  5: "Viager",
+  6: "Enchère",
 };
 
 /* Catalogue officiel Apimo "property_type" */
