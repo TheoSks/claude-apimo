@@ -1790,8 +1790,37 @@ function Bien({ props, id, ld, go, m, px }) {
           </div>
         </div>
       </section>
+      {(!p.category || p.category === "Vente") && <LoanSimulator price={p.price} m={m} px={px} />}
       <Footer go={go} m={m} px={px} />
     </main>
+  );
+}
+
+/* ═══════ SIMULATEUR DE PRÊT (partenaire OlistO) ═══════
+   Affiché sous chaque bien en vente. La page OlistO ne permet pas de pré-remplir
+   le montant : on rappelle le prix du bien pour que le visiteur le saisisse. */
+const OLISTO_SIMULATOR_URL = "https://olisto.fr/simulateur-ebimmo/";
+
+function LoanSimulator({ price, m, px }) {
+  return (
+    <section style={{ padding: `${m.xs ? 32 : m.mob ? 40 : 64}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
+      <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
+        <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 8 }}>Simulez le financement de ce bien</h2>
+        <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6, marginBottom: m.xs ? 16 : 20 }}>
+          {price > 0 ? <>Prix du bien : <strong style={{ color: C.mine }}>{Number(price).toLocaleString("fr-FR")} €</strong>. </> : null}
+          Calculez vos mensualités avec notre partenaire courtier OlistO.
+        </p>
+        <iframe
+          src={OLISTO_SIMULATOR_URL}
+          title="Simulateur de prêt immobilier OlistO"
+          loading="lazy"
+          style={{ width: "100%", height: m.xs ? 1250 : m.mob ? 1150 : 1000, border: `1px solid ${C.cinder10}`, borderRadius: 16, background: C.white, display: "block" }}
+        />
+        <a href={OLISTO_SIMULATOR_URL} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, fontSize: 14, color: C.cyan, textDecoration: "underline" }}>
+          Ouvrir le simulateur dans un nouvel onglet
+        </a>
+      </div>
+    </section>
   );
 }
 
