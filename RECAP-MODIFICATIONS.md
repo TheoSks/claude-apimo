@@ -6,6 +6,18 @@ Toutes les modifications ci-dessous sont **en ligne** (poussées sur la branche)
 
 ---
 
+## ✅ Corrections du 26/09/2026 (par ordre de priorité)
+
+1. **Types de biens erronés** → le site utilisait une mauvaise table des types Apimo : une maison pouvait s'afficher « Maison / Entrepôt », un appartement « Appartement / Bureau », un commerce « Parking ». Remplacée par le **catalogue officiel Apimo** (types + sous-types). Les pages « Local commercial » et « Immeuble » se remplissent désormais correctement.
+2. **« Salle de bains » au lieu de « Chambres »** sur la fiche d'un bien → le badge affiche maintenant le **nombre de chambres**.
+3. **Logo absent dans Google** → le fichier `favicon.ico` n'existait pas. Création des icônes à partir du logo E&B (favicon, 48/96/192/512 px, icône Apple) + logo déclaré dans les données structurées. _Google met à jour l'icône en quelques jours à quelques semaines ; on peut accélérer via Google Search Console → « Demander une indexation » de la page d'accueil._
+4. **Giulia retirée** de l'équipe (et ses photos supprimées).
+5. **Secteur géographique** → Deauville et Trouville retirés ; mise en avant de **Bavent, Cabourg, Troarn, Merville-Franceville et Petiville** (titres Google, descriptions, pages ville, estimation, guides). Les anciennes pages Deauville/Trouville redirigent vers Cabourg.
+6. **Audit complet des 106 annonces** (26/09) → au-delà du type, la **catégorie** (« Vente » affichée « Appartement »), l'**état** et le **chauffage** (affichés « Terrain », « Local »…) étaient traduits avec la mauvaise table. **Avant : 106 annonces sur 106 avaient au moins une information fausse ; après : 0.** Chaque champ utilise désormais sa propre table officielle Apimo. Ajout du nombre de **salles de bains / d'eau** (compté depuis les pièces saisies dans Apimo).
+7. **Villes dans les textes visibles** → sous-titre de l'accueil, section « Explorer tout », FAQ, pied de page (texte + colonne « Nos secteurs » avec liens vers chaque page ville).
+
+---
+
 ## ✅ Modifications réalisées
 
 ### Page d'accueil & général

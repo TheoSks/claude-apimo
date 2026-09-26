@@ -9,31 +9,67 @@ const APIMO_TOKEN = "5ccdef5377bd6f2f41681f17233c7818a3484333";
 const APIMO_AGENCY = "23650";
 const FALLBACK_API = "https://tst-drab-eta.vercel.app/api/properties";
 
-/* Apimo type/category ID mappings → French labels */
-const APIMO_CATEGORIES = { 1: "Vente", 2: "Location", 3: "Viager", 4: "Saisonnier" };
+/* Catalogues officiels Apimo (api.apimo.pro/catalogs/…?culture=fr) → libellés français.
+   Chaque champ a SA table : ne jamais traduire un identifiant avec la table d'un autre champ. */
+const APIMO_CATEGORIES = { 1: "Vente", 2: "Location", 3: "Location saisonnière", 4: "Programme", 5: "Viager", 6: "Enchère" };
+/* Catalogue "property_type" */
 const APIMO_TYPES = {
-  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Parking", 5: "Bureau",
-  6: "Commerce", 7: "Immeuble", 8: "Loft", 9: "Château", 10: "Local",
-  11: "Villa", 12: "Ferme", 13: "Propriété", 14: "Manoir", 15: "Hôtel particulier",
-  16: "Programme neuf", 17: "Fonds de commerce", 18: "Entrepôt", 19: "Chambre",
-  20: "Studio", 21: "Duplex", 22: "Triplex",
+  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Commerce", 5: "Garage / Parking",
+  6: "Immeuble", 7: "Bureau", 8: "Bateau", 9: "Local d'activité / Entrepôt", 10: "Cave / Box",
 };
 
-function resolveApimoField(field) {
-  if (!field) return "";
-  if (typeof field === "string") return field;
-  if (typeof field === "object" && field.name) return field.name;
-  if (typeof field === "number") return APIMO_TYPES[field] || APIMO_CATEGORIES[field] || "";
+/* Catalogue officiel Apimo "property_subtype" (sous-types) */
+const APIMO_SUBTYPES = {
+  1: "Triplex", 2: "Terrain constructible", 3: "Terrain inconstructible", 4: "Penthouse",
+  5: "Appartement", 6: "Studio", 7: "Château", 8: "Commerce", 9: "Duplex", 10: "Manoir",
+  11: "Ferme", 12: "Loft", 13: "Maison de village", 14: "Villa", 15: "Appartement villa",
+  16: "Grange", 17: "Ruine", 18: "Maison", 19: "Propriété", 20: "Ensemble immobilier",
+  21: "Moulin", 22: "Garage", 23: "Fermette", 24: "Immeuble", 25: "Maison de ville",
+  27: "Chaumière", 29: "Hangar", 31: "Local", 32: "Chalet", 33: "Local commercial",
+  34: "Fonds de commerce", 35: "Droit au bail", 36: "Bureau", 37: "Hôtel particulier",
+  39: "Exploitation agricole", 40: "Cave", 41: "Entrepôt", 43: "Parking", 44: "Hôtel",
+  45: "Haras", 46: "Terrain", 52: "Péniche", 55: "Domaine équestre", 56: "Maison d'hôtes",
+  57: "Gîte", 59: "Box", 63: "Atelier", 70: "Maison de plain-pied", 71: "Maison jumelée",
+  73: "Maison de plage", 78: "Terrain résidentiel", 79: "Terrain commercial", 80: "Lotissement",
+  83: "Maison individuelle", 88: "Pavillon", 103: "Terrain agricole",
+  104: "Local et fonds de commerce", 111: "Dépendance",
+};
+
+/* Catalogue "property_condition" */
+const APIMO_CONDITIONS = { 1: "À rafraîchir", 3: "Bon état", 5: "À rénover", 6: "Excellent état", 7: "Brut de béton", 8: "Neuf" };
+/* Catalogues "property_heating_device" et "property_heating_type" */
+const APIMO_HEATING_DEVICES = { 1: "Convecteur", 2: "Au sol", 3: "Radiateur", 4: "Poêle", 5: "Climatisation", 6: "Central", 7: "Sans chauffage", 8: "Cheminée" };
+const APIMO_HEATING_TYPES = {
+  1: "Gaz", 2: "Fioul / Mazout", 3: "Électrique", 4: "Bois", 5: "Solaire", 6: "Charbon", 7: "Pompe à chaleur",
+  8: "Géothermie", 9: "Granulés / Pellets de bois", 10: "Eau chaude", 11: "Aérothermie", 12: "Copeaux de bois",
+};
+/* Catalogue "property_areas" : pièces comptées comme salles de bains / salles d'eau */
+const APIMO_BATHROOM_AREAS = [8, 13, 41, 42];
+
+/* Traduit un identifiant Apimo avec la table du champ concerné. */
+function apimoLabel(catalog, field) {
+  if (field === null || field === undefined || field === "") return "";
+  if (typeof field === "object") return field.name || "";
+  if (/^\d+$/.test(String(field))) return catalog[Number(field)] || "";
   return String(field);
 }
+const resolveSubtype = (field) => apimoLabel(APIMO_SUBTYPES, field);
 
-/* Correctif d'affichage : certains biens sont saisis "Parking" (type 4) dans Apimo
-   alors que ce sont des locaux commerciaux (prix élevés). On rétablit le bon libellé
-   côté site, sans dépendre d'une correction dans Apimo. */
+/* Libellé du type générique ("Maison", "Terrain", "Commerce"…). */
 function correctedTypeLabel(p) {
-  const price = p?.price?.value || 0;
-  if (Number(p?.type) === 4 && price > 50000) return "Local commercial";
-  return resolveApimoField(p?.type);
+  return apimoLabel(APIMO_TYPES, p?.type);
+}
+
+function heatingLabel(h) {
+  if (!h) return "";
+  const device = apimoLabel(APIMO_HEATING_DEVICES, h.device);
+  const energy = apimoLabel(APIMO_HEATING_TYPES, h.type);
+  return [device, energy].filter(Boolean).join(" – ");
+}
+
+function bathroomCount(p) {
+  return (p.areas || []).filter(a => APIMO_BATHROOM_AREAS.includes(Number(a.type)))
+    .reduce((n, a) => n + (Number(a.number) || 1), 0);
 }
 
 /* Format title like ebimmo.com: "MAISON DE VILLE A RENOVER – 63M² – BIEVILLE-BEUVILLE" */
@@ -41,7 +77,7 @@ function fmtTitle(p) {
   /* 1. If Apimo provides a name, use it directly */
   if (p.name && p.name.length > 3) return p.name.toUpperCase();
   /* 2. Otherwise build from type + area + city */
-  const type = correctedTypeLabel(p) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
+  const type = correctedTypeLabel(p) || resolveSubtype(p.subtype) || "Bien";
   const area = p.area?.value || p.area?.total || 0;
   const areaStr = area ? `${area}M²` : "";
   const city = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
@@ -52,13 +88,13 @@ function fmtTitle(p) {
 function fmtDesc(p) {
   const raw = (p.comments || []).map(c => c.comment).filter(Boolean).join("\n\n");
   if (raw && raw.length > 30) return raw;
-  const type = (resolveApimoField(p.type) || resolveApimoField(p.subtype) || "bien").toLowerCase();
+  const type = (resolveSubtype(p.subtype) || correctedTypeLabel(p) || "bien").toLowerCase();
   const rooms = p.rooms || 0;
   const beds = p.bedrooms || 0;
   const area = p.area?.value || p.area?.total || 0;
   const cityName = typeof p.city === "object" ? (p.city?.name || "Normandie") : (p.city || "Normandie");
   const zip = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
-  const isFem = type === "maison" || type === "villa" || type.endsWith("e");
+  const isFem = /^(maison|villa|propriété|ferme|grange|chaumière|péniche)/.test(type) || type.endsWith("e");
   const lines = [];
   lines.push(`NOUVEAUTÉ CHEZ E&B IMMO`);
   if (area > 0) {
@@ -74,8 +110,8 @@ function fmtDesc(p) {
 function normalizeApimo(p) {
   const photos = (p.pictures || []).map(pic => pic.url).filter(Boolean);
   const typeName = correctedTypeLabel(p);
-  const subtypeName = resolveApimoField(p.subtype);
-  const categoryName = resolveApimoField(p.category);
+  const subtypeName = resolveSubtype(p.subtype);
+  const categoryName = apimoLabel(APIMO_CATEGORIES, p.category);
   const cityName = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
   const zipCode = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
   /* Extract services/amenities */
@@ -96,7 +132,7 @@ function normalizeApimo(p) {
     id: p.id, title: p.name || fmtTitle(p),
     displayTitle: fmtTitle(p),
     price: p.price?.value || 0, rooms: p.rooms || 0, bedrooms: p.bedrooms || 0,
-    bathrooms: p.bathrooms || 0,
+    bathrooms: p.bathrooms || bathroomCount(p),
     area: { value: p.area?.value || 0, total: p.area?.total || 0 },
     city: cityName, zipcode: zipCode, reference: p.reference || "",
     thumbnail: photos[0] || "", photos, url: p.url || "",
@@ -108,12 +144,12 @@ function normalizeApimo(p) {
     regulations,
     virtualTour,
     agent,
-    condition: p.condition?.name || resolveApimoField(p.condition) || "",
+    condition: apimoLabel(APIMO_CONDITIONS, p.condition),
     createdAt: p.created_at || "",
     step: p.step,
     status: p.status,
     availability: p.available_at || p.availability || "",
-    heating: p.heating ? (p.heating.device?.name || resolveApimoField(p.heating?.device) || "") : "",
+    heating: heatingLabel(p.heating),
     _raw: p,
   };
 }
@@ -816,7 +852,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
                 <input value={cityText} autoFocus onFocus={() => setShowCitySug(true)}
                   onChange={e => { setCityText(e.target.value); setShowCitySug(true); }}
                   onBlur={e => setSq(q => ({ ...q, city: e.target.value }))}
-                  placeholder="Ex : Cabourg, Deauville…"
+                  placeholder="Ex : Cabourg, Bavent…"
                   style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 12px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box", color: C.mine }} />
                 {showCitySug && citySuggestions.length > 0 && (
                   <div style={{ position: "absolute", left: 0, right: 0, top: 46, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 200, overflowY: "auto", zIndex: 60 }}>
@@ -1161,6 +1197,9 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
               <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block" }}>Agence de la côte fleurie</span></span>
               <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}><span className="hl" style={{ display: "block" }}>et alentours</span></span>
             </h1>
+            <p style={{ fontSize: m.xs ? 15 : m.mob ? 17 : 20, fontWeight: 400, color: C.white, lineHeight: 1.5, margin: 0, maxWidth: 620, textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}>
+              Agence immobilière à Bavent : achat, vente et estimation à Cabourg, Troarn, Merville-Franceville, Petiville et alentours.
+            </p>
             <div className="hero-cta" style={{ opacity: 0 }}><PillBtn variant="outline-white" onClick={() => go("annonces")}>Commencer à découvrir</PillBtn></div>
           </div>
         </div>
@@ -1206,7 +1245,7 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
               <span style={{ fontSize: m.xs ? 14 : m.mob ? 16 : 20, fontWeight: 400, display: "block", marginBottom: 12, color: C.abbey }}>Explorer tout</span>
               <h2 style={{ fontSize: "clamp(22px, 5vw, 44px)", fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>L'Évolution d'une Passion Immobilière</h2>
               <p style={{ fontSize: m.xs ? 14 : m.mob ? 15 : 17, fontWeight: 400, lineHeight: 1.65, color: C.abbey, marginBottom: m.xs ? 24 : 32 }}>
-                Depuis 2017, nous vous accompagnons dans tous vos projets immobiliers avec professionnalisme et passion.
+                Depuis 2017, notre agence de Bavent vous accompagne dans tous vos projets immobiliers à Cabourg, Troarn, Merville-Franceville, Petiville et sur toute la Côte Fleurie, avec professionnalisme et passion.
               </p>
               {[
                 { t: "Votre partenaire immobilier dévoué", d: "Nous conseillons et guidons à chaque étape de votre démarche.", icon: "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" },
@@ -1261,9 +1300,9 @@ function Home({ props, ld, go, m, px, sq, setSq, budgetRange, setBudgetRange, ar
         </Rv>
         <Rv d={1}>
           <div>
-            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée en 2017. Nous accompagnons nos clients dans leurs projets d'achat, vente et location en Normandie." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={1} q="Qui sommes-nous ?" a="E&B Immo est une agence immobilière créée par Emeline Burel et Benjamin, fondée en 2017. Nous accompagnons nos clients dans leurs projets d'achat, vente et location depuis notre agence de Bavent, à deux pas de Cabourg, Troarn, Merville-Franceville et Petiville." />
             <FaqItem mob={m.mob} xs={m.xs} idx={2} q="Comment prendre rendez-vous ?" a="Contactez-nous au +33 7 60 95 36 18 ou par email à contact@eb-immo.fr. Nous répondrons rapidement pour fixer un rendez-vous." />
-            <FaqItem mob={m.mob} xs={m.xs} idx={3} q="Quelle zone géographique couvrez-vous ?" a="La côte fleurie, le Calvados et la Normandie principalement. Nous avons aussi des biens en Corse et en région parisienne." />
+            <FaqItem mob={m.mob} xs={m.xs} idx={3} q="Quelle zone géographique couvrez-vous ?" a="Depuis notre agence de Bavent, nous intervenons principalement à Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et dans les communes voisines de la Côte Fleurie et du Calvados. Nous avons aussi des biens en Corse et en région parisienne." />
           </div>
         </Rv>
       </section>
@@ -1595,7 +1634,7 @@ function Bien({ props, id, ld, go, m, px }) {
             <div style={{ display: "flex", gap: m.xs ? 10 : m.mob ? 12 : 20, marginBottom: m.xs ? 28 : 36, flexWrap: "wrap" }}>
               {[
                 p.rooms > 0 && [`${p.rooms} Pièce${p.rooms > 1 ? "s" : ""}`, "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"],
-                [`${p.bedrooms || 0} Salle de bains`, "M21 10H7M21 6H3M21 14H3M21 18H7"],
+                p.bedrooms > 0 && [`${p.bedrooms} Chambre${p.bedrooms > 1 ? "s" : ""}`, "M3 18V8M3 14h18v4M21 18v-6a2 2 0 0 0-2-2h-8v4M7 12a1.5 1.5 0 1 0 0-.01"],
                 area > 0 && [`${area} m²`, "M3 3h18v18H3zM3 9h18M9 3v18"],
               ].filter(Boolean).map(([label, icon], i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: m.mob ? 14 : 15, color: C.mine, fontWeight: 500 }}>
@@ -1639,7 +1678,7 @@ function Bien({ props, id, ld, go, m, px }) {
               <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", columnGap: m.mob ? 0 : 48, rowGap: 0 }}>
                 {[
                   p.category && ["Catégorie", p.category],
-                  p.type && ["Type", `${p.type}${p.subtype ? ` / ${p.subtype}` : ""}`],
+                  p.type && ["Type", `${p.type}${p.subtype && p.subtype !== p.type ? ` / ${p.subtype}` : ""}`],
                   p.condition && ["État", p.condition],
                   p.availability && ["Disponibilité", p.availability],
                   area > 0 && ["Surfaces", `${area} m²`],
@@ -1647,7 +1686,7 @@ function Bien({ props, id, ld, go, m, px }) {
                   ["Prix", `€ ${Number(p.price).toLocaleString("fr-FR")}`],
                   p.rooms > 0 && ["Pièces", p.rooms],
                   p.bedrooms > 0 && ["Chambres", p.bedrooms],
-                  p.bathrooms > 0 && ["Salles de bains", p.bathrooms],
+                  p.bathrooms > 0 && ["Salles de bains / d'eau", p.bathrooms],
                   p.heating && ["Chauffage", p.heating],
                   p.reference && ["Référence", p.reference],
                 ].filter(Boolean).map(([label, value], i) => (
@@ -1751,8 +1790,37 @@ function Bien({ props, id, ld, go, m, px }) {
           </div>
         </div>
       </section>
+      {(!p.category || p.category === "Vente") && <LoanSimulator price={p.price} m={m} px={px} />}
       <Footer go={go} m={m} px={px} />
     </main>
+  );
+}
+
+/* ═══════ SIMULATEUR DE PRÊT (partenaire OlistO) ═══════
+   Affiché sous chaque bien en vente. La page OlistO ne permet pas de pré-remplir
+   le montant : on rappelle le prix du bien pour que le visiteur le saisisse. */
+const OLISTO_SIMULATOR_URL = "https://olisto.fr/simulateur-ebimmo/";
+
+function LoanSimulator({ price, m, px }) {
+  return (
+    <section style={{ padding: `${m.xs ? 32 : m.mob ? 40 : 64}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
+      <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
+        <h2 style={{ fontSize: m.xs ? 18 : m.mob ? 20 : 24, fontWeight: 600, color: C.bush, marginBottom: 8 }}>Simulez le financement de ce bien</h2>
+        <p style={{ fontSize: m.xs ? 14 : 15, color: C.abbey, lineHeight: 1.6, marginBottom: m.xs ? 16 : 20 }}>
+          {price > 0 ? <>Prix du bien : <strong style={{ color: C.mine }}>{Number(price).toLocaleString("fr-FR")} €</strong>. </> : null}
+          Calculez vos mensualités avec notre partenaire courtier OlistO.
+        </p>
+        <iframe
+          src={OLISTO_SIMULATOR_URL}
+          title="Simulateur de prêt immobilier OlistO"
+          loading="lazy"
+          style={{ width: "100%", height: m.xs ? 1250 : m.mob ? 1150 : 1000, border: `1px solid ${C.cinder10}`, borderRadius: 16, background: C.white, display: "block" }}
+        />
+        <a href={OLISTO_SIMULATOR_URL} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, fontSize: 14, color: C.cyan, textDecoration: "underline" }}>
+          Ouvrir le simulateur dans un nouvel onglet
+        </a>
+      </div>
+    </section>
   );
 }
 
@@ -1929,7 +1997,6 @@ function Apropos({ go, m, px }) {
   const team = [
     { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr", photo: "/team-emeline.png" },
     { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr", photo: "/team-benjamin.png" },
-    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr", photo: "/team-giulia.jpeg" },
     { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr", photo: "/team-aurelia.png" },
     { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr", photo: "/team-angelique.png" },
     { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr", photo: "/team-josselin.png" },
@@ -2091,6 +2158,12 @@ function ProtocoleRGPD({ go, m, px }) {
 }
 
 /* ═══════ FOOTER ═══════ */
+/* Communes mises en avant (liens vers les pages /agence/<ville>, utiles au référencement local) */
+const SECTEURS = [
+  ["bavent", "Bavent"], ["cabourg", "Cabourg"], ["troarn", "Troarn"],
+  ["merville-franceville-plage", "Merville-Franceville"], ["petiville", "Petiville"],
+];
+
 function Footer({ go, m, px }) {
   return (
     <footer style={{ padding: `${m.xs ? 40 : m.mob ? 48 : 80}px ${px} 24px`, maxWidth: 1440, margin: "0 auto" }}>
@@ -2098,7 +2171,7 @@ function Footer({ go, m, px }) {
         <div style={{ maxWidth: m.mob ? "100%" : 300, flexShrink: 0 }}>
           <img src={LOGO} alt="E&B Immo" style={{ width: 100, marginBottom: 16 }} />
           <p style={{ fontSize: m.xs ? 14 : 15, color: C.bush, lineHeight: 1.65, marginBottom: 20 }}>
-            Votre partenaire de confiance pour tous vos besoins immobiliers.
+            Agence immobilière à Bavent, votre partenaire de confiance à Cabourg, Troarn, Merville-Franceville, Petiville et sur la Côte Fleurie.
           </p>
           <PillBtn variant="outline-cyan" onClick={() => go("contact")} style={{ fontSize: 14, padding: "8px 22px" }}>Prendre contact</PillBtn>
         </div>
@@ -2109,6 +2182,12 @@ function Footer({ go, m, px }) {
               <a key={i} onClick={() => go(["home", "annonces", "estimation", "contact"][i])} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>{l}</a>
             ))}
             <a href="/bareme-honoraires-2026.pdf" target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, cursor: "pointer", marginBottom: 10, lineHeight: 1.6 }}>Honoraires</a>
+          </div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Nos secteurs</h4>
+            {SECTEURS.map(([slug, name]) => (
+              <a key={slug} href={`/agence/${slug}`} style={{ display: "block", fontSize: m.xs ? 14 : 15, fontWeight: 500, color: C.abbey, textDecoration: "none", marginBottom: 10, lineHeight: 1.6 }}>Immobilier {name}</a>
+            ))}
           </div>
           <div style={{ flex: 1, minWidth: m.xs ? 140 : 160 }}>
             <h4 style={{ fontSize: 16, fontWeight: 500, color: C.bush, marginBottom: 14 }}>Contact</h4>

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { GUIDES, findGuide } from "../../_lib/guides";
 import { SeoHeader, SeoFooter, SEO_COLORS as C } from "../../_components/SeoShell";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 export async function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));

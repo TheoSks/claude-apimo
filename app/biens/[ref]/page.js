@@ -15,7 +15,7 @@ import {
 import { findCity } from "../../_lib/cities";
 import EBImmo from "../../eb-immo";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 export const revalidate = 600;
 

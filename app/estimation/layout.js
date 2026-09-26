@@ -1,8 +1,8 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
-const title = "Estimation immobilière gratuite en ligne — Deauville, Côte Fleurie";
+const title = "Estimation immobilière gratuite en ligne — Bavent, Cabourg, Côte Fleurie";
 const description =
-  "Estimez gratuitement et en 2 minutes la valeur de votre bien immobilier sur la Côte Fleurie (Deauville, Trouville, Honfleur, Cabourg…). Estimation en ligne réalisée par un agent E&B Immo, sans engagement.";
+  "Estimez gratuitement et en 2 minutes la valeur de votre bien immobilier sur la Côte Fleurie (Bavent, Cabourg, Troarn, Merville-Franceville, Petiville…). Estimation en ligne réalisée par un agent E&B Immo, sans engagement.";
 const url = `${SITE_URL}/estimation`;
 
 export const metadata = {
@@ -29,8 +29,8 @@ const serviceLd = {
   description,
   url,
   areaServed: [
-    "Deauville", "Trouville-sur-Mer", "Honfleur", "Cabourg", "Houlgate",
-    "Villers-sur-Mer", "Blonville-sur-Mer", "Varaville", "Côte Fleurie", "Calvados", "Normandie",
+    "Bavent", "Cabourg", "Troarn", "Merville-Franceville-Plage", "Petiville",
+    "Varaville", "Houlgate", "Côte Fleurie", "Calvados", "Normandie",
   ].map((name) => ({ "@type": "City", name })),
   provider: {
     "@type": "RealEstateAgent",
@@ -67,7 +67,7 @@ const faqLd = {
       name: "Sur quelles communes estimez-vous les biens ?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "E&B Immo estime les biens sur toute la Côte Fleurie : Deauville, Trouville-sur-Mer, Honfleur, Cabourg, Houlgate, Villers-sur-Mer, Blonville-sur-Mer, Varaville et les communes environnantes du Calvados.",
+        text: "E&B Immo estime les biens sur toute la Côte Fleurie et ses alentours : Bavent, Cabourg, Troarn, Merville-Franceville-Plage, Petiville, Varaville, Houlgate et les communes environnantes du Calvados.",
       },
     },
     {

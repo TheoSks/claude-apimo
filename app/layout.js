@@ -1,23 +1,24 @@
 import "./globals.css";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ebimmo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "E&B Immo — Agence immobilière Deauville, Trouville, Honfleur | Côte Fleurie",
+    default: "E&B Immo — Agence immobilière Bavent, Cabourg, Troarn | Côte Fleurie",
     template: "%s | E&B Immo",
   },
   description:
-    "E&B Immo, agence immobilière sur la Côte Fleurie. Achat, vente, location et estimation gratuite à Deauville, Trouville, Honfleur, Cabourg, Houlgate et alentours en Normandie.",
+    "E&B Immo, agence immobilière sur la Côte Fleurie. Achat, vente, location et estimation gratuite à Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et alentours en Normandie.",
   keywords: [
-    "agence immobilière Deauville",
-    "agence immobilière Trouville",
-    "agence immobilière Honfleur",
+    "agence immobilière Bavent",
     "agence immobilière Cabourg",
+    "agence immobilière Troarn",
+    "agence immobilière Merville-Franceville",
+    "agence immobilière Petiville",
     "immobilier Côte Fleurie",
     "immobilier Normandie",
-    "vente maison Deauville",
+    "vente maison Cabourg",
     "villa bord de mer Normandie",
     "estimation immobilière gratuite",
     "E&B Immo",
@@ -46,7 +47,7 @@ export const metadata = {
     siteName: "E&B Immo",
     title: "E&B Immo — Agence immobilière de la Côte Fleurie",
     description:
-      "Achat, vente, location et estimation gratuite sur Deauville, Trouville, Honfleur, Cabourg et la Côte Fleurie.",
+      "Achat, vente, location et estimation gratuite sur Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et la Côte Fleurie.",
     images: [
       {
         url: "/hero-drone.jpg",
@@ -63,7 +64,18 @@ export const metadata = {
       "Achat, vente, location et estimation gratuite sur la Côte Fleurie en Normandie.",
     images: ["/hero-drone.jpg"],
   },
-  icons: { icon: "/favicon.ico" },
+  // Logo affiché par Google à côté du site dans les résultats de recherche
+  // (Google exige une icône carrée, multiple de 48 px, accessible au robot).
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
+      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  manifest: "/manifest.webmanifest",
   formatDetection: { telephone: true, email: true, address: true },
 };
 
@@ -78,21 +90,26 @@ const jsonLd = {
   "@type": "RealEstateAgent",
   name: "E&B Immo",
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.ico`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${SITE_URL}/icon-512.png`,
+    width: 512,
+    height: 512,
+  },
   image: `${SITE_URL}/hero-drone.jpg`,
   description:
-    "Agence immobilière sur la Côte Fleurie : achat, vente, location et estimation à Deauville, Trouville, Honfleur, Cabourg et alentours.",
+    "Agence immobilière sur la Côte Fleurie : achat, vente, location et estimation à Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et alentours.",
   email: "contact@eb-immo.fr",
   telephone: "+33760953618",
   priceRange: "€€€",
   areaServed: [
-    { "@type": "City", name: "Deauville" },
-    { "@type": "City", name: "Trouville-sur-Mer" },
-    { "@type": "City", name: "Honfleur" },
+    { "@type": "City", name: "Bavent" },
     { "@type": "City", name: "Cabourg" },
+    { "@type": "City", name: "Troarn" },
+    { "@type": "City", name: "Merville-Franceville-Plage" },
+    { "@type": "City", name: "Petiville" },
+    { "@type": "City", name: "Varaville" },
     { "@type": "City", name: "Houlgate" },
-    { "@type": "City", name: "Villers-sur-Mer" },
-    { "@type": "City", name: "Blonville-sur-Mer" },
     { "@type": "AdministrativeArea", name: "Côte Fleurie" },
     { "@type": "AdministrativeArea", name: "Calvados" },
     { "@type": "AdministrativeArea", name: "Normandie" },
@@ -101,7 +118,9 @@ const jsonLd = {
     "@type": "PostalAddress",
     addressCountry: "FR",
     addressRegion: "Normandie",
-    addressLocality: "Deauville",
+    streetAddress: "3 place du Commerce",
+    postalCode: "14860",
+    addressLocality: "Bavent",
   },
   contactPoint: {
     "@type": "ContactPoint",
@@ -121,7 +140,6 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
