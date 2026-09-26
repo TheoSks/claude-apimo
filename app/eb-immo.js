@@ -1801,7 +1801,76 @@ function Bien({ props, id, ld, go, m, px }) {
    le montant : on rappelle le prix du bien pour que le visiteur le saisisse. */
 const OLISTO_SIMULATOR_URL = "https://olisto.fr/simulateur-ebimmo/";
 
+/* Hauteur de la page OlistO selon la largeur du cadre (mesurée : 1 365 px en
+   2 colonnes ; ~1 800 à 1 980 px en 1 colonne, sous 782 px de large), avec une
+   marge pour ne jamais avoir de défilement interne. */
+function olistoHeight(width) {
+  if (!width || width >= 782) return 1400;
+  return Math.round(1880 + Math.max(0, 700 - width) * 0.75);
+}
+
 function LoanSimulator({ price, m, px }) {
+  const boxRef = useRef(null);
+  const [width, setWidth] = useState(0);
+  const [visible, setVisible] = useState(false);
+
+  /* Largeur réelle du cadre → hauteur adaptée */
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const update = () => setWidth(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /* Chargement uniquement quand le simulateur arrive à l'écran : tant que le
+     visiteur lit l'annonce, la page OlistO n'existe pas et ne peut rien déclencher. */
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el || visible) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); io.disconnect(); } });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+
+  /* Pendant son chargement, la page OlistO place le curseur dans son simulateur, ce qui
+     fait défiler notre page jusqu'à lui (défilement fluide, par petits pas). Dès que le
+     cadre apparaît et jusqu'à 4 s après son chargement : si le focus part dans le cadre,
+     on fige la position de la page pendant 1,5 s, ce qui annule ce défilement. Un geste
+     du visiteur (molette, doigt, clavier) lève immédiatement le blocage. */
+  const frameRef = useRef(null);
+  const stopGuardRef = useRef(null);
+  useEffect(() => {
+    if (!visible) return;
+    let lastY = window.scrollY, lockY = 0, lockUntil = 0;
+    const release = () => { lockUntil = 0; };
+    const onBlur = () => setTimeout(() => {
+      if (document.activeElement === frameRef.current) { lockY = lastY; lockUntil = Date.now() + 1500; }
+    }, 0);
+    const onScroll = () => {
+      if (Date.now() < lockUntil) { if (window.scrollY !== lockY) window.scrollTo({ top: lockY, behavior: "instant" }); }
+      else lastY = window.scrollY;
+    };
+    const userEvts = ["wheel", "touchstart", "keydown"];
+    userEvts.forEach(e => window.addEventListener(e, release, { passive: true }));
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    let timer = null;
+    const stop = () => {
+      clearTimeout(timer);
+      userEvts.forEach(e => window.removeEventListener(e, release));
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("scroll", onScroll);
+    };
+    timer = setTimeout(stop, 15000); /* filet de sécurité si le cadre ne finit jamais de charger */
+    stopGuardRef.current = () => { clearTimeout(timer); timer = setTimeout(stop, 4000); };
+    return stop;
+  }, [visible]);
+  const onFrameLoad = useCallback(() => { stopGuardRef.current?.(); }, []);
+
+  const height = olistoHeight(width);
   return (
     <section style={{ padding: `${m.xs ? 32 : m.mob ? 40 : 64}px ${px} 0`, maxWidth: 1440, margin: "0 auto" }}>
       <div style={{ borderTop: `1px solid ${C.cinder10}`, paddingTop: m.xs ? 22 : 28 }}>
@@ -1810,12 +1879,19 @@ function LoanSimulator({ price, m, px }) {
           {price > 0 ? <>Prix du bien : <strong style={{ color: C.mine }}>{Number(price).toLocaleString("fr-FR")} €</strong>. </> : null}
           Calculez vos mensualités avec notre partenaire courtier OlistO.
         </p>
-        <iframe
-          src={OLISTO_SIMULATOR_URL}
-          title="Simulateur de prêt immobilier OlistO"
-          loading="lazy"
-          style={{ width: "100%", height: m.xs ? 1250 : m.mob ? 1150 : 1000, border: `1px solid ${C.cinder10}`, borderRadius: 16, background: C.white, display: "block" }}
-        />
+        <div ref={boxRef} style={{ width: "100%", height, border: `1px solid ${C.cinder10}`, borderRadius: 16, overflow: "hidden", background: C.white }}>
+          {visible ? (
+            <iframe
+              ref={frameRef}
+              src={OLISTO_SIMULATOR_URL}
+              title="Simulateur de prêt immobilier OlistO"
+              onLoad={onFrameLoad}
+              style={{ width: "100%", height: "100%", border: 0, display: "block" }}
+            />
+          ) : (
+            <div style={{ padding: 24, fontSize: 14, color: C.abbey }}>Chargement du simulateur…</div>
+          )}
+        </div>
         <a href={OLISTO_SIMULATOR_URL} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, fontSize: 14, color: C.cyan, textDecoration: "underline" }}>
           Ouvrir le simulateur dans un nouvel onglet
         </a>
