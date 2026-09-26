@@ -1,30 +1,12 @@
 export const CITIES = [
   {
-    slug: "deauville",
-    name: "Deauville",
-    zipcode: "14800",
+    slug: "bavent",
+    name: "Bavent",
+    zipcode: "14860",
     intro:
-      "Station balnéaire mythique de la Côte Fleurie, Deauville séduit par ses villas Belle Époque, ses Planches et son art de vivre. E&B Immo vous accompagne dans l'achat, la vente et l'estimation de biens d'exception à Deauville.",
-    priceApt: [6000, 9000],
-    priceHouse: [6500, 10000],
-  },
-  {
-    slug: "trouville-sur-mer",
-    name: "Trouville-sur-Mer",
-    zipcode: "14360",
-    intro:
-      "Authentique port de pêche devenu station balnéaire prisée, Trouville-sur-Mer offre un marché immobilier dynamique entre appartements vue mer et maisons de caractère.",
-    priceApt: [5000, 7500],
-    priceHouse: [4500, 7000],
-  },
-  {
-    slug: "honfleur",
-    name: "Honfleur",
-    zipcode: "14600",
-    intro:
-      "Port classé et joyau architectural, Honfleur conjugue patrimoine, charme normand et art de vivre. Découvrez nos biens à la vente et à la location à Honfleur.",
-    priceApt: [4500, 6500],
-    priceHouse: [4000, 6500],
+      "Siège de l'agence E&B Immo, Bavent offre un cadre de vie paisible entre marais de la Dives, campagne normande et plages de la Côte Fleurie à quelques minutes. Maisons familiales, terrains à bâtir et biens de caractère : découvrez nos annonces à Bavent et Robehomme.",
+    priceApt: [2500, 3500],
+    priceHouse: [2600, 3800],
   },
   {
     slug: "cabourg",
@@ -34,6 +16,42 @@ export const CITIES = [
       "Reine de la Côte Fleurie, Cabourg séduit par sa Promenade Marcel-Proust et son ambiance Belle Époque. Vente, achat et estimation de biens à Cabourg.",
     priceApt: [5000, 7000],
     priceHouse: [4500, 6500],
+  },
+  {
+    slug: "troarn",
+    name: "Troarn",
+    zipcode: "14670",
+    intro:
+      "Commune dynamique entre Caen et la mer, Troarn allie commerces, écoles et accès rapide à l'A13. Un marché recherché par les familles : maisons avec jardin, pavillons récents et terrains constructibles.",
+    priceApt: [2200, 3000],
+    priceHouse: [2300, 3300],
+  },
+  {
+    slug: "merville-franceville-plage",
+    name: "Merville-Franceville-Plage",
+    zipcode: "14810",
+    intro:
+      "Entre l'estuaire de l'Orne et Cabourg, Merville-Franceville-Plage offre de grandes plages de sable, des dunes préservées et un marché immobilier prisé en résidence principale comme secondaire.",
+    priceApt: [3800, 5500],
+    priceHouse: [3500, 5500],
+  },
+  {
+    slug: "petiville",
+    name: "Petiville",
+    zipcode: "14390",
+    intro:
+      "À 7 minutes de Cabourg, Petiville conjugue calme de la campagne et proximité des plages. Maisons familiales et terrains y attirent ceux qui recherchent l'espace à deux pas de la Côte Fleurie.",
+    priceApt: [2600, 3600],
+    priceHouse: [2700, 3800],
+  },
+  {
+    slug: "honfleur",
+    name: "Honfleur",
+    zipcode: "14600",
+    intro:
+      "Port classé et joyau architectural, Honfleur conjugue patrimoine, charme normand et art de vivre. Découvrez nos biens à la vente et à la location à Honfleur.",
+    priceApt: [4500, 6500],
+    priceHouse: [4000, 6500],
   },
   {
     slug: "houlgate",
@@ -58,7 +76,7 @@ export const CITIES = [
     name: "Blonville-sur-Mer",
     zipcode: "14910",
     intro:
-      "Entre Deauville et Villers, Blonville-sur-Mer offre une plage de sable fin et un marché immobilier prisé des résidences secondaires.",
+      "Entre Villers-sur-Mer et Bénerville, Blonville-sur-Mer offre une plage de sable fin et un marché immobilier prisé des résidences secondaires.",
     priceApt: [4000, 5800],
     priceHouse: [3800, 5500],
   },

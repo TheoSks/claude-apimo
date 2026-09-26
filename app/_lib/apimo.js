@@ -9,12 +9,27 @@ export const APIMO_CATEGORIES = {
   4: "Saisonnier",
 };
 
+/* Catalogue officiel Apimo "property_type" */
 export const APIMO_TYPES = {
-  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Parking", 5: "Bureau",
-  6: "Commerce", 7: "Immeuble", 8: "Loft", 9: "Château", 10: "Local",
-  11: "Villa", 12: "Ferme", 13: "Propriété", 14: "Manoir", 15: "Hôtel particulier",
-  16: "Programme neuf", 17: "Fonds de commerce", 18: "Entrepôt", 19: "Chambre",
-  20: "Studio", 21: "Duplex", 22: "Triplex",
+  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Commerce", 5: "Garage / Parking",
+  6: "Immeuble", 7: "Bureau", 8: "Bateau", 9: "Local d'activité / Entrepôt", 10: "Cave / Box",
+};
+
+/* Catalogue officiel Apimo "property_subtype" (sous-types) */
+export const APIMO_SUBTYPES = {
+  1: "Triplex", 2: "Terrain constructible", 3: "Terrain inconstructible", 4: "Penthouse",
+  5: "Appartement", 6: "Studio", 7: "Château", 8: "Commerce", 9: "Duplex", 10: "Manoir",
+  11: "Ferme", 12: "Loft", 13: "Maison de village", 14: "Villa", 15: "Appartement villa",
+  16: "Grange", 17: "Ruine", 18: "Maison", 19: "Propriété", 20: "Ensemble immobilier",
+  21: "Moulin", 22: "Garage", 23: "Fermette", 24: "Immeuble", 25: "Maison de ville",
+  27: "Chaumière", 29: "Hangar", 31: "Local", 32: "Chalet", 33: "Local commercial",
+  34: "Fonds de commerce", 35: "Droit au bail", 36: "Bureau", 37: "Hôtel particulier",
+  39: "Exploitation agricole", 40: "Cave", 41: "Entrepôt", 43: "Parking", 44: "Hôtel",
+  45: "Haras", 46: "Terrain", 52: "Péniche", 55: "Domaine équestre", 56: "Maison d'hôtes",
+  57: "Gîte", 59: "Box", 63: "Atelier", 70: "Maison de plain-pied", 71: "Maison jumelée",
+  73: "Maison de plage", 78: "Terrain résidentiel", 79: "Terrain commercial", 80: "Lotissement",
+  83: "Maison individuelle", 88: "Pavillon", 103: "Terrain agricole",
+  104: "Local et fonds de commerce", 111: "Dépendance",
 };
 
 export function slugify(str) {
@@ -27,7 +42,7 @@ export function slugify(str) {
 }
 
 export function typeLabel(p) {
-  return APIMO_TYPES[p.type] || APIMO_TYPES[p.subtype] || "Bien";
+  return APIMO_TYPES[p.type] || APIMO_SUBTYPES[p.subtype] || "Bien";
 }
 
 export function categoryLabel(p) {

@@ -17,7 +17,7 @@ export async function GET() {
   lines.push("# E&B Immo");
   lines.push("");
   lines.push(
-    "> Agence immobilière indépendante de la Côte Fleurie (Normandie), fondée en 2017 par Emeline Burel et Benjamin. E&B Immo accompagne l'achat, la vente, la location, le viager et l'estimation de biens à Deauville, Trouville-sur-Mer, Honfleur, Cabourg, Houlgate, Villers-sur-Mer, Blonville-sur-Mer et Varaville."
+    "> Agence immobilière indépendante de la Côte Fleurie (Normandie), fondée en 2017 par Emeline Burel et Benjamin. E&B Immo accompagne l'achat, la vente, la location, le viager et l'estimation de biens à Bavent (siège de l'agence), Cabourg, Troarn, Merville-Franceville-Plage, Petiville et leurs alentours."
   );
   lines.push("");
   lines.push("## Coordonnées");

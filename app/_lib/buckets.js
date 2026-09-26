@@ -1,3 +1,8 @@
+/* IDs du catalogue Apimo : type 1 Appartement, 2 Maison, 3 Terrain, 4 Commerce,
+   6 Immeuble, 7 Bureau, 9 Locaux d'activité. Sous-types "prestige" : Château (7),
+   Manoir (10), Villa (14), Propriété (19), Hôtel particulier (37), Haras (45). */
+const PRESTIGE_SUBTYPES = [7, 10, 14, 19, 37, 45];
+
 export const BUCKETS = [
   {
     slug: "vente-maison",
@@ -9,7 +14,7 @@ export const BUCKETS = [
       `Découvrez nos maisons à vendre à ${city} sur la Côte Fleurie. Sélection E&B Immo : maisons de caractère, villas et propriétés en Normandie.`,
     intro: (city) =>
       `Vous cherchez une maison à vendre à ${city} ? E&B Immo vous propose une sélection de maisons et villas en vente à ${city} et sur la Côte Fleurie, du pied-à-terre à la propriété d'exception.`,
-    match: (p) => p.category === 1 && [2, 11, 13, 14, 15].includes(p.type),
+    match: (p) => p.category === 1 && p.type === 2,
   },
   {
     slug: "vente-appartement",
@@ -21,7 +26,7 @@ export const BUCKETS = [
       `Appartements à vendre à ${city} : studios, 2 pièces, 3 pièces et plus. Sélection E&B Immo, agence immobilière de la Côte Fleurie.`,
     intro: (city) =>
       `Découvrez les appartements à vendre à ${city} proposés par E&B Immo. Du studio vue mer au grand appartement familial, notre sélection couvre tous les budgets sur la Côte Fleurie.`,
-    match: (p) => p.category === 1 && [1, 8, 19, 20, 21, 22].includes(p.type),
+    match: (p) => p.category === 1 && p.type === 1,
   },
   {
     slug: "vente-villa",
@@ -33,7 +38,7 @@ export const BUCKETS = [
       `Villas et propriétés d'exception à vendre à ${city}. Découvrez les biens prestige sélectionnés par E&B Immo sur la Côte Fleurie.`,
     intro: (city) =>
       `Explorez nos villas à vendre à ${city}. E&B Immo sélectionne pour vous les plus belles villas Belle Époque, anglo-normandes et contemporaines de la Côte Fleurie.`,
-    match: (p) => p.category === 1 && [11, 13, 14, 15, 9].includes(p.type),
+    match: (p) => p.category === 1 && p.type === 2 && PRESTIGE_SUBTYPES.includes(p.subtype),
   },
   {
     slug: "location-maison",
@@ -45,7 +50,7 @@ export const BUCKETS = [
       `Maisons à louer à ${city} en longue durée. Sélection E&B Immo de maisons et villas en location sur la Côte Fleurie.`,
     intro: (city) =>
       `Trouvez votre maison à louer à ${city} avec E&B Immo. Nous accompagnons locataires et propriétaires sur la Côte Fleurie avec un suivi personnalisé.`,
-    match: (p) => p.category === 2 && [2, 11, 13, 14, 15].includes(p.type),
+    match: (p) => p.category === 2 && p.type === 2,
   },
   {
     slug: "location-appartement",
@@ -57,7 +62,7 @@ export const BUCKETS = [
       `Appartements à louer à ${city} : studios, 2 pièces, 3 pièces. Locations longue durée sur la Côte Fleurie avec E&B Immo.`,
     intro: (city) =>
       `Découvrez les appartements à louer à ${city} proposés par E&B Immo. Locations longue durée meublées et non meublées sur la Côte Fleurie.`,
-    match: (p) => p.category === 2 && [1, 8, 19, 20, 21, 22].includes(p.type),
+    match: (p) => p.category === 2 && p.type === 1,
   },
   {
     slug: "vente-terrain",
@@ -81,7 +86,7 @@ export const BUCKETS = [
       `Immeubles de rapport à vendre à ${city}. Opportunités d'investissement locatif sur la Côte Fleurie sélectionnées par E&B Immo.`,
     intro: (city) =>
       `Découvrez les immeubles à vendre à ${city} proposés par E&B Immo : immeubles de rapport et opportunités d'investissement locatif sur la Côte Fleurie.`,
-    match: (p) => p.category === 1 && p.type === 7,
+    match: (p) => p.category === 1 && p.type === 6,
   },
   {
     slug: "vente-local-commercial",
@@ -93,7 +98,7 @@ export const BUCKETS = [
       `Locaux commerciaux, bureaux et fonds de commerce à vendre à ${city}. Immobilier d'entreprise sur la Côte Fleurie avec E&B Immo.`,
     intro: (city) =>
       `E&B Immo vous propose des locaux commerciaux, bureaux et fonds de commerce à vendre à ${city}. Trouvez le local professionnel idéal sur la Côte Fleurie.`,
-    match: (p) => p.category === 1 && [5, 6, 10, 17, 18].includes(p.type),
+    match: (p) => p.category === 1 && [4, 7, 9].includes(p.type),
   },
   {
     slug: "viager",

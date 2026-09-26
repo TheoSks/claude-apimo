@@ -11,12 +11,27 @@ const FALLBACK_API = "https://tst-drab-eta.vercel.app/api/properties";
 
 /* Apimo type/category ID mappings → French labels */
 const APIMO_CATEGORIES = { 1: "Vente", 2: "Location", 3: "Viager", 4: "Saisonnier" };
+/* Catalogue officiel Apimo "property_type" */
 const APIMO_TYPES = {
-  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Parking", 5: "Bureau",
-  6: "Commerce", 7: "Immeuble", 8: "Loft", 9: "Château", 10: "Local",
-  11: "Villa", 12: "Ferme", 13: "Propriété", 14: "Manoir", 15: "Hôtel particulier",
-  16: "Programme neuf", 17: "Fonds de commerce", 18: "Entrepôt", 19: "Chambre",
-  20: "Studio", 21: "Duplex", 22: "Triplex",
+  1: "Appartement", 2: "Maison", 3: "Terrain", 4: "Commerce", 5: "Garage / Parking",
+  6: "Immeuble", 7: "Bureau", 8: "Bateau", 9: "Local d'activité / Entrepôt", 10: "Cave / Box",
+};
+
+/* Catalogue officiel Apimo "property_subtype" (sous-types) */
+const APIMO_SUBTYPES = {
+  1: "Triplex", 2: "Terrain constructible", 3: "Terrain inconstructible", 4: "Penthouse",
+  5: "Appartement", 6: "Studio", 7: "Château", 8: "Commerce", 9: "Duplex", 10: "Manoir",
+  11: "Ferme", 12: "Loft", 13: "Maison de village", 14: "Villa", 15: "Appartement villa",
+  16: "Grange", 17: "Ruine", 18: "Maison", 19: "Propriété", 20: "Ensemble immobilier",
+  21: "Moulin", 22: "Garage", 23: "Fermette", 24: "Immeuble", 25: "Maison de ville",
+  27: "Chaumière", 29: "Hangar", 31: "Local", 32: "Chalet", 33: "Local commercial",
+  34: "Fonds de commerce", 35: "Droit au bail", 36: "Bureau", 37: "Hôtel particulier",
+  39: "Exploitation agricole", 40: "Cave", 41: "Entrepôt", 43: "Parking", 44: "Hôtel",
+  45: "Haras", 46: "Terrain", 52: "Péniche", 55: "Domaine équestre", 56: "Maison d'hôtes",
+  57: "Gîte", 59: "Box", 63: "Atelier", 70: "Maison de plain-pied", 71: "Maison jumelée",
+  73: "Maison de plage", 78: "Terrain résidentiel", 79: "Terrain commercial", 80: "Lotissement",
+  83: "Maison individuelle", 88: "Pavillon", 103: "Terrain agricole",
+  104: "Local et fonds de commerce", 111: "Dépendance",
 };
 
 function resolveApimoField(field) {
@@ -27,12 +42,13 @@ function resolveApimoField(field) {
   return String(field);
 }
 
-/* Correctif d'affichage : certains biens sont saisis "Parking" (type 4) dans Apimo
-   alors que ce sont des locaux commerciaux (prix élevés). On rétablit le bon libellé
-   côté site, sans dépendre d'une correction dans Apimo. */
+function resolveSubtype(field) {
+  if (typeof field === "number" || /^\d+$/.test(String(field || ""))) return APIMO_SUBTYPES[Number(field)] || "";
+  return resolveApimoField(field);
+}
+
+/* Libellé du type générique ("Maison", "Terrain", "Commerce"…), selon le catalogue Apimo. */
 function correctedTypeLabel(p) {
-  const price = p?.price?.value || 0;
-  if (Number(p?.type) === 4 && price > 50000) return "Local commercial";
   return resolveApimoField(p?.type);
 }
 
@@ -41,7 +57,7 @@ function fmtTitle(p) {
   /* 1. If Apimo provides a name, use it directly */
   if (p.name && p.name.length > 3) return p.name.toUpperCase();
   /* 2. Otherwise build from type + area + city */
-  const type = correctedTypeLabel(p) || resolveApimoField(p.subtype) || resolveApimoField(p.category) || "Bien";
+  const type = correctedTypeLabel(p) || resolveSubtype(p.subtype) || resolveApimoField(p.category) || "Bien";
   const area = p.area?.value || p.area?.total || 0;
   const areaStr = area ? `${area}M²` : "";
   const city = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
@@ -52,13 +68,13 @@ function fmtTitle(p) {
 function fmtDesc(p) {
   const raw = (p.comments || []).map(c => c.comment).filter(Boolean).join("\n\n");
   if (raw && raw.length > 30) return raw;
-  const type = (resolveApimoField(p.type) || resolveApimoField(p.subtype) || "bien").toLowerCase();
+  const type = (resolveSubtype(p.subtype) || resolveApimoField(p.type) || "bien").toLowerCase();
   const rooms = p.rooms || 0;
   const beds = p.bedrooms || 0;
   const area = p.area?.value || p.area?.total || 0;
   const cityName = typeof p.city === "object" ? (p.city?.name || "Normandie") : (p.city || "Normandie");
   const zip = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
-  const isFem = type === "maison" || type === "villa" || type.endsWith("e");
+  const isFem = /^(maison|villa|propriété|ferme|grange|chaumière|péniche)/.test(type) || type.endsWith("e");
   const lines = [];
   lines.push(`NOUVEAUTÉ CHEZ E&B IMMO`);
   if (area > 0) {
@@ -74,7 +90,7 @@ function fmtDesc(p) {
 function normalizeApimo(p) {
   const photos = (p.pictures || []).map(pic => pic.url).filter(Boolean);
   const typeName = correctedTypeLabel(p);
-  const subtypeName = resolveApimoField(p.subtype);
+  const subtypeName = resolveSubtype(p.subtype);
   const categoryName = resolveApimoField(p.category);
   const cityName = typeof p.city === "object" ? (p.city?.name || "") : (p.city || "");
   const zipCode = typeof p.city === "object" ? (p.city?.zipcode || "") : "";
@@ -816,7 +832,7 @@ function FilterBar({ sq, setSq, budgetRange, setBudgetRange, areaRange, setAreaR
                 <input value={cityText} autoFocus onFocus={() => setShowCitySug(true)}
                   onChange={e => { setCityText(e.target.value); setShowCitySug(true); }}
                   onBlur={e => setSq(q => ({ ...q, city: e.target.value }))}
-                  placeholder="Ex : Cabourg, Deauville…"
+                  placeholder="Ex : Cabourg, Bavent…"
                   style={{ width: "100%", height: 42, borderRadius: 10, border: `1px solid ${C.cinder10}`, padding: "0 12px", fontFamily: "Urbanist, sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box", color: C.mine }} />
                 {showCitySug && citySuggestions.length > 0 && (
                   <div style={{ position: "absolute", left: 0, right: 0, top: 46, background: C.white, border: `1px solid ${C.cinder15}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.1)", maxHeight: 200, overflowY: "auto", zIndex: 60 }}>
@@ -1595,7 +1611,7 @@ function Bien({ props, id, ld, go, m, px }) {
             <div style={{ display: "flex", gap: m.xs ? 10 : m.mob ? 12 : 20, marginBottom: m.xs ? 28 : 36, flexWrap: "wrap" }}>
               {[
                 p.rooms > 0 && [`${p.rooms} Pièce${p.rooms > 1 ? "s" : ""}`, "M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"],
-                [`${p.bedrooms || 0} Salle de bains`, "M21 10H7M21 6H3M21 14H3M21 18H7"],
+                p.bedrooms > 0 && [`${p.bedrooms} Chambre${p.bedrooms > 1 ? "s" : ""}`, "M3 18V8M3 14h18v4M21 18v-6a2 2 0 0 0-2-2h-8v4M7 12a1.5 1.5 0 1 0 0-.01"],
                 area > 0 && [`${area} m²`, "M3 3h18v18H3zM3 9h18M9 3v18"],
               ].filter(Boolean).map(([label, icon], i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: m.mob ? 14 : 15, color: C.mine, fontWeight: 500 }}>
@@ -1639,7 +1655,7 @@ function Bien({ props, id, ld, go, m, px }) {
               <div style={{ display: "grid", gridTemplateColumns: m.mob ? "1fr" : "1fr 1fr", columnGap: m.mob ? 0 : 48, rowGap: 0 }}>
                 {[
                   p.category && ["Catégorie", p.category],
-                  p.type && ["Type", `${p.type}${p.subtype ? ` / ${p.subtype}` : ""}`],
+                  p.type && ["Type", `${p.type}${p.subtype && p.subtype !== p.type ? ` / ${p.subtype}` : ""}`],
                   p.condition && ["État", p.condition],
                   p.availability && ["Disponibilité", p.availability],
                   area > 0 && ["Surfaces", `${area} m²`],
@@ -1929,7 +1945,6 @@ function Apropos({ go, m, px }) {
   const team = [
     { name: "Emeline", role: "Fondatrice de E&B Immo", phone: "07 60 95 36 18", email: "contact@eb-immo.fr", photo: "/team-emeline.png" },
     { name: "Benjamin", role: "Fondateur de E&B Immo", phone: "06 77 10 01 34", email: "bpain@eb-immo.fr", photo: "/team-benjamin.png" },
-    { name: "Giulia", role: "Conseillère E&B Immo", phone: "07 49 95 37 46", email: "gferloni@eb-immo.fr", photo: "/team-giulia.jpeg" },
     { name: "Aurelia Gardin", role: "Conseillère E&B Immo", phone: "06 50 80 91 68", email: "a.gardin@eb-immo.fr", photo: "/team-aurelia.png" },
     { name: "Angélique Destin", role: "Conseillère E&B Immo", phone: "07 43 52 81 86", email: "adestin@eb-immo.fr", photo: "/team-angelique.png" },
     { name: "Josselin Richard", role: "Conseiller E&B Immo", phone: "06 85 77 50 60", email: "j.richard@eb-immo.fr", photo: "/team-josselin.png" },
