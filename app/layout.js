@@ -45,7 +45,7 @@ export const metadata = {
     locale: "fr_FR",
     url: SITE_URL,
     siteName: "E&B Immo",
-    title: "E&B Immo — Agence immobilière de la Côte Fleurie",
+    title: "E&B Immo — Agence immobilière Bavent, Cabourg, Troarn | Côte Fleurie",
     description:
       "Achat, vente, location et estimation gratuite sur Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et la Côte Fleurie.",
     images: [
@@ -59,9 +59,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "E&B Immo — Agence immobilière de la Côte Fleurie",
+    title: "E&B Immo — Agence immobilière Bavent, Cabourg, Troarn | Côte Fleurie",
     description:
-      "Achat, vente, location et estimation gratuite sur la Côte Fleurie en Normandie.",
+      "Achat, vente, location et estimation gratuite à Bavent, Cabourg, Troarn, Merville-Franceville, Petiville et sur la Côte Fleurie.",
     images: ["/hero-drone.jpg"],
   },
   // Logo affiché par Google à côté du site dans les résultats de recherche

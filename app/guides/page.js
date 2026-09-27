@@ -5,12 +5,12 @@ import { SeoHeader, SeoFooter, SEO_COLORS as C } from "../_components/SeoShell";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ebimmo.com";
 
 export const metadata = {
-  title: "Guides immobilier — Côte Fleurie | E&B Immo",
+  title: "Guides immobilier — Cabourg, Bavent, Troarn, Côte Fleurie",
   description:
     "Tous nos guides immobiliers pour acheter, vendre, estimer et investir sur la Côte Fleurie : prix au m², résidence secondaire, vente rapide.",
   alternates: { canonical: `${SITE_URL}/guides` },
   openGraph: {
-    title: "Guides immobilier — Côte Fleurie",
+    title: "Guides immobilier — Cabourg, Bavent, Troarn, Côte Fleurie",
     description: "Conseils experts E&B Immo pour acheter, vendre et investir sur la Côte Fleurie.",
     url: `${SITE_URL}/guides`,
     type: "website",
