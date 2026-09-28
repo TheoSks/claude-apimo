@@ -1,8 +1,4 @@
-import { Resend } from "resend";
-
-const TO_EMAIL = process.env.CONTACT_EMAIL
-  ? process.env.CONTACT_EMAIL.split(",").map((s) => s.trim()).filter(Boolean)
-  : ["gaggio880@gmail.com", "contact@eb-immo.fr"];
+import { sendToTeam } from "../../_lib/mailer";
 
 const LABELS = {
   typeBien: { maison: "Maison", appartement: "Appartement" },
@@ -51,7 +47,6 @@ function sectionHead(title) {
 }
 
 export async function POST(request) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await request.json();
     const {
@@ -168,16 +163,13 @@ export async function POST(request) {
 </body>
 </html>`;
 
-    const { error } = await resend.emails.send({
-      from: "EB Immo <onboarding@resend.dev>",
-      to: TO_EMAIL,
+    const { ok } = await sendToTeam({
       replyTo: email,
       subject: `🏠 Estimation — ${prenom} ${nom} — ${adresse ? adresse + ", " : ""}${cp} ${ville}`,
       html,
     });
 
-    if (error) {
-      console.error("Resend error:", error);
+    if (!ok) {
       return Response.json({ error: "Erreur lors de l'envoi" }, { status: 500 });
     }
 

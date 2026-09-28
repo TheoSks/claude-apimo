@@ -254,6 +254,7 @@ export default function Estimation({ go, m, px }) {
   const [step, setStep] = useState(0); // 0 = landing
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sendFailed, setSendFailed] = useState(false);
   const [estimate, setEstimate] = useState(null);
   const [errors, setErrors] = useState({});
   // Render-driving state only — changes here trigger conditional rendering
@@ -356,7 +357,8 @@ export default function Estimation({ go, m, px }) {
           estimateCenter: est?.center,
         }),
       });
-      if (!res.ok) throw new Error();
+      /* Même si la transmission échoue, le visiteur voit son estimation, avec nos coordonnées. */
+      setSendFailed(!res.ok);
       setContactInfo({ email: v.email, telephone: v.telephone });
       setEstimate(est);
       setSent(true);
@@ -699,8 +701,13 @@ export default function Estimation({ go, m, px }) {
               </div>
             )}
             <p style={{ fontSize: m.xs ? 13 : 14, color: C.abbey, marginBottom: m.xs ? 20 : 28, lineHeight: 1.6 }}>
-              Un email de confirmation a été envoyé à <strong style={{ color: C.mine }}>{contactInfo.email}</strong>.<br />
-              Notre agent prendra contact avec vous au <strong style={{ color: C.mine }}>{contactInfo.telephone}</strong> sous peu.
+              {sendFailed ? (
+                <>Votre demande n'a pas pu nous être transmise automatiquement.<br />
+                Appelez-nous au <a href="tel:+33760953618" style={{ color: C.cyan, fontWeight: 600 }}>07 60 95 36 18</a> ou écrivez à <a href="mailto:contact@eb-immo.fr" style={{ color: C.cyan, fontWeight: 600 }}>contact@eb-immo.fr</a> pour affiner votre estimation.</>
+              ) : (
+                <>Votre demande a bien été transmise à notre équipe.<br />
+                Notre agent prendra contact avec vous au <strong style={{ color: C.mine }}>{contactInfo.telephone}</strong> sous peu.</>
+              )}
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <button
